@@ -1036,10 +1036,23 @@ class Interpolator {
         SymbolicScalar clamped = SymbolicScalar::fmax(query, x_min);
         clamped = SymbolicScalar::fmin(clamped, x_max);
 
-        // Get interpolated result at clamped location
-        std::vector<casadi::MX> args = {clamped};
-        std::vector<casadi::MX> res = m_casadi_fn(args);
-        SymbolicScalar interp_result = res[0];
+        SymbolicScalar interp_result;
+        if (m_method == InterpolationMethod::Nearest) {
+            // Symbolic nearest: snap to closest grid point using if_else cascade.
+            // Start with the last grid value and walk backwards through midpoints.
+            const auto &g = m_grid[0];
+            interp_result = SymbolicScalar(m_values.back());
+            for (int i = static_cast<int>(g.size()) - 2; i >= 0; --i) {
+                double midpoint = 0.5 * (g[i] + g[i + 1]);
+                interp_result = casadi::MX::if_else(clamped < midpoint, SymbolicScalar(m_values[i]),
+                                                    interp_result);
+            }
+        } else {
+            // Linear/BSpline: Use CasADi interpolant
+            std::vector<casadi::MX> args = {clamped};
+            std::vector<casadi::MX> res = m_casadi_fn(args);
+            interp_result = res[0];
+        }
 
         // Handle extrapolation if configured
         if (m_extrap_config.mode == ExtrapolationMode::Linear && !m_slopes_left.empty()) {
