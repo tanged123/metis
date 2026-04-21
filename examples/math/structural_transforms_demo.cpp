@@ -10,11 +10,11 @@
 
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <string>
 #include <vector>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 
@@ -58,7 +58,7 @@ int main() {
         auto residual = SymbolicScalar::vertcat({
             x0 - x1,
             x2 - p,
-            janus::sin(x0) + x2 - 2.0,
+            metis::sin(x0) + x2 - 2.0,
         });
 
         Function fn("alias_case", {x, p}, {residual});

@@ -1,9 +1,9 @@
 #include "../utils/TestUtils.hpp"
 #include <gtest/gtest.h>
-#include <janus/core/Function.hpp> // Function is in core/Function.hpp not JanusFunction.hpp
-#include <janus/math/RootFinding.hpp>
+#include <metis/core/Function.hpp> // Function is in core/Function.hpp not MetisFunction.hpp
+#include <metis/math/RootFinding.hpp>
 
-using namespace janus;
+using namespace metis;
 
 TEST(RootFindingTest, NumericSimpleQuadratic) {
     // F(x) = x^2 - 4 = 0
@@ -172,7 +172,7 @@ TEST(RootFindingTest, ImplicitFunctionDerivative) {
     auto p_sym = sym("p_sym");
     auto x_sym = implicit_fn(p_sym)[0];
 
-    auto jac = casadi::MX::jacobian(janus::to_mx(x_sym), p_sym);
+    auto jac = casadi::MX::jacobian(metis::to_mx(x_sym), p_sym);
 
     casadi::Function j_fn("j_fn", {p_sym}, {jac});
     auto j_val = j_fn(std::vector<casadi::DM>{casadi::DM(4.0)});
@@ -202,7 +202,7 @@ TEST(RootFindingTest, ImplicitFunctionMultiParameterDerivative) {
     auto b_sym = sym("b_sym");
     auto x_sym = implicit_fn(a_sym, b_sym)[0];
     auto ab_sym = casadi::MX::vertcat({a_sym, b_sym});
-    auto jac = casadi::MX::jacobian(janus::to_mx(x_sym), ab_sym);
+    auto jac = casadi::MX::jacobian(metis::to_mx(x_sym), ab_sym);
     casadi::Function j_fn("j_fn_multi", {a_sym, b_sym}, {jac});
     auto j_val = j_fn(std::vector<casadi::DM>{casadi::DM(3.0), casadi::DM(4.0)});
     std::vector<double> jac_vals = std::vector<double>(j_val[0]);
@@ -237,7 +237,7 @@ TEST(RootFindingTest, ImplicitFunctionCustomSlots) {
     auto b_sym = sym("b_sym_custom");
     auto x_sym = implicit_fn(a_sym, b_sym)[0];
     auto ab_sym = casadi::MX::vertcat({a_sym, b_sym});
-    auto jac = casadi::MX::jacobian(janus::to_mx(x_sym), ab_sym);
+    auto jac = casadi::MX::jacobian(metis::to_mx(x_sym), ab_sym);
     casadi::Function j_fn("j_fn_custom", {a_sym, b_sym}, {jac});
     auto j_val = j_fn(std::vector<casadi::DM>{casadi::DM(3.0), casadi::DM(4.0)});
     std::vector<double> jac_vals = std::vector<double>(j_val[0]);
@@ -276,7 +276,7 @@ TEST(RootFindingTest, ImplicitFunctionDifferentInputOutputIndices) {
     auto b_sym = sym("b_sym_diff");
     auto x_sym = implicit_fn(a_sym, b_sym)[0];
     auto ab_sym = casadi::MX::vertcat({a_sym, b_sym});
-    auto jac = casadi::MX::jacobian(janus::to_mx(x_sym), ab_sym);
+    auto jac = casadi::MX::jacobian(metis::to_mx(x_sym), ab_sym);
     casadi::Function j_fn("j_fn_diff_idx", {a_sym, b_sym}, {jac});
     auto j_val = j_fn(std::vector<casadi::DM>{casadi::DM(3.0), casadi::DM(4.0)});
     std::vector<double> jac_vals = std::vector<double>(j_val[0]);
@@ -292,7 +292,7 @@ TEST(RootFindingTest, NewtonSolverClass) {
     Function f("f", {x}, {f_expr});
 
     // Create persistent solver
-    janus::NewtonSolver solver(f);
+    metis::NewtonSolver solver(f);
 
     // Solve with first guess
     Eigen::VectorXd x0(1);

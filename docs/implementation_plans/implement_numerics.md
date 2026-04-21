@@ -1,13 +1,13 @@
 Here is the implementation roadmap for Phase 2: The Math & Numerics Layer, designed for your AI agent.
-This roadmap directly maps the AeroSandbox numpy module structure (which you provided) to the Janus C++ architecture. It prioritizes the "Traceability" features essential for the Code Transformations paradigm.
-janus-math-roadmap.md
-Janus Phase 2: Math & Numerics Implementation Plan
+This roadmap directly maps the AeroSandbox numpy module structure (which you provided) to the Metis C++ architecture. It prioritizes the "Traceability" features essential for the Code Transformations paradigm.
+metis-math-roadmap.md
+Metis Phase 2: Math & Numerics Implementation Plan
 Goal: Implement the "Agnostic Math Stack" that serves as a drop-in replacement for std:: and Eigen.
 Constraint: Every function must be a template that works for both double (Numeric Mode) and casadi::MX (Symbolic Mode).
 1. Directory Structure Update
-Agent Action: Create the following headers in include/janus/math/.
+Agent Action: Create the following headers in include/metis/math/.
 Python Source (ASB)
-Janus C++ Header
+Metis C++ Header
 Responsibility
 arithmetic_*.py
 Arithmetic.hpp
@@ -20,13 +20,13 @@ Calculus.hpp
 Gradients, Jacobians (Autodiff interfaces).
 conditionals.py
 Logic.hpp
-The critical janus::where and sigmoid_blend.
+The critical metis::where and sigmoid_blend.
 finite_difference.py
 DiffOps.hpp
 Numerical differentiation (diff, trapz) on arrays.
 interpolate.py
 Interpolate.hpp
-The JanusInterpolator class (1D/2D/3D).
+The MetisInterpolator class (1D/2D/3D).
 linalg.py
 Linalg.hpp
 Matrix operations (solve, inv, norm).
@@ -41,38 +41,38 @@ Generators (linspace, cosine_spacing).
 A. Arithmetic & Trig (Arithmetic.hpp, Trig.hpp)
 Critical Logic: Use if constexpr or SFINAE to route to std:: or casadi::.
 Functions: sin, cos, tan, exp, log, pow, sqrt, abs.
-Vectorization: Ensure these functions accept JanusMatrix (Eigen types) and apply element-wise operations automatically (using .array() in Eigen).
+Vectorization: Ensure these functions accept MetisMatrix (Eigen types) and apply element-wise operations automatically (using .array() in Eigen).
 B. The Logic Core (Logic.hpp)
 Critical Logic: This replaces standard C++ control flow.
-janus::where(cond, if_true, if_false):
+metis::where(cond, if_true, if_false):
 Numeric: Returns cond ? if_true : if_false.
 Symbolic: Returns casadi::if_else(cond, if_true, if_false).
-janus::sigmoid_blend(x, val_low, val_high, sharpness):
+metis::sigmoid_blend(x, val_low, val_high, sharpness):
 Implements smooth transition for optimization.
 Comparison Operators: Overload (>, <, ==) to return bool (numeric) or casadi::MX (symbolic).
 C. Differential Operators (DiffOps.hpp)
 Critical Logic: Implement finite difference stencils on vectors.
-janus::diff(vector): Returns adjacent differences ($x_{i+1} - x_i$).
-janus::trapz(y, x): Trapezoidal integration.
-janus::gradient_1d(y, x): Central difference gradient estimation.
+metis::diff(vector): Returns adjacent differences ($x_{i+1} - x_i$).
+metis::trapz(y, x): Trapezoidal integration.
+metis::gradient_1d(y, x): Central difference gradient estimation.
 D. Interpolation (Interpolate.hpp)
 Critical Logic: Wrap stateful interpolation to support both binary search and graph nodes.
-Class: JanusInterpolator (Templated class is tricky here; prefer a class that holds data and has a templated operator()).
+Class: MetisInterpolator (Templated class is tricky here; prefer a class that holds data and has a templated operator()).
 Backend:
 Numeric: std::upper_bound + linear math.
 Symbolic: casadi::interpolant (builds a lookup node).
 E. Linear Algebra (Linalg.hpp)
 Critical Logic: Expose Eigen's power without breaking symbols.
-janus::solve(A, b): Solves $Ax=b$.
+metis::solve(A, b): Solves $Ax=b$.
 Numeric: A.colPivHouseholderQr().solve(b)
 Symbolic: casadi::solve(A, b)
-janus::norm(x): Vector norms.
-janus::outer(x, y): Outer product.
+metis::norm(x): Vector norms.
+metis::outer(x, y): Outer product.
 F. Rotations (Rotations.hpp)
 Critical Logic: standard aerospace 3D math.
-janus::rotation_matrix_2d(angle)
-janus::rotation_matrix_3d(angle, axis)
-Implementation: Build 3x3 Eigen matrices populated with janus::sin and janus::cos.
+metis::rotation_matrix_2d(angle)
+metis::rotation_matrix_3d(angle, axis)
+Implementation: Build 3x3 Eigen matrices populated with metis::sin and metis::cos.
 3. Testing Strategy (The "Dual-Check")
 Every single math function needs a corresponding test in tests/ that runs twice.
 Example Test Pattern:
@@ -87,7 +87,7 @@ void test_logic_where() {
     Scalar b = 2.0;
     
     // Test: where(a < b, 10, 20) -> should be 10
-    auto res = janus::where(a < b, 10.0, 20.0);
+    auto res = metis::where(a < b, 10.0, 20.0);
     
     if constexpr (std::is_same_v<Scalar, double>) {
         EXPECT_EQ(res, 10.0);
@@ -109,5 +109,5 @@ Tests 1: Verify basic math compiles for both backends.
 Logic: Implement Logic.hpp (where operator). This is the hardest template challenge.
 Tests 2: Verify branching logic.
 Linalg/DiffOps: Implement array helpers using Eigen.
-Interpolation: Implement the JanusInterpolator class.
+Interpolation: Implement the MetisInterpolator class.
 Final Polish: Format code with clang-format.

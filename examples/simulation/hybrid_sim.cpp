@@ -1,6 +1,6 @@
 #include <cmath>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <vector>
 
 /**
@@ -81,16 +81,16 @@ void demo_hybrid_prestep() {
     // Step 2: Build Symbolic Graph with exactly N steps
     std::cout << "2. Building symbolic graph with N=" << res.steps_needed << "...\n";
 
-    auto v0_sym = janus::sym("v0");
+    auto v0_sym = metis::sym("v0");
     // We simulate exactly 'res.steps_needed' times
     auto y_final_sym =
-        simulate_fixed_steps(janus::SymbolicScalar(y0), v0_sym, dt, res.steps_needed);
+        simulate_fixed_steps(metis::SymbolicScalar(y0), v0_sym, dt, res.steps_needed);
 
     // Step 3: Compute Derivatives
     // d(y_final)/d(v0) tells us how much the impact depth changes with initial velocity
     // This is useful for refining the event instant
-    auto jac_expr = janus::jacobian({y_final_sym}, {v0_sym});
-    janus::Function jac_fun({v0_sym}, {jac_expr});
+    auto jac_expr = metis::jacobian({y_final_sym}, {v0_sym});
+    metis::Function jac_fun({v0_sym}, {jac_expr});
 
     // Evaluate at v0 = 0
     auto sensitivity = jac_fun.eval(v0_numeric);
@@ -137,16 +137,16 @@ void demo_free_time() {
     // Newton-Raphson to find T such that y(T) = 0
     // We need d(y_final)/dT
 
-    auto T_sym = janus::sym("T");
+    auto T_sym = metis::sym("T");
     // Build graph ONCE
     auto y_final_expr =
-        free_time_simulation(janus::SymbolicScalar(y0), janus::SymbolicScalar(v0_val), T_sym, N);
+        free_time_simulation(metis::SymbolicScalar(y0), metis::SymbolicScalar(v0_val), T_sym, N);
 
     // Create function y(T) and dy/dT
-    janus::Function y_fun({T_sym}, {y_final_expr});
+    metis::Function y_fun({T_sym}, {y_final_expr});
 
-    auto dy_dT_expr = janus::jacobian({y_final_expr}, {T_sym});
-    janus::Function dy_dT_fun({T_sym}, {dy_dT_expr}); // Symbolic derivative w.r.t time!
+    auto dy_dT_expr = metis::jacobian({y_final_expr}, {T_sym});
+    metis::Function dy_dT_fun({T_sym}, {dy_dT_expr}); // Symbolic derivative w.r.t time!
 
     // Iterative solver using the symbolic derivative
     double T = T_guess;
@@ -171,7 +171,7 @@ void demo_free_time() {
 
 int main() {
     std::cout << "=== HYBRID SIMULATION PATTERNS ===\n";
-    std::cout << "Handling unknown end-times in Janus optimization.\n";
+    std::cout << "Handling unknown end-times in Metis optimization.\n";
 
     demo_hybrid_prestep();
     demo_free_time();

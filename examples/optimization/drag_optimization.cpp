@@ -14,7 +14,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 // ============================================================================
 // SHARED PHYSICS FUNCTIONS (C++20 Auto Templates)
@@ -24,14 +24,14 @@
 // Drag Force: D = 0.5 * rho * v² * S * Cd
 // Using 'auto' allows the compiler to handle mixed inputs (double * Symbolic -> Symbolic)
 auto compute_drag(auto rho, auto v, auto S, auto Cd0, auto k, auto Cl, auto Cl0) {
-    auto q = 0.5 * rho * janus::pow(v, 2.0);
-    auto Cd = Cd0 + k * janus::pow(Cl - Cl0, 2.0);
+    auto q = 0.5 * rho * metis::pow(v, 2.0);
+    auto Cd = Cd0 + k * metis::pow(Cl - Cl0, 2.0);
     return q * S * Cd;
 }
 
 // Lift Force: L = 0.5 * rho * v² * S * Cl
 auto compute_lift(auto rho, auto v, auto S, auto Cl) {
-    auto q = 0.5 * rho * janus::pow(v, 2.0);
+    auto q = 0.5 * rho * metis::pow(v, 2.0);
     return q * S * Cl;
 }
 
@@ -54,13 +54,13 @@ int main() {
     // =========================================================================
     std::cout << "=== Problem 1: Maximum L/D Ratio ===\n";
     {
-        janus::Opti opti;
+        metis::Opti opti;
         auto Cl = opti.variable(0.5);
         opti.subject_to_bounds(Cl, 0.1, 2.0);
 
         // CLEANEST: Just pass the variables!
         // compute_drag(double, double, double, double, double, Symbolic, double)
-        // Works because double * Symbolic -> Symbolic via Janus operator overloads.
+        // Works because double * Symbolic -> Symbolic via Metis operator overloads.
         auto D = compute_drag(rho, 100.0, S, Cd0, k, Cl, Cl0);
         auto L = compute_lift(rho, 100.0, S, Cl);
 
@@ -81,7 +81,7 @@ int main() {
     // =========================================================================
     std::cout << "=== Problem 2: Minimum Drag at Cruise (L = W) ===\n";
     {
-        janus::Opti opti;
+        metis::Opti opti;
         auto V = opti.variable(50.0);
         auto Cl = opti.variable(0.5);
 
@@ -108,7 +108,7 @@ int main() {
     // =========================================================================
     std::cout << "=== Problem 3: Minimum Power (P = D*V) ===\n";
     {
-        janus::Opti opti;
+        metis::Opti opti;
         auto V = opti.variable(40.0);
         auto Cl = opti.variable(0.8);
 

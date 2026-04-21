@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <sstream>
 #include <vector>
 
@@ -38,8 +38,8 @@
  * @param skip_header If true, skip the first line
  * @return true on success
  */
-bool load_table_1d(const std::string &filepath, janus::NumericVector &x_out,
-                   janus::NumericVector &y_out, bool skip_header = true) {
+bool load_table_1d(const std::string &filepath, metis::NumericVector &x_out,
+                   metis::NumericVector &y_out, bool skip_header = true) {
     std::ifstream file(filepath);
     if (!file.is_open()) {
         std::cerr << "Error: Could not open file: " << filepath << "\n";
@@ -82,8 +82,8 @@ bool load_table_1d(const std::string &filepath, janus::NumericVector &x_out,
     }
 
     // Convert to Eigen vectors
-    x_out = Eigen::Map<janus::NumericVector>(x_data.data(), x_data.size());
-    y_out = Eigen::Map<janus::NumericVector>(y_data.data(), y_data.size());
+    x_out = Eigen::Map<metis::NumericVector>(x_data.data(), x_data.size());
+    y_out = Eigen::Map<metis::NumericVector>(y_data.data(), y_data.size());
 
     return true;
 }
@@ -103,8 +103,8 @@ bool load_table_1d(const std::string &filepath, janus::NumericVector &x_out,
  * @param z_out Output: z values in Fortran order (column-major)
  * @return true on success
  */
-bool load_table_2d(const std::string &filepath, janus::NumericVector &x_out,
-                   janus::NumericVector &y_out, janus::NumericVector &z_out) {
+bool load_table_2d(const std::string &filepath, metis::NumericVector &x_out,
+                   metis::NumericVector &y_out, metis::NumericVector &z_out) {
     std::ifstream file(filepath);
     if (!file.is_open()) {
         std::cerr << "Error: Could not open file: " << filepath << "\n";
@@ -156,8 +156,8 @@ bool load_table_2d(const std::string &filepath, janus::NumericVector &x_out,
     }
 
     // Convert to Eigen vectors
-    x_out = Eigen::Map<janus::NumericVector>(x_data.data(), x_data.size());
-    y_out = Eigen::Map<janus::NumericVector>(y_data.data(), y_data.size());
+    x_out = Eigen::Map<metis::NumericVector>(x_data.data(), x_data.size());
+    y_out = Eigen::Map<metis::NumericVector>(y_data.data(), y_data.size());
 
     // Flatten z-values in Fortran (column-major) order for CasADi
     // z_out[i + j*nx] = z_rows[i][j]
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
     // -------------------------------------------------------------------------
     std::cout << "\n--- 1D Table Interpolation (Thrust vs Throttle) ---\n";
 
-    janus::NumericVector throttle_pts, thrust_pts;
+    metis::NumericVector throttle_pts, thrust_pts;
     if (!load_table_1d(file_1d, throttle_pts, thrust_pts)) {
         return 1;
     }
@@ -233,8 +233,8 @@ int main(int argc, char *argv[]) {
     std::cout << "Loaded " << throttle_pts.size() << " data points from file\n";
 
     // Create interpolator at initialization time
-    janus::Interpolator thrust_interp(throttle_pts, thrust_pts,
-                                      janus::InterpolationMethod::BSpline);
+    metis::Interpolator thrust_interp(throttle_pts, thrust_pts,
+                                      metis::InterpolationMethod::BSpline);
 
     // Numeric evaluation
     double throttle_query = 0.75;
@@ -246,13 +246,13 @@ int main(int argc, char *argv[]) {
     std::cout << "  Exact thrust:        " << thrust_exact << " kN\n";
 
     // Symbolic evaluation with gradient
-    auto throttle_sym = janus::sym("throttle");
+    auto throttle_sym = metis::sym("throttle");
     auto thrust_sym = thrust_interp(throttle_sym);
 
     // Compute derivative (d(thrust)/d(throttle))
-    auto d_thrust = janus::jacobian(thrust_sym, throttle_sym);
+    auto d_thrust = metis::jacobian(thrust_sym, throttle_sym);
 
-    janus::Function thrust_fn("thrust_fn", {throttle_sym}, {thrust_sym, d_thrust});
+    metis::Function thrust_fn("thrust_fn", {throttle_sym}, {thrust_sym, d_thrust});
     auto result = thrust_fn(throttle_query);
 
     std::cout << "  Symbolic thrust:     " << result[0](0, 0) << " kN\n";
@@ -264,7 +264,7 @@ int main(int argc, char *argv[]) {
     // -------------------------------------------------------------------------
     std::cout << "\n--- 2D Table Interpolation (Cd vs Alpha, Mach) ---\n";
 
-    janus::NumericVector alpha_pts, mach_pts, cd_values;
+    metis::NumericVector alpha_pts, mach_pts, cd_values;
     if (!load_table_2d(file_2d, alpha_pts, mach_pts, cd_values)) {
         return 1;
     }
@@ -272,13 +272,13 @@ int main(int argc, char *argv[]) {
     std::cout << "Loaded " << alpha_pts.size() << "x" << mach_pts.size() << " grid from file\n";
 
     // Create 2D interpolator
-    std::vector<janus::NumericVector> cd_grid = {alpha_pts, mach_pts};
-    janus::Interpolator cd_interp(cd_grid, cd_values, janus::InterpolationMethod::BSpline);
+    std::vector<metis::NumericVector> cd_grid = {alpha_pts, mach_pts};
+    metis::Interpolator cd_interp(cd_grid, cd_values, metis::InterpolationMethod::BSpline);
 
     // Numeric query
     double alpha_q = 7.5; // degrees
     double mach_q = 0.65;
-    janus::NumericVector query_pt(2);
+    metis::NumericVector query_pt(2);
     query_pt << alpha_q, mach_q;
 
     double cd_numeric = cd_interp(query_pt);
@@ -289,17 +289,17 @@ int main(int argc, char *argv[]) {
     std::cout << "  Exact Cd:        " << cd_exact << "\n";
 
     // Symbolic evaluation with Jacobian
-    auto alpha_sym = janus::sym("alpha");
-    auto mach_sym = janus::sym("mach");
+    auto alpha_sym = metis::sym("alpha");
+    auto mach_sym = metis::sym("mach");
 
-    janus::SymbolicVector query_sym(2);
+    metis::SymbolicVector query_sym(2);
     query_sym(0) = alpha_sym;
     query_sym(1) = mach_sym;
 
     auto cd_sym = cd_interp(query_sym);
-    auto grad_cd = janus::jacobian(cd_sym, alpha_sym, mach_sym);
+    auto grad_cd = metis::jacobian(cd_sym, alpha_sym, mach_sym);
 
-    janus::Function cd_fn("cd_fn", {alpha_sym, mach_sym}, {cd_sym, grad_cd});
+    metis::Function cd_fn("cd_fn", {alpha_sym, mach_sym}, {cd_sym, grad_cd});
     auto cd_result = cd_fn(alpha_q, mach_q);
 
     std::cout << "  Symbolic Cd:     " << cd_result[0](0, 0) << "\n";
@@ -318,8 +318,8 @@ int main(int argc, char *argv[]) {
     std::cout << "\n--- Extrapolation with Safety Bounds ---\n";
 
     // Create thrust interpolator WITH linear extrapolation and bounds
-    janus::Interpolator thrust_extrap(throttle_pts, thrust_pts, janus::InterpolationMethod::BSpline,
-                                      janus::ExtrapolationConfig::linear(0.0, 150.0));
+    metis::Interpolator thrust_extrap(throttle_pts, thrust_pts, metis::InterpolationMethod::BSpline,
+                                      metis::ExtrapolationConfig::linear(0.0, 150.0));
 
     std::cout << "Created interpolator with ExtrapolationConfig::linear(0, 150)\n";
 
@@ -337,7 +337,7 @@ int main(int argc, char *argv[]) {
     std::cout << "  Extrapolated thrust: " << thrust_under << " kN (clamped to lower bound)\n";
 
     // Compare to clamp behavior
-    janus::Interpolator thrust_clamp(throttle_pts, thrust_pts, janus::InterpolationMethod::BSpline);
+    metis::Interpolator thrust_clamp(throttle_pts, thrust_pts, metis::InterpolationMethod::BSpline);
 
     double thrust_clamp_over = thrust_clamp(throttle_over);
     std::cout << "\nWith default clamping (no extrapolation):\n";
@@ -345,11 +345,11 @@ int main(int argc, char *argv[]) {
               << " kN (clamped to boundary value)\n";
 
     // Symbolic extrapolation with gradient
-    auto t_sym = janus::sym("throttle");
+    auto t_sym = metis::sym("throttle");
     auto thrust_extrap_sym = thrust_extrap(t_sym);
-    auto d_thrust_extrap = janus::jacobian(thrust_extrap_sym, t_sym);
+    auto d_thrust_extrap = metis::jacobian(thrust_extrap_sym, t_sym);
 
-    janus::Function extrap_fn("extrap_fn", {t_sym}, {thrust_extrap_sym, d_thrust_extrap});
+    metis::Function extrap_fn("extrap_fn", {t_sym}, {thrust_extrap_sym, d_thrust_extrap});
     auto extrap_result = extrap_fn(throttle_over);
 
     std::cout << "\nSymbolic extrapolation at throttle = " << throttle_over << ":\n";
@@ -362,7 +362,7 @@ int main(int argc, char *argv[]) {
     // -------------------------------------------------------------------------
     std::cout << "\n=== Summary ===\n";
     std::cout << "1. Load table data from files at startup (CSV, HDF5, etc.)\n";
-    std::cout << "2. Construct janus::Interpolator with loaded data\n";
+    std::cout << "2. Construct metis::Interpolator with loaded data\n";
     std::cout << "3. Use the interpolator for both numeric AND symbolic evaluation\n";
     std::cout << "4. Automatic differentiation works through the table lookup!\n";
     std::cout << "5. Use ExtrapolationConfig::linear() for gradient-preserving extrapolation\n";

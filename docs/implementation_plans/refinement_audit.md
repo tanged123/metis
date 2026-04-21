@@ -1,4 +1,4 @@
-# Janus Refinement Audit & Refactoring Plan
+# Metis Refinement Audit & Refactoring Plan
 
 ## Codebase Profile
 
@@ -8,7 +8,7 @@
 | **Tests** | 35 files across 3 executables |
 | **Examples** | 31 files across 5 directories |
 | **Modules** | core/ (8), math/ (22), optimization/ (11), utils/ (1), root (2) |
-| **Largest files** | JanusIO.hpp (1507), Interpolate.hpp (1277), Integrate.hpp (1147), Opti.hpp (1099), Sparsity.hpp (1083) |
+| **Largest files** | MetisIO.hpp (1507), Interpolate.hpp (1277), Integrate.hpp (1147), Opti.hpp (1099), Sparsity.hpp (1083) |
 
 ---
 
@@ -34,12 +34,12 @@ Same file can mix both: `Calculus.hpp` has `gradient`, `diff`, `trapz`, `cumtrap
 
 Two conventions, no rule:
 
-- **Generic `detail`**: Sparsity, JanusIO, Function, IntegrateDiscrete, Interpolate, RootFinding, AutoDiff, ScatteredInterpolator, OrthogonalPolynomials, Linalg, SurrogateModel
+- **Generic `detail`**: Sparsity, MetisIO, Function, IntegrateDiscrete, Interpolate, RootFinding, AutoDiff, ScatteredInterpolator, OrthogonalPolynomials, Linalg, SurrogateModel
 - **Prefixed `<module>_detail`**: structural_detail, diagnostics_detail, polynomial_chaos_detail, integrate_detail, opti_detail, quadrature_detail, autodiff_detail, logic_detail
 
 AutoDiff.hpp uses **both** (`detail` and `autodiff_detail`) in the same file.
 
-### C3. JanusIO.hpp — 1507-Line Monolith with 750+ Lines of Duplicated HTML/JS
+### C3. MetisIO.hpp — 1507-Line Monolith with 750+ Lines of Duplicated HTML/JS
 
 Four near-identical export function families with copy-pasted HTML/CSS/JavaScript:
 - `export_graph_dot` / `export_graph_html` (MX graphs)
@@ -112,14 +112,14 @@ Leave doxygen in as  needed for documentation downstream for users.
 
 ### M3. Dead/Deprecated Code Still Present
 
-- **DiffOps.hpp**: 16-line deprecated redirect to AutoDiff.hpp + Calculus.hpp. Commented out in JanusMath.hpp but file still exists.
-- **`Interp1D`** and **`JanusInterpolator`**: Backward-compat aliases for `Interpolator` at Interpolate.hpp:1101-1106.
+- **DiffOps.hpp**: 16-line deprecated redirect to AutoDiff.hpp + Calculus.hpp. Commented out in MetisMath.hpp but file still exists.
+- **`Interp1D`** and **`MetisInterpolator`**: Backward-compat aliases for `Interpolator` at Interpolate.hpp:1101-1106.
 - **`clip()`**: Pointless forwarding alias for `clamp()` in Logic.hpp:552.
-- **OptiCache**: Single-method class that forwards to `janus::utils::read_json()`. Could be a static method on OptiSol.
+- **OptiCache**: Single-method class that forwards to `metis::utils::read_json()`. Could be a static method on OptiSol.
 
 ### M4. Include Path Inconsistency
 
-FiniteDifference.hpp uses relative paths (`../core/JanusError.hpp`) while all other 43 files use absolute paths (`janus/core/JanusError.hpp`).
+FiniteDifference.hpp uses relative paths (`../core/MetisError.hpp`) while all other 43 files use absolute paths (`metis/core/MetisError.hpp`).
 
 ### M5. Magic Numbers Without Justification
 
@@ -163,7 +163,7 @@ if (y.size() != x.size()) throw InvalidArgument("funcname: size mismatch");
 
 ### M11. CasADi Internals Leaked
 
-`Opti::casadi_opti()` returns mutable reference to internal `casadi::Opti`. Users can bypass all Janus invariants.
+`Opti::casadi_opti()` returns mutable reference to internal `casadi::Opti`. Users can bypass all Metis invariants.
 
 ### M12. JsonUtils.hpp — Naive Parser in Public API
 
@@ -175,11 +175,11 @@ if (y.size() != x.size()) throw InvalidArgument("funcname: size mismatch");
 
 ### m1. .cursorrules Stale Information
 
-References `include/janus/linalg/` which doesn't exist (linear algebra is in `math/Linalg.hpp`).
+References `include/metis/linalg/` which doesn't exist (linear algebra is in `math/Linalg.hpp`).
 
-### m2. JanusMath.hpp Redundant Include
+### m2. MetisMath.hpp Redundant Include
 
-Includes `janus/core/JanusError.hpp` directly, but it's already transitively included through every math header.
+Includes `metis/core/MetisError.hpp` directly, but it's already transitively included through every math header.
 
 ### m3. CasADi Version Not Pinned in CMakeLists.txt
 
@@ -210,12 +210,12 @@ Mix of `states()` (bare noun), `get_category()` (get_ prefix), `diff_matrix()` (
 **Strengths**: Tests are well-organized, mirror source structure, use dual-mode (numeric + symbolic) testing. Complex physics problems (brachistochrone, harmonic oscillators) verified against analytical solutions. Coverage is generally good.
 
 **Gaps**:
-- No direct tests for JanusError.hpp, JanusConcepts.hpp, TranscriptionBase.hpp (only indirect through derived classes)
+- No direct tests for MetisError.hpp, MetisConcepts.hpp, TranscriptionBase.hpp (only indirect through derived classes)
 - Convergence studies minimal (only 1 in entire suite)
 - No high-scale tests (>100 equations for structural analysis)
 - JsonUtils error paths untested
 
-**Examples**: Excellent physics fidelity, demonstrate real downstream patterns. All 31 use `#include <janus/janus.hpp>` — no direct CasADi/Eigen exposure. The top 3 features by example usage: symbolic computation (25/31), autodiff (22/31), optimization (8/31).
+**Examples**: Excellent physics fidelity, demonstrate real downstream patterns. All 31 use `#include <metis/metis.hpp>` — no direct CasADi/Eigen exposure. The top 3 features by example usage: symbolic computation (25/31), autodiff (22/31), optimization (8/31).
 
 ---
 
@@ -231,25 +231,25 @@ Mix of `states()` (bare noun), `get_category()` (get_ prefix), `diff_matrix()` (
 | **Constants/Enum values** | PascalCase | `Solver::Ipopt`, `CollocationScheme::Trapezoidal` |
 | **Template parameters** | PascalCase | `Scalar`, `Derived`, `Func` |
 | **Files** | PascalCase.hpp | `Interpolate.hpp`, `RootFinding.hpp` (keep current) |
-| **Detail namespaces** | `detail` (plain) | `namespace detail { }` — always nested inside `janus` |
+| **Detail namespaces** | `detail` (plain) | `namespace detail { }` — always nested inside `metis` |
 
-**Rationale**: snake_case for functions matches C++ numerics tradition (Eigen, Boost.Math). Math primitives stay lowercase to match `std::sin`. PascalCase for types is universally expected in C++. Plain `detail` is simpler and sufficient (no collision risk inside `janus` namespace).
+**Rationale**: snake_case for functions matches C++ numerics tradition (Eigen, Boost.Math). Math primitives stay lowercase to match `std::sin`. PascalCase for types is universally expected in C++. Plain `detail` is simpler and sufficient (no collision risk inside `metis` namespace).
 
 ## Error Philosophy
 
-- **Exceptions only** — `throw janus::InvalidArgument(...)` for precondition violations, `throw janus::RuntimeError(...)` for solver/integration failures. No silent fallbacks, no return codes, no `-1` sentinel values.
+- **Exceptions only** — `throw metis::InvalidArgument(...)` for precondition violations, `throw metis::RuntimeError(...)` for solver/integration failures. No silent fallbacks, no return codes, no `-1` sentinel values.
 - **Validate at API boundaries** — public functions validate inputs. Internal/detail functions may skip validation for performance.
 - **No asserts in release code** — asserts are for development invariants only (7 total currently, fine).
 
 ## Header Organization
 
 ```
-include/janus/
+include/metis/
   core/           <- Types, concepts, error, function wrapper, sparsity, I/O
   math/           <- Math operations, calculus, interpolation, integration, quadrature, etc.
   optimization/   <- Opti, transcriptions, solution, options, scaling
   utils/          <- Internal utilities (JsonUtils.hpp — make private or remove)
-  janus.hpp       <- Uber umbrella (keep)
+  metis.hpp       <- Uber umbrella (keep)
   using.hpp       <- Namespace convenience (keep, with warning)
 ```
 
@@ -258,24 +258,24 @@ include/janus/
 **Split/merge targets**:
 - **Delete** DiffOps.hpp (deprecated redirect).
 - **Delete** or inline OptiCache.hpp (trivial pass-through).
-- Remove backward-compat aliases (`Interp1D`, `JanusInterpolator`, `clip`).
+- Remove backward-compat aliases (`Interp1D`, `MetisInterpolator`, `clip`).
 
 ## Include Strategy
 
-- **Granular**: Consumers can include specific headers (`#include <janus/math/Interpolate.hpp>`).
-- **Umbrella**: `janus.hpp` pulls everything (acceptable for applications, not for libraries).
+- **Granular**: Consumers can include specific headers (`#include <metis/math/Interpolate.hpp>`).
+- **Umbrella**: `metis.hpp` pulls everything (acceptable for applications, not for libraries).
 - **using.hpp** stays as explicit opt-in namespace pollution with clear warning.
-- JanusMath.hpp stays as math-only umbrella.
+- MetisMath.hpp stays as math-only umbrella.
 
 ## What Belongs in This Library vs. Consumers
 
-**In Janus**: Dual-mode math primitives, autodiff, sparsity, optimization framework, ODE integration, interpolation, quadrature, polynomial chaos, root finding, structural analysis.
+**In Metis**: Dual-mode math primitives, autodiff, sparsity, optimization framework, ODE integration, interpolation, quadrature, polynomial chaos, root finding, structural analysis.
 
 **Push to consumers**: JSON I/O (replace with proper library or make strictly internal). Example-specific CSV utilities.
 
 ## Template/constexpr Policy
 
-- All physics/math functions templated on `JanusScalar` (this is correct).
+- All physics/math functions templated on `MetisScalar` (this is correct).
 - `constexpr` where possible for compile-time-evaluable functions (constants, small helpers).
 - The `if constexpr` numeric/symbolic branching pattern is **inherent to the design** — it is the mechanism for dual-mode support. It's not a problem to fix; it's the architecture.
 

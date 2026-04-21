@@ -1,11 +1,11 @@
 #include "../utils/TestUtils.hpp" // specific path to TestUtils
-#include "janus/core/Function.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/math/AutoDiff.hpp"
-#include "janus/math/SurrogateModel.hpp"
+#include "metis/core/Function.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/math/AutoDiff.hpp"
+#include "metis/math/SurrogateModel.hpp"
 #include <gtest/gtest.h>
 
-namespace janus {
+namespace metis {
 namespace test {
 namespace {
 
@@ -62,7 +62,7 @@ TEST(SurrogateTests, SoftmaxSymbolic) {
     auto res = softmax(args);
 
     // Evaluate
-    janus::Function f({x, y}, {res});
+    metis::Function f({x, y}, {res});
     // f(1, 3) with default softness 1.0
     // max=3. sum= exp(-2)+exp(0) = 0.135+1 = 1.135. log(1.135)~0.126. res 3.126
     auto val = f.eval(1.0, 3.0);
@@ -88,12 +88,12 @@ TEST(SurrogateTests, SoftminNumeric) {
 }
 
 TEST(SurrogateTests, SoftminSymbolic) {
-    auto x = janus::sym("x");
+    auto x = metis::sym("x");
     std::vector<casadi::MX> args = {x, casadi::MX(2.0)};
     auto expr = softmin(args, 0.1);
 
     // softmin(1.0, 2.0) ~ min(1,2) = 1
-    double val = janus::Function({x}, {expr}).eval(1.0)(0, 0);
+    double val = metis::Function({x}, {expr}).eval(1.0)(0, 0);
     EXPECT_NEAR(val, 1.0, 0.1);
 }
 
@@ -113,9 +113,9 @@ TEST(SurrogateTests, SoftplusNumeric) {
 }
 
 TEST(SurrogateTests, SoftplusSymbolic) {
-    auto x = janus::sym("x");
+    auto x = metis::sym("x");
     auto expr = softplus(x);
-    janus::Function f({x}, {expr});
+    metis::Function f({x}, {expr});
 
     EXPECT_NEAR(f.eval(0.0)(0, 0), std::log(2.0), 1e-5);
     EXPECT_NEAR(f.eval(1000.0)(0, 0), 1000.0, 1e-5);
@@ -152,13 +152,13 @@ TEST(SurrogateTests, SoftplusSymbolicDerivativesRemainSmoothAcrossLegacyThreshol
     constexpr double transition = threshold / beta;
     constexpr double h = 1e-4;
 
-    auto x = janus::sym("x");
+    auto x = metis::sym("x");
     auto expr = softplus(x, beta, threshold);
-    auto first = janus::jacobian(expr, x);
-    auto second = janus::hessian(expr, x);
+    auto first = metis::jacobian(expr, x);
+    auto second = metis::hessian(expr, x);
 
-    janus::Function first_fn({x}, {first});
-    janus::Function second_fn({x}, {second});
+    metis::Function first_fn({x}, {first});
+    metis::Function second_fn({x}, {second});
 
     const double d1_left = first_fn.eval(transition - h)(0, 0);
     const double d1_right = first_fn.eval(transition + h)(0, 0);
@@ -195,14 +195,14 @@ TEST(SurrogateTests, SmoothAbsNumericConvergesToAbsoluteValue) {
 TEST(SurrogateTests, SmoothAbsSymbolicDerivativesExistAtOrigin) {
     constexpr double hardness = 20.0;
 
-    auto x = janus::sym("x");
+    auto x = metis::sym("x");
     auto expr = smooth_abs(x, hardness);
-    auto first = janus::jacobian(expr, x);
-    auto second = janus::hessian(expr, x);
+    auto first = metis::jacobian(expr, x);
+    auto second = metis::hessian(expr, x);
 
-    janus::Function f({x}, {expr});
-    janus::Function first_fn({x}, {first});
-    janus::Function second_fn({x}, {second});
+    metis::Function f({x}, {expr});
+    metis::Function first_fn({x}, {first});
+    metis::Function second_fn({x}, {second});
 
     EXPECT_NEAR(f.eval(0.0)(0, 0), std::log(2.0) / hardness, 1e-10);
     EXPECT_NEAR(first_fn.eval(0.0)(0, 0), 0.0, 1e-10);
@@ -221,17 +221,17 @@ TEST(SurrogateTests, SmoothMaxMinNumericConvergeToHardOperators) {
 TEST(SurrogateTests, SmoothMaxMinSymbolicGradientsExistAtTie) {
     constexpr double hardness = 15.0;
 
-    auto a = janus::sym("a");
-    auto b = janus::sym("b");
+    auto a = metis::sym("a");
+    auto b = metis::sym("b");
 
     auto smax = smooth_max(a, b, hardness);
     auto smin = smooth_min(a, b, hardness);
 
-    auto grad_max = janus::jacobian(smax, a, b);
-    auto grad_min = janus::jacobian(smin, a, b);
+    auto grad_max = metis::jacobian(smax, a, b);
+    auto grad_min = metis::jacobian(smin, a, b);
 
-    janus::Function grad_max_fn({a, b}, {grad_max});
-    janus::Function grad_min_fn({a, b}, {grad_min});
+    metis::Function grad_max_fn({a, b}, {grad_max});
+    metis::Function grad_min_fn({a, b}, {grad_min});
 
     auto max_grad = grad_max_fn.eval(0.0, 0.0);
     auto min_grad = grad_min_fn.eval(0.0, 0.0);
@@ -253,11 +253,11 @@ TEST(SurrogateTests, SmoothClampNumericConvergesToClamp) {
 TEST(SurrogateTests, SmoothClampSymbolicGradientExistsAtBounds) {
     constexpr double hardness = 25.0;
 
-    auto x = janus::sym("x");
+    auto x = metis::sym("x");
     auto expr = smooth_clamp(x, 0.0, 1.0, hardness);
-    auto grad = janus::jacobian(expr, x);
+    auto grad = metis::jacobian(expr, x);
 
-    janus::Function grad_fn({x}, {grad});
+    metis::Function grad_fn({x}, {grad});
 
     const double grad_at_low = grad_fn.eval(0.0)(0, 0);
     const double grad_at_high = grad_fn.eval(1.0)(0, 0);
@@ -274,7 +274,7 @@ TEST(SurrogateTests, KsMaxNumericConvergesToMaximum) {
 
     EXPECT_NEAR(ks_max(values, rho), 3.0, 1e-10);
 
-    janus::NumericVector eigen_values(3);
+    metis::NumericVector eigen_values(3);
     eigen_values << 1.0, 2.0, 3.0;
     EXPECT_NEAR(ks_max(eigen_values, rho), 3.0, 1e-10);
 }
@@ -282,14 +282,14 @@ TEST(SurrogateTests, KsMaxNumericConvergesToMaximum) {
 TEST(SurrogateTests, KsMaxSymbolicGradientExistsAndFormsConvexWeights) {
     constexpr double rho = 9.0;
 
-    auto x = janus::sym("x");
-    auto y = janus::sym("y");
-    auto z = janus::sym("z");
+    auto x = metis::sym("x");
+    auto y = metis::sym("y");
+    auto z = metis::sym("z");
 
-    auto expr = ks_max(std::vector<janus::SymbolicScalar>{x, y, z}, rho);
-    auto grad = janus::jacobian(expr, x, y, z);
+    auto expr = ks_max(std::vector<metis::SymbolicScalar>{x, y, z}, rho);
+    auto grad = metis::jacobian(expr, x, y, z);
 
-    janus::Function grad_fn({x, y, z}, {grad});
+    metis::Function grad_fn({x, y, z}, {grad});
     auto grad_val = grad_fn.eval(0.0, 0.0, 0.0);
 
     EXPECT_NEAR(grad_val(0, 0), 1.0 / 3.0, 1e-10);
@@ -317,9 +317,9 @@ TEST(SurrogateTests, SigmoidNumeric) {
 }
 
 TEST(SurrogateTests, SigmoidSymbolic) {
-    auto x = janus::sym("x");
+    auto x = metis::sym("x");
     auto expr = sigmoid(x); // default 0 to 1
-    double val = janus::Function({x}, {expr}).eval(0.0)(0, 0);
+    double val = metis::Function({x}, {expr}).eval(0.0)(0, 0);
     EXPECT_NEAR(val, 0.5, 1e-5);
 }
 
@@ -336,9 +336,9 @@ TEST(SurrogateTests, SwishNumeric) {
 }
 
 TEST(SurrogateTests, SwishSymbolic) {
-    auto x = janus::sym("x");
+    auto x = metis::sym("x");
     auto expr = swish(x);
-    double val = janus::Function({x}, {expr}).eval(2.0)(0, 0);
+    double val = metis::Function({x}, {expr}).eval(2.0)(0, 0);
     // 2 / (1 + exp(-2))
     EXPECT_NEAR(val, 2.0 / (1.0 + std::exp(-2.0)), 1e-5);
 }
@@ -363,29 +363,29 @@ TEST(SurrogateTests, BlendNumeric) {
 }
 
 TEST(SurrogateTests, BlendSymbolic) {
-    auto s = janus::sym("s");
+    auto s = metis::sym("s");
     auto expr = blend(s, 10.0, 0.0);
 
     // s=0 -> 5.0
-    double val = janus::Function({s}, {expr}).eval(0.0)(0, 0);
+    double val = metis::Function({s}, {expr}).eval(0.0)(0, 0);
     EXPECT_NEAR(val, 5.0, 1e-5);
 }
 
 TEST(SurrogateTests, CoverageErrors) {
     std::vector<double> empty;
-    EXPECT_THROW(janus::softmax(empty), janus::InvalidArgument);
+    EXPECT_THROW(metis::softmax(empty), metis::InvalidArgument);
 
     std::vector<double> valid = {1.0, 2.0};
-    EXPECT_THROW(janus::softmax(valid, -1.0), janus::InvalidArgument); // Invalid softness
-    EXPECT_THROW(janus::softmax(valid, 0.0), janus::InvalidArgument);  // Invalid softness
+    EXPECT_THROW(metis::softmax(valid, -1.0), metis::InvalidArgument); // Invalid softness
+    EXPECT_THROW(metis::softmax(valid, 0.0), metis::InvalidArgument);  // Invalid softness
 
-    EXPECT_THROW(janus::smooth_abs(0.0, 0.0), janus::InvalidArgument);
-    EXPECT_THROW(janus::smooth_max(0.0, 1.0, -1.0), janus::InvalidArgument);
-    EXPECT_THROW(janus::smooth_min(0.0, 1.0, -1.0), janus::InvalidArgument);
-    EXPECT_THROW(janus::smooth_clamp(0.0, -1.0, 1.0, -1.0), janus::InvalidArgument);
-    EXPECT_THROW(janus::ks_max(std::vector<double>{}, 1.0), janus::InvalidArgument);
-    EXPECT_THROW(janus::ks_max(std::vector<double>{1.0, 2.0}, 0.0), janus::InvalidArgument);
+    EXPECT_THROW(metis::smooth_abs(0.0, 0.0), metis::InvalidArgument);
+    EXPECT_THROW(metis::smooth_max(0.0, 1.0, -1.0), metis::InvalidArgument);
+    EXPECT_THROW(metis::smooth_min(0.0, 1.0, -1.0), metis::InvalidArgument);
+    EXPECT_THROW(metis::smooth_clamp(0.0, -1.0, 1.0, -1.0), metis::InvalidArgument);
+    EXPECT_THROW(metis::ks_max(std::vector<double>{}, 1.0), metis::InvalidArgument);
+    EXPECT_THROW(metis::ks_max(std::vector<double>{1.0, 2.0}, 0.0), metis::InvalidArgument);
 }
 
 } // namespace test
-} // namespace janus
+} // namespace metis

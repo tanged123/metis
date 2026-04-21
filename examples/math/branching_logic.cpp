@@ -1,22 +1,22 @@
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 /**
- * @brief Demonstrate complex branching logic in Janus
+ * @brief Demonstrate complex branching logic in Metis
  *
  * Standard C++ if/else doesn't work with symbolic types because conditions
- * can't be evaluated at graph-building time. Instead, we use janus::where()
+ * can't be evaluated at graph-building time. Instead, we use metis::where()
  * which creates computational graphs that branch at runtime.
  */
 
-// Example 1: Simple If-Else → janus::where()
+// Example 1: Simple If-Else → metis::where()
 template <typename Scalar> Scalar absolute_value(const Scalar &x) {
     // C++ way (DOESN'T work with symbolic):
     // if (x < 0) return -x;
     // else return x;
 
-    // Janus way (works with both numeric and symbolic):
-    return janus::where(x < 0.0, -x, x);
+    // Metis way (works with both numeric and symbolic):
+    return metis::where(x < 0.0, -x, x);
 }
 
 // Example 2: If-Else-If-Else → Nested where()
@@ -30,8 +30,8 @@ template <typename Scalar> Scalar piecewise_function(const Scalar &x) {
     // else if (x > 1.0) return 1.0;
     // else return x;
 
-    // Janus way: chain where() calls
-    return janus::where(x < -1.0, Scalar(-1.0), janus::where(x > 1.0, Scalar(1.0), x));
+    // Metis way: chain where() calls
+    return metis::where(x < -1.0, Scalar(-1.0), metis::where(x > 1.0, Scalar(1.0), x));
 }
 
 // Example 3: Switch-Case Logic → select() function (CLEAN!)
@@ -43,7 +43,7 @@ template <typename Scalar> Scalar flight_regime(const Scalar &mach) {
     // Mach >= 1.2: supersonic (Cd = 0.03)
     // Much cleaner than nested where() calls!
 
-    return janus::select({mach < 0.3, mach < 0.8, mach < 1.2},
+    return metis::select({mach < 0.3, mach < 0.8, mach < 1.2},
                          {Scalar(0.02), Scalar(0.025), Scalar(0.05)},
                          Scalar(0.03)); // default: supersonic
 }
@@ -51,23 +51,23 @@ template <typename Scalar> Scalar flight_regime(const Scalar &mach) {
 // Example 3b: Old nested way (for comparison)
 template <typename Scalar> Scalar flight_regime_nested(const Scalar &mach) {
     // Same logic, but harder to read with nested where()
-    return janus::where(mach < 0.3, Scalar(0.02),
-                        janus::where(mach < 0.8, Scalar(0.025),
-                                     janus::where(mach < 1.2, Scalar(0.05), Scalar(0.03))));
+    return metis::where(mach < 0.3, Scalar(0.02),
+                        metis::where(mach < 0.8, Scalar(0.025),
+                                     metis::where(mach < 1.2, Scalar(0.05), Scalar(0.03))));
 }
 
 // Example 4: Complex Multi-Step Branch Logic
 // Helper functions for complex calculations
 template <typename Scalar> Scalar turbulent_drag(const Scalar &reynolds, const Scalar &velocity) {
     // Multi-step calculation for turbulent flow
-    auto cf = 0.074 / janus::pow(reynolds, 0.2);                       // Friction coefficient
-    auto correction = 1.0 + 0.144 * janus::pow(velocity / 343.0, 2.0); // Compressibility
+    auto cf = 0.074 / metis::pow(reynolds, 0.2);                       // Friction coefficient
+    auto correction = 1.0 + 0.144 * metis::pow(velocity / 343.0, 2.0); // Compressibility
     return cf * correction;
 }
 
 template <typename Scalar> Scalar laminar_drag(const Scalar &reynolds) {
     // Simpler calculation for laminar flow
-    return 1.328 / janus::sqrt(reynolds);
+    return 1.328 / metis::sqrt(reynolds);
 }
 
 // Main function using helper functions in branches
@@ -76,7 +76,7 @@ Scalar skin_friction_coefficient(const Scalar &reynolds, const Scalar &velocity)
     // Branching with complex multi-step logic in each branch
     Scalar Re_transition = 5e5;
 
-    return janus::where(reynolds > Re_transition,
+    return metis::where(reynolds > Re_transition,
                         turbulent_drag(reynolds, velocity), // Complex calculation
                         laminar_drag(reynolds));            // Simpler calculation
 
@@ -96,7 +96,7 @@ template <typename Scalar> Scalar atmospheric_temperature(const Scalar &altitude
     Scalar T_tropopause = T0 - L * h_tropopause;
 
     // Branch based on altitude
-    return janus::where(altitude_m < h_tropopause,
+    return metis::where(altitude_m < h_tropopause,
                         T0 - L * altitude_m, // Troposphere
                         T_tropopause);       // Stratosphere
 }
@@ -112,15 +112,15 @@ Scalar lift_coefficient(const Scalar &alpha_deg, const Scalar &reynolds) {
     Scalar alpha_stall = 15.0;
     Scalar Cl_max = 1.5;
 
-    Scalar alpha_abs = janus::where(alpha_deg < 0.0, -alpha_deg, alpha_deg);
-    Scalar sign_alpha = janus::where(alpha_deg < 0.0, Scalar(-1.0), Scalar(1.0));
+    Scalar alpha_abs = metis::where(alpha_deg < 0.0, -alpha_deg, alpha_deg);
+    Scalar sign_alpha = metis::where(alpha_deg < 0.0, Scalar(-1.0), Scalar(1.0));
 
     // Reynolds number affects Cl_max
-    Scalar Cl_max_corrected = Cl_max * janus::where(reynolds < 1e5,
+    Scalar Cl_max_corrected = Cl_max * metis::where(reynolds < 1e5,
                                                     Scalar(0.8), // Low Re penalty
                                                     Scalar(1.0));
 
-    return janus::where(alpha_abs < alpha_stall,
+    return metis::where(alpha_abs < alpha_stall,
                         a * alpha_deg,                  // Linear region
                         Cl_max_corrected * sign_alpha); // Stalled
 }
@@ -132,10 +132,10 @@ Scalar safe_division(const Scalar &numerator, const Scalar &denominator) {
     Scalar epsilon = 1e-10;
 
     // Check if denominator is "close to zero" using absolute value
-    Scalar denom_abs = janus::where(denominator < 0.0, -denominator, denominator);
+    Scalar denom_abs = metis::where(denominator < 0.0, -denominator, denominator);
     Scalar is_small = denom_abs < epsilon;
 
-    return janus::where(is_small,
+    return metis::where(is_small,
                         Scalar(0.0),              // Return 0 if denom ≈ 0
                         numerator / denominator); // Safe division
 }
@@ -179,14 +179,14 @@ int main() {
     // Test 6: Symbolic Mode - Generate derivatives
     std::cout << "\n6. Symbolic Mode - Automatic Differentiation:\n";
 
-    auto alpha_sym = janus::sym("alpha");
-    auto reynolds_sym = janus::sym("reynolds");
+    auto alpha_sym = metis::sym("alpha");
+    auto reynolds_sym = metis::sym("reynolds");
 
-    auto Cl_expr = lift_coefficient(alpha_sym, janus::SymbolicScalar(2e5)); // Fix reynolds
+    auto Cl_expr = lift_coefficient(alpha_sym, metis::SymbolicScalar(2e5)); // Fix reynolds
 
     // Compute dCl/dalpha (lift curve slope with stall)
-    auto dCl_dalpha = janus::jacobian({Cl_expr}, {alpha_sym});
-    janus::Function Cl_slope({alpha_sym}, {dCl_dalpha});
+    auto dCl_dalpha = metis::jacobian({Cl_expr}, {alpha_sym});
+    metis::Function Cl_slope({alpha_sym}, {dCl_dalpha});
 
     std::cout << "   Lift curve slope at alpha=5°: " << Cl_slope.eval(5.0)(0, 0) << "\n";
     std::cout << "   Lift curve slope at alpha=20°: " << Cl_slope.eval(20.0)(0, 0)
@@ -199,7 +199,7 @@ int main() {
 
     std::cout << "\n✅ All branching examples completed!\n";
     std::cout
-        << "💡 Key takeaway: Use janus::where() instead of if/else for symbolic compatibility\n";
+        << "💡 Key takeaway: Use metis::where() instead of if/else for symbolic compatibility\n";
 
     return 0;
 }

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 /**
  * @brief Graph Visualization Example: Electric Motor Engineering
@@ -51,43 +51,43 @@ template <typename Scalar> struct MotorModel {
     Scalar efficiency(Scalar T_e, Scalar omega, Scalar P_elec) const {
         Scalar P_mech = T_e * omega;
         // Use softplus-based smooth max to avoid division by zero
-        Scalar P_elec_safe = janus::log(1.0 + janus::exp(P_elec - 0.001)) + 0.001;
+        Scalar P_elec_safe = metis::log(1.0 + metis::exp(P_elec - 0.001)) + 0.001;
         return P_mech / P_elec_safe;
     }
 };
 
 int main() {
-    std::cout << "=== Janus Graph Visualization: Electric Motor Model ===\n\n";
+    std::cout << "=== Metis Graph Visualization: Electric Motor Model ===\n\n";
 
     // Create symbolic variables for motor state
-    auto id = janus::sym("id");           // d-axis current [A]
-    auto iq = janus::sym("iq");           // q-axis current [A]
-    auto omega = janus::sym("omega");     // Mechanical angular velocity [rad/s]
-    auto omega_e = janus::sym("omega_e"); // Electrical angular velocity [rad/s]
-    auto did_dt = janus::sym("did_dt");   // d-current derivative
-    auto diq_dt = janus::sym("diq_dt");   // q-current derivative
-    auto T_load = janus::sym("T_load");   // Load torque [N*m]
+    auto id = metis::sym("id");           // d-axis current [A]
+    auto iq = metis::sym("iq");           // q-axis current [A]
+    auto omega = metis::sym("omega");     // Mechanical angular velocity [rad/s]
+    auto omega_e = metis::sym("omega_e"); // Electrical angular velocity [rad/s]
+    auto did_dt = metis::sym("did_dt");   // d-current derivative
+    auto diq_dt = metis::sym("diq_dt");   // q-current derivative
+    auto T_load = metis::sym("T_load");   // Load torque [N*m]
 
     // Motor parameters (symbolic for generality)
-    auto Rs = janus::sym("Rs");
-    auto Ld = janus::sym("Ld");
-    auto Lq = janus::sym("Lq");
-    auto lambda = janus::sym("lambda");
-    auto p = janus::sym("p");
-    auto J = janus::sym("J");
-    auto B = janus::sym("B");
+    auto Rs = metis::sym("Rs");
+    auto Ld = metis::sym("Ld");
+    auto Lq = metis::sym("Lq");
+    auto lambda = metis::sym("lambda");
+    auto p = metis::sym("p");
+    auto J = metis::sym("J");
+    auto B = metis::sym("B");
 
     // Build motor model
-    MotorModel<janus::SymbolicScalar> motor{Rs, Ld, Lq, lambda, p, J, B};
+    MotorModel<metis::SymbolicScalar> motor{Rs, Ld, Lq, lambda, p, J, B};
 
     // ============================================================
     // Graph 1: Electromagnetic Torque
     // ============================================================
     std::cout << "1. Electromagnetic Torque Expression\n";
     auto T_e = motor.electromagnetic_torque(id, iq);
-    janus::export_graph_dot(T_e, "graph_em_torque", "ElectromagneticTorque");
-    janus::render_graph("graph_em_torque.dot", "graph_em_torque.pdf");
-    janus::export_graph_html(T_e, "graph_em_torque", "ElectromagneticTorque");
+    metis::export_graph_dot(T_e, "graph_em_torque", "ElectromagneticTorque");
+    metis::render_graph("graph_em_torque.dot", "graph_em_torque.pdf");
+    metis::export_graph_html(T_e, "graph_em_torque", "ElectromagneticTorque");
     std::cout << "   T_e = 1.5 * p * [lambda*iq + (Ld-Lq)*id*iq]\n";
     std::cout << "   -> graph_em_torque.pdf / .html\n\n";
 
@@ -97,11 +97,11 @@ int main() {
     std::cout << "2. Park Transform Voltage Equations\n";
     auto Vd = motor.voltage_d(id, iq, did_dt, omega_e);
     auto Vq = motor.voltage_q(id, iq, diq_dt, omega_e);
-    auto V_magnitude = janus::sqrt(Vd * Vd + Vq * Vq);
+    auto V_magnitude = metis::sqrt(Vd * Vd + Vq * Vq);
 
-    janus::export_graph_dot(V_magnitude, "graph_voltage", "VoltageMagnitude");
-    janus::render_graph("graph_voltage.dot", "graph_voltage.pdf");
-    janus::export_graph_html(V_magnitude, "graph_voltage", "VoltageMagnitude");
+    metis::export_graph_dot(V_magnitude, "graph_voltage", "VoltageMagnitude");
+    metis::render_graph("graph_voltage.dot", "graph_voltage.pdf");
+    metis::export_graph_html(V_magnitude, "graph_voltage", "VoltageMagnitude");
     std::cout << "   |V| = sqrt(Vd^2 + Vq^2)\n";
     std::cout << "   -> graph_voltage.pdf / .html\n\n";
 
@@ -111,9 +111,9 @@ int main() {
     std::cout << "3. Motor Mechanical Dynamics (ODE)\n";
     auto domega_dt = motor.mechanical_dynamics(id, iq, omega, T_load);
 
-    janus::export_graph_dot(domega_dt, "graph_dynamics", "MechanicalDynamics");
-    janus::render_graph("graph_dynamics.dot", "graph_dynamics.pdf");
-    janus::export_graph_html(domega_dt, "graph_dynamics", "MechanicalDynamics");
+    metis::export_graph_dot(domega_dt, "graph_dynamics", "MechanicalDynamics");
+    metis::render_graph("graph_dynamics.dot", "graph_dynamics.pdf");
+    metis::export_graph_html(domega_dt, "graph_dynamics", "MechanicalDynamics");
     std::cout << "   d(omega)/dt = (T_e - T_load - B*omega) / J\n";
     std::cout << "   -> graph_dynamics.pdf / .html\n\n";
 
@@ -123,23 +123,23 @@ int main() {
     std::cout << "4. Electrical Power\n";
     auto P_elec = motor.electrical_power(Vd, Vq, id, iq);
 
-    janus::export_graph_dot(P_elec, "graph_power", "ElectricalPower");
-    janus::render_graph("graph_power.dot", "graph_power.pdf");
-    janus::export_graph_html(P_elec, "graph_power", "ElectricalPower");
+    metis::export_graph_dot(P_elec, "graph_power", "ElectricalPower");
+    metis::render_graph("graph_power.dot", "graph_power.pdf");
+    metis::export_graph_html(P_elec, "graph_power", "ElectricalPower");
     std::cout << "   P = 1.5 * (Vd*id + Vq*iq)\n";
     std::cout << "   -> graph_power.pdf / .html\n\n";
 
     // ============================================================
-    // Create callable janus::Function for torque
+    // Create callable metis::Function for torque
     // ============================================================
-    std::cout << "5. Creating janus::Function for Jacobian\n";
-    janus::Function torque_fn("torque", {id, iq, lambda, Ld, Lq, p}, {T_e});
+    std::cout << "5. Creating metis::Function for Jacobian\n";
+    metis::Function torque_fn("torque", {id, iq, lambda, Ld, Lq, p}, {T_e});
 
     // Compute Jacobian of torque w.r.t. currents
-    auto dT_dq = janus::jacobian({T_e}, {id, iq});
-    janus::export_graph_dot(dT_dq, "graph_jacobian", "TorqueJacobian");
-    janus::render_graph("graph_jacobian.dot", "graph_jacobian.pdf");
-    janus::export_graph_html(dT_dq, "graph_jacobian", "TorqueJacobian");
+    auto dT_dq = metis::jacobian({T_e}, {id, iq});
+    metis::export_graph_dot(dT_dq, "graph_jacobian", "TorqueJacobian");
+    metis::render_graph("graph_jacobian.dot", "graph_jacobian.pdf");
+    metis::export_graph_html(dT_dq, "graph_jacobian", "TorqueJacobian");
     std::cout << "   dT/d[id, iq] Jacobian computed symbolically\n";
     std::cout << "   -> graph_jacobian.pdf / .html\n\n";
 

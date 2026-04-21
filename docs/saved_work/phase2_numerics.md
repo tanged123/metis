@@ -6,7 +6,7 @@
 
 ## Implemented Components
 
-The following headers have been created in `include/janus/math/` to provide a dual-backend (Numeric `double` / Symbolic `casadi::MX`) mathematical core.
+The following headers have been created in `include/metis/math/` to provide a dual-backend (Numeric `double` / Symbolic `casadi::MX`) mathematical core.
 
 ### 1. Core Arithmetic & Trigonometry
 *   **Files**: `Arithmetic.hpp`, `Trig.hpp`
@@ -16,8 +16,8 @@ The following headers have been created in `include/janus/math/` to provide a du
 ### 2. Logic & Control Flow
 *   **Files**: `Logic.hpp`
 *   **Features**:
-    *   `janus::where(cond, if_true, if_false)`: Dispatches to ternary operator (numeric) or `casadi::if_else` (symbolic).
-    *   `janus::sigmoid_blend`: Smooth blending function for optimization stability.
+    *   `metis::where(cond, if_true, if_false)`: Dispatches to ternary operator (numeric) or `casadi::if_else` (symbolic).
+    *   `metis::sigmoid_blend`: Smooth blending function for optimization stability.
 
 ### 3. Differential Operators
 *   **Files**: `DiffOps.hpp`
@@ -37,7 +37,7 @@ The following headers have been created in `include/janus/math/` to provide a du
 
 ### 5. Interpolation
 *   **Files**: `Interpolate.hpp`
-*   **Features**: `JanusInterpolator` class.
+*   **Features**: `MetisInterpolator` class.
     *   **Numeric**: STL `upper_bound` + linear interpolation.
     *   **Symbolic**: Wraps `casadi::interpolant`.
 
@@ -60,18 +60,18 @@ Or manually:
 
 ## Critical Design Notes for Next Phase
 1.  **Eigen Evaluation**: When using `Ax=b` solvers in Eigen with CasADi types, the result expression from `solve` relies on temporary decomposition objects. Always call `.eval()` or assign immediately to a concrete matrix to avoid dangling references (Fixed in `Linalg.hpp`).
-2.  **ADL**: CasADi functions like `fabs` are often hidden friends. Call them without `casadi::` prefix or use `using` declarations if inside the `janus` namespace.
-3.  **Template Constraints**: Continue using `JanusScalar` concept to enforce valid types.
+2.  **ADL**: CasADi functions like `fabs` are often hidden friends. Call them without `casadi::` prefix or use `using` declarations if inside the `metis` namespace.
+3.  **Template Constraints**: Continue using `MetisScalar` concept to enforce valid types.
 
 ## File Manifest
-*   `include/janus/math/Arithmetic.hpp`
-*   `include/janus/math/Trig.hpp`
-*   `include/janus/math/Logic.hpp`
-*   `include/janus/math/DiffOps.hpp`
-*   `include/janus/math/Linalg.hpp`
-*   `include/janus/math/Interpolate.hpp`
-*   `include/janus/math/Spacing.hpp`
-*   `include/janus/math/Rotations.hpp`
+*   `include/metis/math/Arithmetic.hpp`
+*   `include/metis/math/Trig.hpp`
+*   `include/metis/math/Logic.hpp`
+*   `include/metis/math/DiffOps.hpp`
+*   `include/metis/math/Linalg.hpp`
+*   `include/metis/math/Interpolate.hpp`
+*   `include/metis/math/Spacing.hpp`
+*   `include/metis/math/Rotations.hpp`
 *   `tests/test_math.cpp`
 *   `scripts/ci.sh`
 *   `scripts/build.sh` (updated)

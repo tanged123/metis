@@ -3,19 +3,19 @@ find_package(GTest REQUIRED)
 add_executable(test_core 
     test_core.cpp
     core/test_diagnostics.cpp
-    core/test_janus_io.cpp
-    core/test_janus_types.cpp
+    core/test_metis_io.cpp
+    core/test_metis_types.cpp
     core/test_io_coverage.cpp
     core/test_sparsity.cpp
     core/test_structural_transforms.cpp
 )
-target_link_libraries(test_core PRIVATE janus GTest::gtest_main)
+target_link_libraries(test_core PRIVATE metis GTest::gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(test_core)
 
 add_executable(test_function core/test_function.cpp)
-target_link_libraries(test_function PRIVATE janus GTest::gtest_main)
+target_link_libraries(test_function PRIVATE metis GTest::gtest_main)
 gtest_discover_tests(test_function)
 
 add_executable(test_math 
@@ -41,7 +41,7 @@ add_executable(test_math
     math/test_polynomial_chaos.cpp
     math/test_quadrature.cpp
 )
-target_link_libraries(test_math PRIVATE janus GTest::gtest_main)
+target_link_libraries(test_math PRIVATE metis GTest::gtest_main)
 gtest_discover_tests(test_math)
 
 add_executable(test_diff
@@ -54,7 +54,7 @@ add_executable(test_diff
     math/test_calculus_diff.cpp
     math/test_interpolate_diff.cpp
 )
-target_link_libraries(test_diff PRIVATE janus GTest::gtest_main)
+target_link_libraries(test_diff PRIVATE metis GTest::gtest_main)
 gtest_discover_tests(test_diff)
 
 add_executable(test_opti
@@ -66,5 +66,5 @@ add_executable(test_opti
     optimization/test_pseudospectral.cpp
     optimization/test_birkhoff_pseudospectral.cpp
 )
-target_link_libraries(test_opti PRIVATE janus GTest::gtest_main)
+target_link_libraries(test_opti PRIVATE metis GTest::gtest_main)
 gtest_discover_tests(test_opti)

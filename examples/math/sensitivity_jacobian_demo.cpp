@@ -10,11 +10,11 @@
 
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <string>
 #include <vector>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 
@@ -101,7 +101,7 @@ int main() {
     measurement_terms.reserve(4);
     measurement_terms.push_back(s0 + 2.0 * s1 + 0.1 * coeffs(0));
     measurement_terms.push_back(s0 * s1);
-    measurement_terms.push_back(janus::sin(s0) + coeffs(1));
+    measurement_terms.push_back(metis::sin(s0) + coeffs(1));
     measurement_terms.push_back(s0 - s1 + 0.5 * coeffs(2));
     casadi::MX measurements = casadi::MX::vertcat(measurement_terms);
 
@@ -114,8 +114,8 @@ int main() {
 
     Function model("sensitivity_workflow_model", {state, coeffs}, {measurements, objective});
 
-    auto explicit_measurement_jac = janus::jacobian(measurements, state);
-    auto explicit_objective_jac = janus::jacobian(objective, coeffs);
+    auto explicit_measurement_jac = metis::jacobian(measurements, state);
+    auto explicit_objective_jac = metis::jacobian(objective, coeffs);
     Function reference("sensitivity_workflow_reference", {state, coeffs},
                        {explicit_measurement_jac, explicit_objective_jac});
 

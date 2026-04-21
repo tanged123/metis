@@ -1,9 +1,9 @@
 #include "../utils/TestUtils.hpp"
 #include <cmath>
 #include <gtest/gtest.h>
-#include <janus/core/Function.hpp>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/math/IntegratorStep.hpp>
+#include <metis/core/Function.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/math/IntegratorStep.hpp>
 
 // ============================================================================
 // Tests for euler_step
@@ -12,11 +12,11 @@
 TEST(IntegratorStep, EulerStepExponential) {
     // dy/dt = -y, y(0) = 1
     // After one step with dt = 0.1: y ≈ 1 + 0.1*(-1) = 0.9
-    janus::NumericVector y0(1);
+    metis::NumericVector y0(1);
     y0(0) = 1.0;
 
     auto y1 =
-        janus::euler_step([](double t, const janus::NumericVector &y) { return -y; }, y0, 0.0, 0.1);
+        metis::euler_step([](double t, const metis::NumericVector &y) { return -y; }, y0, 0.0, 0.1);
 
     // Euler step: y1 = y0 + dt * (-y0) = 1 - 0.1 = 0.9
     EXPECT_NEAR(y1(0), 0.9, 1e-12);
@@ -25,12 +25,12 @@ TEST(IntegratorStep, EulerStepExponential) {
 TEST(IntegratorStep, EulerStepLinear) {
     // dy/dt = 2, y(0) = 0
     // After one step with dt = 0.5: y = 0 + 0.5*2 = 1.0
-    janus::NumericVector y0(1);
+    metis::NumericVector y0(1);
     y0(0) = 0.0;
 
-    auto y1 = janus::euler_step(
-        [](double t, const janus::NumericVector &y) {
-            janus::NumericVector dydt(1);
+    auto y1 = metis::euler_step(
+        [](double t, const metis::NumericVector &y) {
+            metis::NumericVector dydt(1);
             dydt(0) = 2.0;
             return dydt;
         },
@@ -46,12 +46,12 @@ TEST(IntegratorStep, EulerStepLinear) {
 TEST(IntegratorStep, RK2StepExponential) {
     // dy/dt = -y, y(0) = 1
     // RK2 should be more accurate than Euler
-    janus::NumericVector y0(1);
+    metis::NumericVector y0(1);
     y0(0) = 1.0;
     double dt = 0.1;
 
     auto y1 =
-        janus::rk2_step([](double t, const janus::NumericVector &y) { return -y; }, y0, 0.0, dt);
+        metis::rk2_step([](double t, const metis::NumericVector &y) { return -y; }, y0, 0.0, dt);
 
     double exact = std::exp(-dt);
     // RK2 is 2nd order, so error should be O(dt^3) ≈ 1e-3
@@ -65,12 +65,12 @@ TEST(IntegratorStep, RK2StepExponential) {
 TEST(IntegratorStep, RK4StepExponential) {
     // dy/dt = -y, y(0) = 1
     // RK4 should be very accurate
-    janus::NumericVector y0(1);
+    metis::NumericVector y0(1);
     y0(0) = 1.0;
     double dt = 0.1;
 
     auto y1 =
-        janus::rk4_step([](double t, const janus::NumericVector &y) { return -y; }, y0, 0.0, dt);
+        metis::rk4_step([](double t, const metis::NumericVector &y) { return -y; }, y0, 0.0, dt);
 
     double exact = std::exp(-dt);
     // RK4 is 4th order, error should be O(dt^5) ≈ 1e-5
@@ -81,12 +81,12 @@ TEST(IntegratorStep, RK4StepHarmonicOscillator) {
     // y'' = -ω²y => state = [y, v], d/dt[y, v] = [v, -ω²y]
     // y(0) = 1, v(0) = 0 => y(t) = cos(ωt)
     double omega = 2.0;
-    janus::NumericVector state0(2);
+    metis::NumericVector state0(2);
     state0 << 1.0, 0.0;
 
-    auto state1 = janus::rk4_step(
-        [omega](double t, const janus::NumericVector &s) {
-            janus::NumericVector ds(2);
+    auto state1 = metis::rk4_step(
+        [omega](double t, const metis::NumericVector &s) {
+            metis::NumericVector ds(2);
             ds << s(1), -omega * omega * s(0);
             return ds;
         },
@@ -107,13 +107,13 @@ TEST(IntegratorStep, RK4MultipleSteps) {
     int n_steps = 100;
     double dt = 1.0 / n_steps;
 
-    janus::NumericVector y(1);
+    metis::NumericVector y(1);
     y(0) = y0_val;
     double t = 0.0;
 
     for (int i = 0; i < n_steps; ++i) {
-        y = janus::rk4_step(
-            [lambda](double t, const janus::NumericVector &y) { return -lambda * y; }, y, t, dt);
+        y = metis::rk4_step(
+            [lambda](double t, const metis::NumericVector &y) { return -lambda * y; }, y, t, dt);
         t += dt;
     }
 
@@ -126,8 +126,8 @@ TEST(IntegratorStep, RK4MultipleSteps) {
 // ============================================================================
 
 TEST(IntegratorStep, StormerVerletEnergyBoundedOnHarmonicOscillator) {
-    janus::NumericVector q(1);
-    janus::NumericVector v(1);
+    metis::NumericVector q(1);
+    metis::NumericVector v(1);
     q(0) = 1.0;
     v(0) = 0.0;
 
@@ -139,8 +139,8 @@ TEST(IntegratorStep, StormerVerletEnergyBoundedOnHarmonicOscillator) {
     double t = 0.0;
 
     for (int i = 0; i < n_steps; ++i) {
-        auto step = janus::stormer_verlet_step(
-            [omega](double time, const janus::NumericVector &q_state) {
+        auto step = metis::stormer_verlet_step(
+            [omega](double time, const metis::NumericVector &q_state) {
                 return (-omega * omega * q_state).eval();
             },
             q, v, t, dt);
@@ -156,16 +156,16 @@ TEST(IntegratorStep, StormerVerletEnergyBoundedOnHarmonicOscillator) {
 }
 
 TEST(IntegratorStep, Rkn4StepHarmonicOscillator) {
-    janus::NumericVector q0(1);
-    janus::NumericVector v0(1);
+    metis::NumericVector q0(1);
+    metis::NumericVector v0(1);
     q0(0) = 1.0;
     v0(0) = 0.0;
 
     const double omega = 2.0;
     const double dt = 0.1;
 
-    auto step = janus::rkn4_step(
-        [omega](double time, const janus::NumericVector &q) { return (-omega * omega * q).eval(); },
+    auto step = metis::rkn4_step(
+        [omega](double time, const metis::NumericVector &q) { return (-omega * omega * q).eval(); },
         q0, v0, 0.0, dt);
 
     EXPECT_NEAR(step.q(0), std::cos(omega * dt), 1e-6);
@@ -178,12 +178,12 @@ TEST(IntegratorStep, Rkn4StepHarmonicOscillator) {
 
 TEST(IntegratorStep, RK45StepExponential) {
     // dy/dt = -y, y(0) = 1
-    janus::NumericVector y0(1);
+    metis::NumericVector y0(1);
     y0(0) = 1.0;
     double dt = 0.1;
 
     auto result =
-        janus::rk45_step([](double t, const janus::NumericVector &y) { return -y; }, y0, 0.0, dt);
+        metis::rk45_step([](double t, const metis::NumericVector &y) { return -y; }, y0, 0.0, dt);
 
     double exact = std::exp(-dt);
 
@@ -199,14 +199,14 @@ TEST(IntegratorStep, RK45StepExponential) {
 
 TEST(IntegratorStep, RK45ErrorEstimateStiff) {
     // For a stiff-ish problem, error should be larger with bigger steps
-    janus::NumericVector y0(1);
+    metis::NumericVector y0(1);
     y0(0) = 1.0;
 
-    auto result_small = janus::rk45_step(
-        [](double t, const janus::NumericVector &y) { return -10.0 * y; }, y0, 0.0, 0.01);
+    auto result_small = metis::rk45_step(
+        [](double t, const metis::NumericVector &y) { return -10.0 * y; }, y0, 0.0, 0.01);
 
-    auto result_large = janus::rk45_step(
-        [](double t, const janus::NumericVector &y) { return -10.0 * y; }, y0, 0.0, 0.1);
+    auto result_large = metis::rk45_step(
+        [](double t, const metis::NumericVector &y) { return -10.0 * y; }, y0, 0.0, 0.1);
 
     // Larger step should have larger error estimate
     EXPECT_LT(result_small.error, result_large.error);
@@ -219,11 +219,11 @@ TEST(IntegratorStep, RK45ErrorEstimateStiff) {
 TEST(IntegratorStep, ConvergenceOrderEuler) {
     // Verify O(h) convergence for Euler
     // Error should halve when step size halves (approximately)
-    janus::NumericVector y0(1);
+    metis::NumericVector y0(1);
     y0(0) = 1.0;
 
     auto compute_error = [&](double dt) {
-        auto y1 = janus::euler_step([](double t, const janus::NumericVector &y) { return -y; }, y0,
+        auto y1 = metis::euler_step([](double t, const metis::NumericVector &y) { return -y; }, y0,
                                     0.0, dt);
         return std::abs(y1(0) - std::exp(-dt));
     };
@@ -239,11 +239,11 @@ TEST(IntegratorStep, ConvergenceOrderEuler) {
 TEST(IntegratorStep, ConvergenceOrderRK4) {
     // Verify O(h^4) convergence for RK4
     // Error should decrease by factor of 16 when step size halves
-    janus::NumericVector y0(1);
+    metis::NumericVector y0(1);
     y0(0) = 1.0;
 
     auto compute_error = [&](double dt) {
-        auto y1 = janus::rk4_step([](double t, const janus::NumericVector &y) { return -y; }, y0,
+        auto y1 = metis::rk4_step([](double t, const metis::NumericVector &y) { return -y; }, y0,
                                   0.0, dt);
         return std::abs(y1(0) - std::exp(-dt));
     };
@@ -262,15 +262,15 @@ TEST(IntegratorStep, ConvergenceOrderRK4) {
 
 TEST(IntegratorStep, SymbolicRK4Step) {
     // Test that rk4_step produces valid symbolic expressions
-    auto x = janus::sym_vec("x", 1);
-    auto t = janus::sym("t");
-    auto dt = janus::sym("dt");
+    auto x = metis::sym_vec("x", 1);
+    auto t = metis::sym("t");
+    auto dt = metis::sym("dt");
 
     // Simple linear ODE: dx/dt = -x
-    auto x_next = janus::rk4_step([](auto t, const auto &x) { return -x; }, x, t, dt);
+    auto x_next = metis::rk4_step([](auto t, const auto &x) { return -x; }, x, t, dt);
 
     // Verify we can create a CasADi function from the result
-    casadi::Function step_fn("step_fn", {janus::to_mx(x), t, dt}, {janus::to_mx(x_next)});
+    casadi::Function step_fn("step_fn", {metis::to_mx(x), t, dt}, {metis::to_mx(x_next)});
 
     // Evaluate numerically
     std::vector<casadi::DM> args = {
@@ -288,13 +288,13 @@ TEST(IntegratorStep, SymbolicRK4Step) {
 
 TEST(IntegratorStep, SymbolicEulerStep) {
     // Test Euler step in symbolic mode
-    auto x = janus::sym_vec("x", 1);
-    auto t = janus::sym("t");
-    auto dt = janus::sym("dt");
+    auto x = metis::sym_vec("x", 1);
+    auto t = metis::sym("t");
+    auto dt = metis::sym("dt");
 
-    auto x_next = janus::euler_step([](auto t, const auto &x) { return -x; }, x, t, dt);
+    auto x_next = metis::euler_step([](auto t, const auto &x) { return -x; }, x, t, dt);
 
-    casadi::Function step_fn("euler_step", {janus::to_mx(x), t, dt}, {janus::to_mx(x_next)});
+    casadi::Function step_fn("euler_step", {metis::to_mx(x), t, dt}, {metis::to_mx(x_next)});
 
     std::vector<casadi::DM> args = {casadi::DM(1.0), casadi::DM(0.0), casadi::DM(0.1)};
     auto res = step_fn(args);
@@ -305,16 +305,16 @@ TEST(IntegratorStep, SymbolicEulerStep) {
 }
 
 TEST(IntegratorStep, SymbolicStormerVerletStep) {
-    auto q = janus::sym_vec("q", 1);
-    auto v = janus::sym_vec("v", 1);
-    auto t = janus::sym("t");
-    auto dt = janus::sym("dt");
+    auto q = metis::sym_vec("q", 1);
+    auto v = metis::sym_vec("v", 1);
+    auto t = metis::sym("t");
+    auto dt = metis::sym("dt");
 
-    auto step = janus::stormer_verlet_step(
+    auto step = metis::stormer_verlet_step(
         [](auto time, const auto &q_state) { return (-q_state).eval(); }, q, v, t, dt);
 
-    casadi::Function step_fn("stormer_verlet_step", {janus::to_mx(q), janus::to_mx(v), t, dt},
-                             {janus::to_mx(step.q), janus::to_mx(step.v)});
+    casadi::Function step_fn("stormer_verlet_step", {metis::to_mx(q), metis::to_mx(v), t, dt},
+                             {metis::to_mx(step.q), metis::to_mx(step.v)});
 
     std::vector<casadi::DM> args = {
         casadi::DM(1.0),

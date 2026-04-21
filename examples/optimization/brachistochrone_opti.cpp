@@ -21,7 +21,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 // Physical constants
 constexpr double g = 9.80665; // Standard gravity [m/s²]
@@ -35,14 +35,14 @@ constexpr double g = 9.80665; // Standard gravity [m/s²]
  * @tparam Scalar Type (double for numeric, SymbolicScalar for symbolic/optimization)
  */
 template <typename Scalar>
-janus::JanusVector<Scalar> brachistochrone_ode(const janus::JanusVector<Scalar> &state,
+metis::MetisVector<Scalar> brachistochrone_ode(const metis::MetisVector<Scalar> &state,
                                                const Scalar &theta) {
     Scalar v = state(2);
 
-    Scalar cos_theta = janus::cos(theta);
-    Scalar sin_theta = janus::sin(theta);
+    Scalar cos_theta = metis::cos(theta);
+    Scalar sin_theta = metis::sin(theta);
 
-    janus::JanusVector<Scalar> dydt(3);
+    metis::MetisVector<Scalar> dydt(3);
     dydt << v * sin_theta, // xdot = v * sin(θ)
         -v * cos_theta,    // ydot = -v * cos(θ) (going down when cos(θ) > 0)
         g * cos_theta;     // vdot = g * cos(θ)
@@ -74,14 +74,14 @@ int main() {
     // =========================================================================
     // Setup Optimization Problem
     // =========================================================================
-    janus::Opti opti;
+    metis::Opti opti;
 
     // Time - this is what we're minimizing
     // Initial guess of 2.0s, bounds [0.5, 10]
     auto T = opti.variable(2.0, std::nullopt, 0.5, 10.0);
 
     // Normalized time grid: tau ∈ [0, 1], actual time t = tau * T
-    janus::NumericVector tau = janus::linspace(0.0, 1.0, N);
+    metis::NumericVector tau = metis::linspace(0.0, 1.0, N);
 
     // State trajectories: x(tau), y(tau), v(tau)
     // Initial guesses based on linear interpolation
@@ -110,11 +110,11 @@ int main() {
         double dtau = tau(i + 1) - tau(i);
 
         // Build state vector at point i
-        janus::SymbolicVector state_i(3);
+        metis::SymbolicVector state_i(3);
         state_i << x(i), y(i), v(i);
 
         // Build state vector at point i+1
-        janus::SymbolicVector state_ip1(3);
+        metis::SymbolicVector state_ip1(3);
         state_ip1 << x(i + 1), y(i + 1), v(i + 1);
 
         // Evaluate ODE at both points (REUSING the same ODE function!)
@@ -194,13 +194,13 @@ int main() {
 
     double error_pct = std::abs(T_opt - 1.80185208) / 1.80185208 * 100.0;
     std::cout << "\nComparison to Dymos:\n";
-    std::cout << "  Janus T* = " << T_opt << " s\n";
+    std::cout << "  Metis T* = " << T_opt << " s\n";
     std::cout << "  Dymos T* = 1.80185208 s\n";
     std::cout << "  Error: " << error_pct << "%\n";
 
     std::cout << "\n=== SUMMARY ===\n";
     std::cout << "✓ Same ODE function used for BOTH simulation AND optimization\n";
-    std::cout << "✓ janus::Opti with trapezoidal collocation\n";
+    std::cout << "✓ metis::Opti with trapezoidal collocation\n";
     std::cout << "✓ Matches Dymos problem setup exactly\n";
     std::cout << "✓ Clean API - no direct CasADi calls\n";
 

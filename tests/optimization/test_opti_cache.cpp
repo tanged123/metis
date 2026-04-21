@@ -2,10 +2,10 @@
 #include <cstdio>
 #include <fstream>
 #include <gtest/gtest.h>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/math/Arithmetic.hpp>
-#include <janus/optimization/Opti.hpp>
-#include <janus/optimization/OptiSol.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/math/Arithmetic.hpp>
+#include <metis/optimization/Opti.hpp>
+#include <metis/optimization/OptiSol.hpp>
 
 class OptiCacheTest : public ::testing::Test {
   protected:
@@ -23,18 +23,18 @@ class OptiCacheTest : public ::testing::Test {
 };
 
 TEST_F(OptiCacheTest, SaveAndLoad) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(1.0);
     auto y = opti.variable(2.0);
 
     // Minimize (x-1)^2 + (y-2)^2 -> x=1, y=2
-    opti.minimize(janus::pow(x - 1, 2) + janus::pow(y - 2, 2));
+    opti.minimize(metis::pow(x - 1, 2) + metis::pow(y - 2, 2));
 
     auto sol = opti.solve({.verbose = false});
 
     // Save
-    std::map<std::string, janus::SymbolicScalar> vars;
+    std::map<std::string, metis::SymbolicScalar> vars;
     vars["x"] = x;
     vars["y"] = y;
     sol.save(filename, vars);
@@ -45,7 +45,7 @@ TEST_F(OptiCacheTest, SaveAndLoad) {
     f.close();
 
     // Load
-    auto data = janus::OptiSol::load(filename);
+    auto data = metis::OptiSol::load(filename);
 
     ASSERT_EQ(data.count("x"), 1);
     ASSERT_EQ(data.count("y"), 1);
@@ -55,21 +55,21 @@ TEST_F(OptiCacheTest, SaveAndLoad) {
 }
 
 TEST_F(OptiCacheTest, VectorVariable) {
-    janus::Opti opti;
+    metis::Opti opti;
     int N = 5;
     auto v = opti.variable(N, 0.0);
 
     // Minimize (v[i] - i)^2
-    janus::SymbolicScalar obj = 0;
+    metis::SymbolicScalar obj = 0;
     for (int i = 0; i < N; ++i) {
-        obj = obj + janus::pow(v(i) - i, 2);
+        obj = obj + metis::pow(v(i) - i, 2);
     }
     opti.minimize(obj);
 
     auto sol = opti.solve({.verbose = false});
 
     // Save
-    std::map<std::string, janus::SymbolicVector> vars;
+    std::map<std::string, metis::SymbolicVector> vars;
     vars["v"] = v;
     sol.save(filename, vars);
 
@@ -79,7 +79,7 @@ TEST_F(OptiCacheTest, VectorVariable) {
     f.close();
 
     // Load
-    auto data = janus::OptiSol::load(filename);
+    auto data = metis::OptiSol::load(filename);
 
     ASSERT_EQ(data.count("v"), 1);
     const auto &vec = data["v"];
@@ -92,25 +92,25 @@ TEST_F(OptiCacheTest, VectorVariable) {
 
 TEST_F(OptiCacheTest, WarmStartConvergence) {
     // 1. Solve 'cold' problem to get baseline and solution
-    janus::Opti opti_cold;
+    metis::Opti opti_cold;
     auto x = opti_cold.variable(0.0); // Bad initial guess
     auto y = opti_cold.variable(0.0);
     // Rosenbrock: (1-x)^2 + 100(y-x^2)^2 with optimum at (1,1)
-    opti_cold.minimize(janus::pow(1 - x, 2) + 100 * janus::pow(y - janus::pow(x, 2), 2));
+    opti_cold.minimize(metis::pow(1 - x, 2) + 100 * metis::pow(y - metis::pow(x, 2), 2));
     auto sol_cold = opti_cold.solve({.verbose = false});
 
     int iter_cold = sol_cold.num_iterations().value_or(-1);
 
     // Save solution
-    std::map<std::string, janus::SymbolicScalar> vars;
+    std::map<std::string, metis::SymbolicScalar> vars;
     vars["x"] = x;
     vars["y"] = y;
     sol_cold.save(filename, vars);
 
     // 2. Solve 'warm' problem loading from cache
-    auto data = janus::OptiSol::load(filename);
+    auto data = metis::OptiSol::load(filename);
 
-    janus::Opti opti_warm;
+    metis::Opti opti_warm;
     // Initialize with loaded values
     double init_x = data.count("x") ? data["x"][0] : 0.0;
     double init_y = data.count("y") ? data["y"][0] : 0.0;
@@ -118,7 +118,7 @@ TEST_F(OptiCacheTest, WarmStartConvergence) {
     auto x2 = opti_warm.variable(init_x);
     auto y2 = opti_warm.variable(init_y);
 
-    opti_warm.minimize(janus::pow(1 - x2, 2) + 100 * janus::pow(y2 - janus::pow(x2, 2), 2));
+    opti_warm.minimize(metis::pow(1 - x2, 2) + 100 * metis::pow(y2 - metis::pow(x2, 2), 2));
     auto sol_warm = opti_warm.solve({.verbose = false});
 
     int iter_warm = sol_warm.num_iterations().value_or(-1);

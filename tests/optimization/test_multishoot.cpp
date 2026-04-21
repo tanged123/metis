@@ -4,11 +4,11 @@
  */
 
 #include <gtest/gtest.h>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/optimization/MultiShooting.hpp>
-#include <janus/optimization/Opti.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/optimization/MultiShooting.hpp>
+#include <metis/optimization/Opti.hpp>
 
-using namespace janus;
+using namespace metis;
 
 // ============================================================================
 // Double Integrator Tests (x'' = u)

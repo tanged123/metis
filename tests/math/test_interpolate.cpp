@@ -1,22 +1,22 @@
 #include "../utils/TestUtils.hpp"
 #include <gtest/gtest.h>
-#include <janus/core/Function.hpp>
-#include <janus/core/JanusError.hpp>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/math/AutoDiff.hpp>
-#include <janus/math/Interpolate.hpp>
+#include <metis/core/Function.hpp>
+#include <metis/core/MetisError.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/math/AutoDiff.hpp>
+#include <metis/math/Interpolate.hpp>
 #include <string>
 
 namespace {
 
-void expect_hermite_symbolic_error(const janus::InterpolationError &err) {
+void expect_hermite_symbolic_error(const metis::InterpolationError &err) {
     const std::string message = err.what();
     EXPECT_NE(message.find("Hermite/Catmull-Rom"), std::string::npos);
     EXPECT_NE(message.find("runtime comparisons"), std::string::npos);
     EXPECT_NE(message.find("BSpline"), std::string::npos);
 }
 
-void expect_symbolic_table_values_error(const janus::InterpolationError &err) {
+void expect_symbolic_table_values_error(const metis::InterpolationError &err) {
     const std::string message = err.what();
     EXPECT_NE(message.find("symbolic table values"), std::string::npos);
     EXPECT_NE(message.find("BSpline"), std::string::npos);
@@ -31,12 +31,12 @@ void expect_symbolic_table_values_error(const janus::InterpolationError &err) {
 template <typename Scalar> void test_interp1d() {
     // x = [0, 1, 2]
     // y = [0, 10, 0]
-    janus::NumericVector x(3);
+    metis::NumericVector x(3);
     x << 0.0, 1.0, 2.0;
-    janus::NumericVector y(3);
+    metis::NumericVector y(3);
     y << 0.0, 10.0, 0.0;
 
-    janus::Interpolator interp(x, y); // Default: Linear
+    metis::Interpolator interp(x, y); // Default: Linear
 
     Scalar query_mid = 0.5; // Expect 5.0
     auto res_mid = interp(query_mid);
@@ -53,55 +53,55 @@ template <typename Scalar> void test_interp1d() {
         EXPECT_DOUBLE_EQ(res_right, 5.0);
         EXPECT_DOUBLE_EQ(res_bound, 0.0); // Value at x=2
     } else {
-        EXPECT_DOUBLE_EQ(janus::eval(res_mid), 5.0);
-        EXPECT_DOUBLE_EQ(janus::eval(res_right), 5.0);
-        EXPECT_DOUBLE_EQ(janus::eval(res_bound), 0.0);
+        EXPECT_DOUBLE_EQ(metis::eval(res_mid), 5.0);
+        EXPECT_DOUBLE_EQ(metis::eval(res_right), 5.0);
+        EXPECT_DOUBLE_EQ(metis::eval(res_bound), 0.0);
     }
 }
 
 TEST(InterpolatorTests, Numeric) { test_interp1d<double>(); }
 
-TEST(InterpolatorTests, Symbolic) { test_interp1d<janus::SymbolicScalar>(); }
+TEST(InterpolatorTests, Symbolic) { test_interp1d<metis::SymbolicScalar>(); }
 
 TEST(InterpolatorTests, CoverageErrorChecks) {
-    janus::NumericVector x(3);
+    metis::NumericVector x(3);
     x << 0, 1, 2;
-    janus::NumericVector y(2);
+    metis::NumericVector y(2);
     y << 0, 1;
 
     // Mismatched size
-    EXPECT_THROW(janus::Interpolator(x, y), janus::InterpolationError);
+    EXPECT_THROW(metis::Interpolator(x, y), metis::InterpolationError);
 
     // Size < 2
-    janus::NumericVector x1(1);
+    metis::NumericVector x1(1);
     x1 << 0;
-    janus::NumericVector y1(1);
+    metis::NumericVector y1(1);
     y1 << 0;
-    EXPECT_THROW(janus::Interpolator(x1, y1), janus::InterpolationError);
+    EXPECT_THROW(metis::Interpolator(x1, y1), metis::InterpolationError);
 
     // Unsorted
-    janus::NumericVector xu(3);
+    metis::NumericVector xu(3);
     xu << 0, 2, 1;
-    janus::NumericVector yu(3);
+    metis::NumericVector yu(3);
     yu << 0, 0, 0;
-    EXPECT_THROW(janus::Interpolator(xu, yu), janus::InterpolationError);
+    EXPECT_THROW(metis::Interpolator(xu, yu), metis::InterpolationError);
 
     // Uninitialized use
-    janus::Interpolator empty;
-    EXPECT_THROW(empty(1.0), janus::InterpolationError);
+    metis::Interpolator empty;
+    EXPECT_THROW(empty(1.0), metis::InterpolationError);
 
     // Uninitialized matrix use
-    janus::NumericMatrix q(1, 1);
+    metis::NumericMatrix q(1, 1);
     q << 1.0;
-    EXPECT_THROW(empty(q), janus::InterpolationError);
+    EXPECT_THROW(empty(q), metis::InterpolationError);
 }
 
 TEST(InterpolatorTests, BoundsClamping) {
-    janus::NumericVector x(3);
+    metis::NumericVector x(3);
     x << 0, 1, 2;
-    janus::NumericVector y(3);
+    metis::NumericVector y(3);
     y << 0, 10, 20;
-    janus::Interpolator interp(x, y);
+    metis::Interpolator interp(x, y);
 
     // Query outside bounds - should clamp
     EXPECT_DOUBLE_EQ(interp(-1.0), 0.0); // Clamps to x=0, y=0
@@ -110,13 +110,13 @@ TEST(InterpolatorTests, BoundsClamping) {
 
 TEST(InterpolatorTests, HermiteMethod) {
     // Test Hermite (C1) interpolation
-    janus::NumericVector x(4);
+    metis::NumericVector x(4);
     x << 0, 1, 2, 3;
-    janus::NumericVector y(4);
+    metis::NumericVector y(4);
     y << 0, 1, 4, 9; // y = x^2
 
-    janus::Interpolator interp(x, y, janus::InterpolationMethod::Hermite);
-    EXPECT_EQ(interp.method(), janus::InterpolationMethod::Hermite);
+    metis::Interpolator interp(x, y, metis::InterpolationMethod::Hermite);
+    EXPECT_EQ(interp.method(), metis::InterpolationMethod::Hermite);
 
     // Should produce smooth interpolation
     double result = interp(1.5);
@@ -126,13 +126,13 @@ TEST(InterpolatorTests, HermiteMethod) {
 
 TEST(InterpolatorTests, BSplineMethod) {
     // Test BSpline (C2) interpolation
-    janus::NumericVector x(4);
+    metis::NumericVector x(4);
     x << 0, 1, 2, 3;
-    janus::NumericVector y(4);
+    metis::NumericVector y(4);
     y << 1, 1, 1, 1; // Constant function
 
-    janus::Interpolator interp(x, y, janus::InterpolationMethod::BSpline);
-    EXPECT_EQ(interp.method(), janus::InterpolationMethod::BSpline);
+    metis::Interpolator interp(x, y, metis::InterpolationMethod::BSpline);
+    EXPECT_EQ(interp.method(), metis::InterpolationMethod::BSpline);
 
     // Constant should interpolate exactly
     EXPECT_NEAR(interp(0.5), 1.0, 1e-10);
@@ -142,23 +142,23 @@ TEST(InterpolatorTests, BSplineMethod) {
 
 TEST(InterpolatorTests, BSplineRequires4Points) {
     // BSpline should fail with < 4 points
-    janus::NumericVector x(3);
+    metis::NumericVector x(3);
     x << 0, 1, 2;
-    janus::NumericVector y(3);
+    metis::NumericVector y(3);
     y << 0, 1, 2;
 
-    EXPECT_THROW(janus::Interpolator(x, y, janus::InterpolationMethod::BSpline),
-                 janus::InterpolationError);
+    EXPECT_THROW(metis::Interpolator(x, y, metis::InterpolationMethod::BSpline),
+                 metis::InterpolationError);
 }
 
 TEST(InterpolatorTests, NearestMethod) {
     // Test Nearest neighbor
-    janus::NumericVector x(3);
+    metis::NumericVector x(3);
     x << 0, 1, 2;
-    janus::NumericVector y(3);
+    metis::NumericVector y(3);
     y << 0, 10, 20;
 
-    janus::Interpolator interp(x, y, janus::InterpolationMethod::Nearest);
+    metis::Interpolator interp(x, y, metis::InterpolationMethod::Nearest);
 
     // Nearest to x=0
     EXPECT_DOUBLE_EQ(interp(0.4), 0.0);
@@ -170,53 +170,53 @@ TEST(InterpolatorTests, NearestMethod) {
 }
 
 TEST(InterpolatorTests, HermiteSymbolicNotSupported) {
-    janus::NumericVector x(4);
+    metis::NumericVector x(4);
     x << 0, 1, 2, 3;
-    janus::NumericVector y(4);
+    metis::NumericVector y(4);
     y << 0, 1, 4, 9;
 
-    janus::Interpolator interp(x, y, janus::InterpolationMethod::Hermite);
+    metis::Interpolator interp(x, y, metis::InterpolationMethod::Hermite);
 
     // Symbolic should throw with guidance toward BSpline
-    janus::SymbolicScalar query = janus::sym("q");
+    metis::SymbolicScalar query = metis::sym("q");
     try {
         static_cast<void>(interp(query));
         FAIL() << "Expected InterpolationError for symbolic Hermite query";
-    } catch (const janus::InterpolationError &err) {
+    } catch (const metis::InterpolationError &err) {
         expect_hermite_symbolic_error(err);
     }
 }
 
 TEST(InterpolatorTests, HermiteSymbolicBatchNotSupported) {
-    janus::NumericVector x(4);
+    metis::NumericVector x(4);
     x << 0, 1, 2, 3;
-    janus::NumericVector y(4);
+    metis::NumericVector y(4);
     y << 0, 1, 4, 9;
 
-    janus::Interpolator interp(x, y, janus::InterpolationMethod::Hermite);
+    metis::Interpolator interp(x, y, metis::InterpolationMethod::Hermite);
 
-    janus::SymbolicMatrix queries(2, 1);
-    queries(0, 0) = janus::sym("q0");
-    queries(1, 0) = janus::sym("q1");
+    metis::SymbolicMatrix queries(2, 1);
+    queries(0, 0) = metis::sym("q0");
+    queries(1, 0) = metis::sym("q1");
 
     try {
         static_cast<void>(interp(queries));
         FAIL() << "Expected InterpolationError for symbolic Hermite batch query";
-    } catch (const janus::InterpolationError &err) {
+    } catch (const metis::InterpolationError &err) {
         expect_hermite_symbolic_error(err);
     }
 }
 
 TEST(InterpolatorTests, BSplineSymbolic) {
     // BSpline should work with symbolic
-    janus::NumericVector x(4);
+    metis::NumericVector x(4);
     x << 0, 1, 2, 3;
-    janus::NumericVector y(4);
+    metis::NumericVector y(4);
     y << 1, 1, 1, 1;
 
-    janus::Interpolator interp(x, y, janus::InterpolationMethod::BSpline);
+    metis::Interpolator interp(x, y, metis::InterpolationMethod::BSpline);
 
-    janus::SymbolicScalar query = casadi::MX(1.5);
+    metis::SymbolicScalar query = casadi::MX(1.5);
     auto result = interp(query);
 
     EXPECT_NEAR(eval_scalar(result), 1.0, 1e-9);
@@ -224,15 +224,15 @@ TEST(InterpolatorTests, BSplineSymbolic) {
 
 TEST(InterpolatorTests, VectorizedQuery) {
     // Test vectorized queries - pass as matrix for batch evaluation
-    janus::NumericVector x(3);
+    metis::NumericVector x(3);
     x << 0, 1, 2;
-    janus::NumericVector y(3);
+    metis::NumericVector y(3);
     y << 0, 10, 20;
 
-    janus::Interpolator interp(x, y);
+    metis::Interpolator interp(x, y);
 
     // Create as matrix (Nx1) for batch query
-    janus::NumericMatrix queries(3, 1);
+    metis::NumericMatrix queries(3, 1);
     queries << 0.5, 1.0, 1.5;
 
     auto results = interp(queries);
@@ -250,22 +250,22 @@ TEST(InterpnTests, Numeric2DLinear) {
     // 2D grid: x = [0, 1], y = [0, 1]
     // Values: z(x, y) = x + y
     // z(0,0)=0, z(1,0)=1, z(0,1)=1, z(1,1)=2
-    janus::NumericVector x_pts(2);
+    metis::NumericVector x_pts(2);
     x_pts << 0.0, 1.0;
-    janus::NumericVector y_pts(2);
+    metis::NumericVector y_pts(2);
     y_pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
     // Values in Fortran order: (0,0), (1,0), (0,1), (1,1) -> 0, 1, 1, 2
-    janus::NumericVector values(4);
+    metis::NumericVector values(4);
     values << 0.0, 1.0, 1.0, 2.0;
 
     // Query at (0.5, 0.5) - should get 1.0
-    janus::NumericMatrix xi(1, 2);
+    metis::NumericMatrix xi(1, 2);
     xi << 0.5, 0.5;
 
-    auto result = janus::interpn<double>(points, values, xi, janus::InterpolationMethod::Linear);
+    auto result = metis::interpn<double>(points, values, xi, metis::InterpolationMethod::Linear);
 
     EXPECT_NEAR(result(0), 1.0, 1e-10);
 }
@@ -273,25 +273,25 @@ TEST(InterpnTests, Numeric2DLinear) {
 TEST(InterpnTests, Numeric2DMultiplePoints) {
     // 3x3 grid: x = [0, 1, 2], y = [0, 1, 2]
     // Values: z(x, y) = x * y
-    janus::NumericVector x_pts(3);
+    metis::NumericVector x_pts(3);
     x_pts << 0.0, 1.0, 2.0;
-    janus::NumericVector y_pts(3);
+    metis::NumericVector y_pts(3);
     y_pts << 0.0, 1.0, 2.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
     // Values in Fortran order:
     // (0,0)=0, (1,0)=0, (2,0)=0, (0,1)=0, (1,1)=1, (2,1)=2, (0,2)=0, (1,2)=2, (2,2)=4
-    janus::NumericVector values(9);
+    metis::NumericVector values(9);
     values << 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 2.0, 4.0;
 
     // Multiple query points
-    janus::NumericMatrix xi(3, 2);
+    metis::NumericMatrix xi(3, 2);
     xi << 0.5, 0.5, // Should give ~0.25
         1.0, 1.0,   // Should give 1.0 exactly
         1.5, 1.5;   // Should give ~2.25
 
-    auto result = janus::interpn<double>(points, values, xi, janus::InterpolationMethod::Linear);
+    auto result = metis::interpn<double>(points, values, xi, metis::InterpolationMethod::Linear);
 
     EXPECT_NEAR(result(0), 0.25, 1e-10);
     EXPECT_NEAR(result(1), 1.0, 1e-10);
@@ -301,21 +301,21 @@ TEST(InterpnTests, Numeric2DMultiplePoints) {
 TEST(InterpnTests, Numeric2DBSpline) {
     // Test BSpline method - needs at least 4 points per dimension for cubic
     // 4x4 grid with constant function for easy verification
-    janus::NumericVector x_pts(4);
+    metis::NumericVector x_pts(4);
     x_pts << 0.0, 1.0, 2.0, 3.0;
-    janus::NumericVector y_pts(4);
+    metis::NumericVector y_pts(4);
     y_pts << 0.0, 1.0, 2.0, 3.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
     // Values: z = 1 (constant for easy verification)
-    janus::NumericVector values(16);
+    metis::NumericVector values(16);
     values.setConstant(1.0);
 
-    janus::NumericMatrix xi(1, 2);
+    metis::NumericMatrix xi(1, 2);
     xi << 1.5, 1.5;
 
-    auto result = janus::interpn<double>(points, values, xi, janus::InterpolationMethod::BSpline);
+    auto result = metis::interpn<double>(points, values, xi, metis::InterpolationMethod::BSpline);
 
     // For constant function, bspline should also give 1.0
     EXPECT_NEAR(result(0), 1.0, 1e-10);
@@ -323,21 +323,21 @@ TEST(InterpnTests, Numeric2DBSpline) {
 
 TEST(InterpnTests, NumericFillValue) {
     // Test out-of-bounds with fill_value
-    janus::NumericVector x_pts(2);
+    metis::NumericVector x_pts(2);
     x_pts << 0.0, 1.0;
-    janus::NumericVector y_pts(2);
+    metis::NumericVector y_pts(2);
     y_pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
-    janus::NumericVector values(4);
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
+    metis::NumericVector values(4);
     values << 0.0, 1.0, 1.0, 2.0;
 
     // Query outside bounds
-    janus::NumericMatrix xi(2, 2);
+    metis::NumericMatrix xi(2, 2);
     xi << 0.5, 0.5, // In bounds
         2.0, 0.5;   // Out of bounds in x
 
-    auto result = janus::interpn<double>(points, values, xi, janus::InterpolationMethod::Linear,
+    auto result = metis::interpn<double>(points, values, xi, metis::InterpolationMethod::Linear,
                                          std::optional<double>(-999.0));
 
     EXPECT_NEAR(result(0), 1.0, 1e-10);    // In bounds
@@ -346,20 +346,20 @@ TEST(InterpnTests, NumericFillValue) {
 
 TEST(InterpnTests, NumericExtrapolation) {
     // Without fill_value, should clamp to bounds
-    janus::NumericVector x_pts(2);
+    metis::NumericVector x_pts(2);
     x_pts << 0.0, 1.0;
-    janus::NumericVector y_pts(2);
+    metis::NumericVector y_pts(2);
     y_pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
-    janus::NumericVector values(4);
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
+    metis::NumericVector values(4);
     values << 0.0, 1.0, 1.0, 2.0;
 
     // Query outside bounds - should clamp
-    janus::NumericMatrix xi(1, 2);
+    metis::NumericMatrix xi(1, 2);
     xi << 2.0, 0.5; // x=2 should clamp to x=1
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     // At (1.0, 0.5): interpolate between z(1,0)=1 and z(1,1)=2 -> 1.5
     EXPECT_NEAR(result(0), 1.5, 1e-10);
@@ -367,47 +367,47 @@ TEST(InterpnTests, NumericExtrapolation) {
 
 TEST(InterpnTests, Symbolic2DLinear) {
     // 2D grid symbolic test
-    janus::NumericVector x_pts(2);
+    metis::NumericVector x_pts(2);
     x_pts << 0.0, 1.0;
-    janus::NumericVector y_pts(2);
+    metis::NumericVector y_pts(2);
     y_pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
     // z(x,y) = x + y
-    janus::NumericVector values(4);
+    metis::NumericVector values(4);
     values << 0.0, 1.0, 1.0, 2.0;
 
     // Symbolic query - use fixed numeric values for simplicity
     // Query at (0.5, 0.5) which should give 1.0
-    Eigen::Matrix<janus::SymbolicScalar, Eigen::Dynamic, Eigen::Dynamic> xi(1, 2);
+    Eigen::Matrix<metis::SymbolicScalar, Eigen::Dynamic, Eigen::Dynamic> xi(1, 2);
     xi(0, 0) = casadi::MX(0.5);
     xi(0, 1) = casadi::MX(0.5);
 
-    auto result = janus::interpn<janus::SymbolicScalar>(points, values, xi);
+    auto result = metis::interpn<metis::SymbolicScalar>(points, values, xi);
 
     // Evaluate the symbolic result (no variables, just constants)
     EXPECT_NEAR(eval_scalar(result(0)), 1.0, 1e-9);
 }
 
 TEST(InterpnTests, SymbolicValues2DLinearWeights) {
-    janus::NumericVector x_pts(2);
+    metis::NumericVector x_pts(2);
     x_pts << 0.0, 1.0;
-    janus::NumericVector y_pts(2);
+    metis::NumericVector y_pts(2);
     y_pts << 0.0, 1.0;
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
-    auto [values_vec, values_mx] = janus::sym_vec_pair("table_values", 4);
-    janus::SymbolicScalar qx = janus::sym("qx");
-    janus::SymbolicScalar qy = janus::sym("qy");
-    janus::SymbolicMatrix xi(1, 2);
+    auto [values_vec, values_mx] = metis::sym_vec_pair("table_values", 4);
+    metis::SymbolicScalar qx = metis::sym("qx");
+    metis::SymbolicScalar qy = metis::sym("qy");
+    metis::SymbolicMatrix xi(1, 2);
     xi(0, 0) = qx;
     xi(0, 1) = qy;
 
-    auto result = janus::interpn(points, values_vec, xi, janus::InterpolationMethod::Linear);
-    auto jac = casadi::MX::jacobian(janus::to_mx(result), values_mx);
+    auto result = metis::interpn(points, values_vec, xi, metis::InterpolationMethod::Linear);
+    auto jac = casadi::MX::jacobian(metis::to_mx(result), values_mx);
     casadi::Function eval_fn("eval_parametric_linear", {qx, qy, values_mx},
-                             {janus::to_mx(result), jac});
+                             {metis::to_mx(result), jac});
 
     auto outputs = eval_fn(std::vector<casadi::DM>{
         casadi::DM(0.25), casadi::DM(0.75), casadi::DM(std::vector<double>{0.0, 1.0, 2.0, 3.0})});
@@ -422,32 +422,32 @@ TEST(InterpnTests, SymbolicValues2DLinearWeights) {
 }
 
 TEST(InterpnTests, SymbolicValuesInterpnLinear2D) {
-    janus::NumericVector x_pts(2);
+    metis::NumericVector x_pts(2);
     x_pts << 0.0, 1.0;
-    janus::NumericVector y_pts(2);
+    metis::NumericVector y_pts(2);
     y_pts << 0.0, 1.0;
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
-    janus::SymbolicScalar v00 = janus::sym("v00");
-    janus::SymbolicScalar v10 = janus::sym("v10");
-    janus::SymbolicScalar v01 = janus::sym("v01");
-    janus::SymbolicScalar v11 = janus::sym("v11");
+    metis::SymbolicScalar v00 = metis::sym("v00");
+    metis::SymbolicScalar v10 = metis::sym("v10");
+    metis::SymbolicScalar v01 = metis::sym("v01");
+    metis::SymbolicScalar v11 = metis::sym("v11");
 
     // Flatten in Fortran (column-major) order: (0,0), (1,0), (0,1), (1,1)
-    janus::SymbolicVector values(4);
+    metis::SymbolicVector values(4);
     values(0) = v00;
     values(1) = v10;
     values(2) = v01;
     values(3) = v11;
 
-    janus::JanusMatrix<janus::SymbolicScalar> xi(1, 2);
-    xi(0, 0) = janus::SymbolicScalar(0.25);
-    xi(0, 1) = janus::SymbolicScalar(0.75);
+    metis::MetisMatrix<metis::SymbolicScalar> xi(1, 2);
+    xi(0, 0) = metis::SymbolicScalar(0.25);
+    xi(0, 1) = metis::SymbolicScalar(0.75);
 
-    auto result = janus::interpn<janus::SymbolicScalar>(points, values, xi,
-                                                        janus::InterpolationMethod::Linear);
+    auto result = metis::interpn<metis::SymbolicScalar>(points, values, xi,
+                                                        metis::InterpolationMethod::Linear);
     casadi::Function eval_fn("eval_parametric_linear_2d", {v00, v10, v01, v11},
-                             {janus::to_mx(result)});
+                             {metis::to_mx(result)});
     auto outputs = eval_fn(std::vector<casadi::DM>{casadi::DM(0.0), casadi::DM(1.0),
                                                    casadi::DM(2.0), casadi::DM(3.0)});
 
@@ -455,24 +455,24 @@ TEST(InterpnTests, SymbolicValuesInterpnLinear2D) {
 }
 
 TEST(InterpnTests, SymbolicValuesBSplineConstant) {
-    janus::NumericVector x_pts(4);
+    metis::NumericVector x_pts(4);
     x_pts << 0.0, 1.0, 2.0, 3.0;
-    janus::NumericVector y_pts(4);
+    metis::NumericVector y_pts(4);
     y_pts << 0.0, 1.0, 2.0, 3.0;
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
-    janus::SymbolicScalar c = janus::sym("c");
-    janus::SymbolicVector values(16);
+    metis::SymbolicScalar c = metis::sym("c");
+    metis::SymbolicVector values(16);
     for (int i = 0; i < values.size(); ++i) {
         values(i) = c;
     }
 
-    janus::NumericMatrix xi(1, 2);
+    metis::NumericMatrix xi(1, 2);
     xi << 1.5, 1.5;
 
-    auto result = janus::interpn(points, values, xi, janus::InterpolationMethod::BSpline);
-    auto jac = casadi::MX::jacobian(janus::to_mx(result), c);
-    casadi::Function eval_fn("eval_parametric_bspline", {c}, {janus::to_mx(result), jac});
+    auto result = metis::interpn(points, values, xi, metis::InterpolationMethod::BSpline);
+    auto jac = casadi::MX::jacobian(metis::to_mx(result), c);
+    casadi::Function eval_fn("eval_parametric_bspline", {c}, {metis::to_mx(result), jac});
     auto outputs = eval_fn(std::vector<casadi::DM>{casadi::DM(3.25)});
 
     EXPECT_NEAR(double(outputs[0]), 3.25, 1e-9);
@@ -480,58 +480,58 @@ TEST(InterpnTests, SymbolicValuesBSplineConstant) {
 }
 
 TEST(InterpnTests, SymbolicValuesHermiteNotSupported) {
-    janus::NumericVector x_pts(4);
+    metis::NumericVector x_pts(4);
     x_pts << 0.0, 1.0, 2.0, 3.0;
-    std::vector<janus::NumericVector> points = {x_pts};
-    auto values = janus::sym_vec("table_values_1d", 4);
+    std::vector<metis::NumericVector> points = {x_pts};
+    auto values = metis::sym_vec("table_values_1d", 4);
 
-    janus::NumericMatrix xi(1, 1);
+    metis::NumericMatrix xi(1, 1);
     xi << 0.5;
 
     try {
-        static_cast<void>(janus::interpn(points, values, xi, janus::InterpolationMethod::Hermite));
+        static_cast<void>(metis::interpn(points, values, xi, metis::InterpolationMethod::Hermite));
         FAIL() << "Expected InterpolationError for Hermite with symbolic table values";
-    } catch (const janus::InterpolationError &err) {
+    } catch (const metis::InterpolationError &err) {
         expect_symbolic_table_values_error(err);
     }
 }
 
 TEST(InterpnTests, Numeric3D) {
     // 3D interpolation: 2x2x2 grid
-    janus::NumericVector x_pts(2);
+    metis::NumericVector x_pts(2);
     x_pts << 0.0, 1.0;
-    janus::NumericVector y_pts(2);
+    metis::NumericVector y_pts(2);
     y_pts << 0.0, 1.0;
-    janus::NumericVector z_pts(2);
+    metis::NumericVector z_pts(2);
     z_pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts, z_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts, z_pts};
 
     // Values: f(x,y,z) = x + y + z
     // Fortran order: iterate x fastest, then y, then z
     // (0,0,0)=0, (1,0,0)=1, (0,1,0)=1, (1,1,0)=2, (0,0,1)=1, (1,0,1)=2, (0,1,1)=2, (1,1,1)=3
-    janus::NumericVector values(8);
+    metis::NumericVector values(8);
     values << 0.0, 1.0, 1.0, 2.0, 1.0, 2.0, 2.0, 3.0;
 
     // Query at center (0.5, 0.5, 0.5) -> should give 1.5
-    janus::NumericMatrix xi(1, 3);
+    metis::NumericMatrix xi(1, 3);
     xi << 0.5, 0.5, 0.5;
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 1.5, 1e-10);
 }
 
 TEST(InterpnTests, Numeric4D) {
     // 4D interpolation: 2^4 = 16 grid points
-    janus::NumericVector pts(2);
+    metis::NumericVector pts(2);
     pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {pts, pts, pts, pts};
+    std::vector<metis::NumericVector> points = {pts, pts, pts, pts};
 
     // Values: f(x1, x2, x3, x4) = x1 + x2 + x3 + x4
     // 2^4 = 16 values in Fortran order
-    janus::NumericVector values(16);
+    metis::NumericVector values(16);
     int idx = 0;
     for (int i4 = 0; i4 < 2; ++i4) {
         for (int i3 = 0; i3 < 2; ++i3) {
@@ -544,23 +544,23 @@ TEST(InterpnTests, Numeric4D) {
     }
 
     // Query at center (0.5, 0.5, 0.5, 0.5) -> should give 2.0
-    janus::NumericMatrix xi(1, 4);
+    metis::NumericMatrix xi(1, 4);
     xi << 0.5, 0.5, 0.5, 0.5;
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 2.0, 1e-10);
 }
 
 TEST(InterpnTests, Numeric5D) {
     // 5D interpolation: 2^5 = 32 grid points
-    janus::NumericVector pts(2);
+    metis::NumericVector pts(2);
     pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {pts, pts, pts, pts, pts};
+    std::vector<metis::NumericVector> points = {pts, pts, pts, pts, pts};
 
     // Values: f = sum of all coordinates
-    janus::NumericVector values(32);
+    metis::NumericVector values(32);
     int idx = 0;
     for (int i5 = 0; i5 < 2; ++i5) {
         for (int i4 = 0; i4 < 2; ++i4) {
@@ -575,23 +575,23 @@ TEST(InterpnTests, Numeric5D) {
     }
 
     // Query at center -> should give 2.5
-    janus::NumericMatrix xi(1, 5);
+    metis::NumericMatrix xi(1, 5);
     xi << 0.5, 0.5, 0.5, 0.5, 0.5;
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 2.5, 1e-10);
 }
 
 TEST(InterpnTests, Numeric6D) {
     // 6D interpolation: 2^6 = 64 grid points
-    janus::NumericVector pts(2);
+    metis::NumericVector pts(2);
     pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {pts, pts, pts, pts, pts, pts};
+    std::vector<metis::NumericVector> points = {pts, pts, pts, pts, pts, pts};
 
     // Values: f = sum of all coordinates
-    janus::NumericVector values(64);
+    metis::NumericVector values(64);
     int idx = 0;
     for (int i6 = 0; i6 < 2; ++i6) {
         for (int i5 = 0; i5 < 2; ++i5) {
@@ -608,23 +608,23 @@ TEST(InterpnTests, Numeric6D) {
     }
 
     // Query at center -> should give 3.0
-    janus::NumericMatrix xi(1, 6);
+    metis::NumericMatrix xi(1, 6);
     xi << 0.5, 0.5, 0.5, 0.5, 0.5, 0.5;
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 3.0, 1e-10);
 }
 
 TEST(InterpnTests, Numeric7D) {
     // 7D interpolation: 2^7 = 128 grid points
-    janus::NumericVector pts(2);
+    metis::NumericVector pts(2);
     pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {pts, pts, pts, pts, pts, pts, pts};
+    std::vector<metis::NumericVector> points = {pts, pts, pts, pts, pts, pts, pts};
 
     // Values: f = sum of all coordinates
-    janus::NumericVector values(128);
+    metis::NumericVector values(128);
     int idx = 0;
     for (int i7 = 0; i7 < 2; ++i7) {
         for (int i6 = 0; i6 < 2; ++i6) {
@@ -643,50 +643,50 @@ TEST(InterpnTests, Numeric7D) {
     }
 
     // Query at center -> should give 3.5
-    janus::NumericMatrix xi(1, 7);
+    metis::NumericMatrix xi(1, 7);
     xi << 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5;
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 3.5, 1e-10);
 }
 
 TEST(InterpnTests, ErrorEmptyPoints) {
-    std::vector<janus::NumericVector> points;
-    janus::NumericVector values(1);
+    std::vector<metis::NumericVector> points;
+    metis::NumericVector values(1);
     values << 1.0;
-    janus::NumericMatrix xi(1, 1);
+    metis::NumericMatrix xi(1, 1);
     xi << 0.5;
 
-    EXPECT_THROW(janus::interpn<double>(points, values, xi), janus::InterpolationError);
+    EXPECT_THROW(metis::interpn<double>(points, values, xi), metis::InterpolationError);
 }
 
 TEST(InterpnTests, ErrorUnsortedPoints) {
-    janus::NumericVector x_pts(3);
+    metis::NumericVector x_pts(3);
     x_pts << 0.0, 2.0, 1.0; // Not sorted!
-    std::vector<janus::NumericVector> points = {x_pts};
-    janus::NumericVector values(3);
+    std::vector<metis::NumericVector> points = {x_pts};
+    metis::NumericVector values(3);
     values << 1.0, 2.0, 3.0;
-    janus::NumericMatrix xi(1, 1);
+    metis::NumericMatrix xi(1, 1);
     xi << 0.5;
 
-    EXPECT_THROW(janus::interpn<double>(points, values, xi), janus::InterpolationError);
+    EXPECT_THROW(metis::interpn<double>(points, values, xi), metis::InterpolationError);
 }
 
 TEST(InterpnTests, ErrorValuesSizeMismatch) {
-    janus::NumericVector x_pts(2);
+    metis::NumericVector x_pts(2);
     x_pts << 0.0, 1.0;
-    janus::NumericVector y_pts(2);
+    metis::NumericVector y_pts(2);
     y_pts << 0.0, 1.0;
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
     // Wrong size: should be 4, not 3
-    janus::NumericVector values(3);
+    metis::NumericVector values(3);
     values << 1.0, 2.0, 3.0;
-    janus::NumericMatrix xi(1, 2);
+    metis::NumericMatrix xi(1, 2);
     xi << 0.5, 0.5;
 
-    EXPECT_THROW(janus::interpn<double>(points, values, xi), janus::InterpolationError);
+    EXPECT_THROW(metis::interpn<double>(points, values, xi), metis::InterpolationError);
 }
 
 // ============================================================================
@@ -695,25 +695,25 @@ TEST(InterpnTests, ErrorValuesSizeMismatch) {
 
 TEST(InterpnTests, QueryAtGridPoints2D) {
     // Query exactly at grid points should return exact values
-    janus::NumericVector x_pts(3);
+    metis::NumericVector x_pts(3);
     x_pts << 0.0, 1.0, 2.0;
-    janus::NumericVector y_pts(3);
+    metis::NumericVector y_pts(3);
     y_pts << 0.0, 1.0, 2.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
     // z = x + 2*y
     // Fortran order: iterate x fastest
-    janus::NumericVector values(9);
+    metis::NumericVector values(9);
     values << 0, 1, 2, // y=0: (0,0)=0, (1,0)=1, (2,0)=2
         2, 3, 4,       // y=1: (0,1)=2, (1,1)=3, (2,1)=4
         4, 5, 6;       // y=2: (0,2)=4, (1,2)=5, (2,2)=6
 
     // Query all grid points
-    janus::NumericMatrix xi(9, 2);
+    metis::NumericMatrix xi(9, 2);
     xi << 0, 0, 1, 0, 2, 0, 0, 1, 1, 1, 2, 1, 0, 2, 1, 2, 2, 2;
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     for (int i = 0; i < 9; ++i) {
         EXPECT_NEAR(result(i), values(i), 1e-10) << "Mismatch at grid point " << i;
@@ -722,21 +722,21 @@ TEST(InterpnTests, QueryAtGridPoints2D) {
 
 TEST(InterpnTests, QueryAtEdges2D) {
     // Query along edges (one coordinate at boundary)
-    janus::NumericVector x_pts(3);
+    metis::NumericVector x_pts(3);
     x_pts << 0.0, 1.0, 2.0;
-    janus::NumericVector y_pts(3);
+    metis::NumericVector y_pts(3);
     y_pts << 0.0, 1.0, 2.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
     // z = x + y (simple to verify)
-    janus::NumericVector values(9);
+    metis::NumericVector values(9);
     values << 0, 1, 2, // y=0
         1, 2, 3,       // y=1
         2, 3, 4;       // y=2
 
     // Query along bottom edge (y=0), top edge (y=2), left edge (x=0), right edge (x=2)
-    janus::NumericMatrix xi(8, 2);
+    metis::NumericMatrix xi(8, 2);
     xi << 0.5, 0.0, // bottom edge
         1.5, 0.0,   // bottom edge
         0.5, 2.0,   // top edge
@@ -746,7 +746,7 @@ TEST(InterpnTests, QueryAtEdges2D) {
         2.0, 0.5,   // right edge
         2.0, 1.5;   // right edge
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 0.5, 1e-10); // (0.5, 0) -> 0.5
     EXPECT_NEAR(result(1), 1.5, 1e-10); // (1.5, 0) -> 1.5
@@ -760,20 +760,20 @@ TEST(InterpnTests, QueryAtEdges2D) {
 
 TEST(InterpnTests, QueryAtCorners2D) {
     // Query exactly at all four corners
-    janus::NumericVector x_pts(2);
+    metis::NumericVector x_pts(2);
     x_pts << 0.0, 1.0;
-    janus::NumericVector y_pts(2);
+    metis::NumericVector y_pts(2);
     y_pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
-    janus::NumericVector values(4);
+    metis::NumericVector values(4);
     values << 1.0, 2.0, 3.0, 4.0; // corners: (0,0)=1, (1,0)=2, (0,1)=3, (1,1)=4
 
-    janus::NumericMatrix xi(4, 2);
+    metis::NumericMatrix xi(4, 2);
     xi << 0, 0, 1, 0, 0, 1, 1, 1;
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 1.0, 1e-10);
     EXPECT_NEAR(result(1), 2.0, 1e-10);
@@ -787,19 +787,19 @@ TEST(InterpnTests, QueryAtCorners2D) {
 
 TEST(InterpnTests, ExtrapolationAllDirections2D) {
     // Test extrapolation (clamping) in all directions
-    janus::NumericVector x_pts(2);
+    metis::NumericVector x_pts(2);
     x_pts << 0.0, 1.0;
-    janus::NumericVector y_pts(2);
+    metis::NumericVector y_pts(2);
     y_pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
     // z = x + y
-    janus::NumericVector values(4);
+    metis::NumericVector values(4);
     values << 0, 1, 1, 2; // (0,0)=0, (1,0)=1, (0,1)=1, (1,1)=2
 
     // Query outside in all directions (will be clamped)
-    janus::NumericMatrix xi(8, 2);
+    metis::NumericMatrix xi(8, 2);
     xi << -1.0, 0.5, // left of grid
         2.0, 0.5,    // right of grid
         0.5, -1.0,   // below grid
@@ -809,7 +809,7 @@ TEST(InterpnTests, ExtrapolationAllDirections2D) {
         -1.0, 2.0,   // top-left corner
         2.0, 2.0;    // top-right corner
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     // All should clamp to boundary values
     EXPECT_NEAR(result(0), 0.5, 1e-10); // clamps to (0, 0.5)
@@ -824,17 +824,17 @@ TEST(InterpnTests, ExtrapolationAllDirections2D) {
 
 TEST(InterpnTests, FillValueAllDirections2D) {
     // Test fill_value in all out-of-bounds directions
-    janus::NumericVector x_pts(2);
+    metis::NumericVector x_pts(2);
     x_pts << 0.0, 1.0;
-    janus::NumericVector y_pts(2);
+    metis::NumericVector y_pts(2);
     y_pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
-    janus::NumericVector values(4);
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
+    metis::NumericVector values(4);
     values << 0, 1, 1, 2;
 
     // Mix of in-bounds and out-of-bounds
-    janus::NumericMatrix xi(5, 2);
+    metis::NumericMatrix xi(5, 2);
     xi << 0.5, 0.5, // in bounds
         -0.5, 0.5,  // out left
         1.5, 0.5,   // out right
@@ -842,7 +842,7 @@ TEST(InterpnTests, FillValueAllDirections2D) {
         0.5, 1.5;   // out top
 
     double fill = -999.0;
-    auto result = janus::interpn<double>(points, values, xi, janus::InterpolationMethod::Linear,
+    auto result = metis::interpn<double>(points, values, xi, metis::InterpolationMethod::Linear,
                                          std::optional<double>(fill));
 
     EXPECT_NEAR(result(0), 1.0, 1e-10);  // in bounds
@@ -858,15 +858,15 @@ TEST(InterpnTests, FillValueAllDirections2D) {
 
 TEST(InterpnTests, NonUniformGrid2D) {
     // Non-uniformly spaced grid
-    janus::NumericVector x_pts(4);
+    metis::NumericVector x_pts(4);
     x_pts << 0.0, 0.1, 0.5, 1.0; // Clustered near 0
-    janus::NumericVector y_pts(3);
+    metis::NumericVector y_pts(3);
     y_pts << 0.0, 0.8, 1.0; // Clustered near 1
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
     // z = x * y
-    janus::NumericVector values(12);
+    metis::NumericVector values(12);
     int idx = 0;
     for (int j = 0; j < 3; ++j) {
         for (int i = 0; i < 4; ++i) {
@@ -875,12 +875,12 @@ TEST(InterpnTests, NonUniformGrid2D) {
     }
 
     // Query at various points
-    janus::NumericMatrix xi(3, 2);
+    metis::NumericMatrix xi(3, 2);
     xi << 0.05, 0.4, // in first x-cell
         0.75, 0.9,   // in last x-cell, second y-cell
         0.25, 0.5;   // between cells
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     // Expected: linear interpolation of x*y
     EXPECT_NEAR(result(0), 0.05 * 0.4, 0.05); // Approximate
@@ -890,17 +890,17 @@ TEST(InterpnTests, NonUniformGrid2D) {
 
 TEST(InterpnTests, NonUniformGrid3D) {
     // Non-uniform 3D grid
-    janus::NumericVector x_pts(3);
+    metis::NumericVector x_pts(3);
     x_pts << 0.0, 0.2, 1.0;
-    janus::NumericVector y_pts(3);
+    metis::NumericVector y_pts(3);
     y_pts << 0.0, 0.5, 1.0;
-    janus::NumericVector z_pts(2);
+    metis::NumericVector z_pts(2);
     z_pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts, z_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts, z_pts};
 
     // z = x + y + z_coord
-    janus::NumericVector values(18); // 3*3*2 = 18
+    metis::NumericVector values(18); // 3*3*2 = 18
     int idx = 0;
     for (int k = 0; k < 2; ++k) {
         for (int j = 0; j < 3; ++j) {
@@ -911,10 +911,10 @@ TEST(InterpnTests, NonUniformGrid3D) {
     }
 
     // Query
-    janus::NumericMatrix xi(1, 3);
+    metis::NumericMatrix xi(1, 3);
     xi << 0.1, 0.25, 0.5;
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 0.1 + 0.25 + 0.5, 0.05);
 }
@@ -925,13 +925,13 @@ TEST(InterpnTests, NonUniformGrid3D) {
 
 TEST(InterpnTests, HighDimEdgeQuery5D) {
     // Query at edge of 5D hypercube
-    janus::NumericVector pts(2);
+    metis::NumericVector pts(2);
     pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points(5, pts);
+    std::vector<metis::NumericVector> points(5, pts);
 
     // f = sum of coordinates
-    janus::NumericVector values(32);
+    metis::NumericVector values(32);
     for (int i = 0; i < 32; ++i) {
         int sum = 0;
         int temp = i;
@@ -943,23 +943,23 @@ TEST(InterpnTests, HighDimEdgeQuery5D) {
     }
 
     // Query at edge: (0.5, 0.5, 0.5, 0.5, 0) - last dim at boundary
-    janus::NumericMatrix xi(1, 5);
+    metis::NumericMatrix xi(1, 5);
     xi << 0.5, 0.5, 0.5, 0.5, 0.0;
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 2.0, 1e-10); // 0.5*4 + 0 = 2.0
 }
 
 TEST(InterpnTests, HighDimCornerQuery6D) {
     // Query at corner of 6D hypercube
-    janus::NumericVector pts(2);
+    metis::NumericVector pts(2);
     pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points(6, pts);
+    std::vector<metis::NumericVector> points(6, pts);
 
     // f = sum of coordinates
-    janus::NumericVector values(64);
+    metis::NumericVector values(64);
     for (int i = 0; i < 64; ++i) {
         int sum = 0;
         int temp = i;
@@ -971,23 +971,23 @@ TEST(InterpnTests, HighDimCornerQuery6D) {
     }
 
     // Query at all-ones corner
-    janus::NumericMatrix xi(1, 6);
+    metis::NumericMatrix xi(1, 6);
     xi << 1.0, 1.0, 1.0, 1.0, 1.0, 1.0;
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 6.0, 1e-10); // sum of all 1s
 }
 
 TEST(InterpnTests, HighDimExtrapolation4D) {
     // Test extrapolation in 4D
-    janus::NumericVector pts(2);
+    metis::NumericVector pts(2);
     pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points(4, pts);
+    std::vector<metis::NumericVector> points(4, pts);
 
     // f = x1 + x2 + x3 + x4
-    janus::NumericVector values(16);
+    metis::NumericVector values(16);
     for (int i = 0; i < 16; ++i) {
         int sum = 0;
         int temp = i;
@@ -999,10 +999,10 @@ TEST(InterpnTests, HighDimExtrapolation4D) {
     }
 
     // Query outside grid (should clamp)
-    janus::NumericMatrix xi(1, 4);
+    metis::NumericMatrix xi(1, 4);
     xi << 2.0, 2.0, 2.0, 2.0; // All out of bounds
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 4.0, 1e-10); // clamps to (1,1,1,1)
 }
@@ -1013,13 +1013,13 @@ TEST(InterpnTests, HighDimExtrapolation4D) {
 
 TEST(InterpnTests, BatchQuery100Points3D) {
     // Test with many query points
-    janus::NumericVector pts(3);
+    metis::NumericVector pts(3);
     pts << 0.0, 0.5, 1.0;
 
-    std::vector<janus::NumericVector> points(3, pts);
+    std::vector<metis::NumericVector> points(3, pts);
 
     // f = x + y + z
-    janus::NumericVector values(27); // 3^3
+    metis::NumericVector values(27); // 3^3
     int idx = 0;
     for (int k = 0; k < 3; ++k) {
         for (int j = 0; j < 3; ++j) {
@@ -1030,7 +1030,7 @@ TEST(InterpnTests, BatchQuery100Points3D) {
     }
 
     // 100 random-ish query points
-    janus::NumericMatrix xi(100, 3);
+    metis::NumericMatrix xi(100, 3);
     for (int i = 0; i < 100; ++i) {
         double t = static_cast<double>(i) / 99.0;
         xi(i, 0) = t;
@@ -1038,7 +1038,7 @@ TEST(InterpnTests, BatchQuery100Points3D) {
         xi(i, 2) = t * 0.6;
     }
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     // Verify a subset
     for (int i = 0; i < 100; i += 10) {
@@ -1049,21 +1049,21 @@ TEST(InterpnTests, BatchQuery100Points3D) {
 
 TEST(InterpnTests, TransposedXiInput) {
     // Test that transposed xi input works (n_dims x n_points instead of n_points x n_dims)
-    janus::NumericVector x_pts(2);
+    metis::NumericVector x_pts(2);
     x_pts << 0.0, 1.0;
-    janus::NumericVector y_pts(2);
+    metis::NumericVector y_pts(2);
     y_pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
-    janus::NumericVector values(4);
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
+    metis::NumericVector values(4);
     values << 0, 1, 1, 2; // z = x + y
 
     // xi as (n_dims, n_points) = (2, 3)
-    janus::NumericMatrix xi(2, 3);
+    metis::NumericMatrix xi(2, 3);
     xi << 0.5, 0.0, 1.0, // x values
         0.5, 0.0, 1.0;   // y values
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 1.0, 1e-10); // (0.5, 0.5)
     EXPECT_NEAR(result(1), 0.0, 1e-10); // (0, 0)
@@ -1076,22 +1076,22 @@ TEST(InterpnTests, TransposedXiInput) {
 
 TEST(InterpnTests, Symbolic3DLinear) {
     // 3D symbolic interpolation
-    janus::NumericVector pts(2);
+    metis::NumericVector pts(2);
     pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points(3, pts);
+    std::vector<metis::NumericVector> points(3, pts);
 
     // f = x + y + z
-    janus::NumericVector values(8);
+    metis::NumericVector values(8);
     values << 0, 1, 1, 2, 1, 2, 2, 3; // Fortran order
 
     // Symbolic query at fixed point
-    Eigen::Matrix<janus::SymbolicScalar, Eigen::Dynamic, Eigen::Dynamic> xi(1, 3);
+    Eigen::Matrix<metis::SymbolicScalar, Eigen::Dynamic, Eigen::Dynamic> xi(1, 3);
     xi(0, 0) = casadi::MX(0.5);
     xi(0, 1) = casadi::MX(0.5);
     xi(0, 2) = casadi::MX(0.5);
 
-    auto result = janus::interpn<janus::SymbolicScalar>(points, values, xi);
+    auto result = metis::interpn<metis::SymbolicScalar>(points, values, xi);
 
     // Should give 1.5
     EXPECT_NEAR(eval_scalar(result(0)), 1.5, 1e-9);
@@ -1099,13 +1099,13 @@ TEST(InterpnTests, Symbolic3DLinear) {
 
 TEST(InterpnTests, Symbolic4DLinear) {
     // 4D symbolic interpolation
-    janus::NumericVector pts(2);
+    metis::NumericVector pts(2);
     pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points(4, pts);
+    std::vector<metis::NumericVector> points(4, pts);
 
     // f = sum of coordinates
-    janus::NumericVector values(16);
+    metis::NumericVector values(16);
     for (int i = 0; i < 16; ++i) {
         int sum = 0;
         int temp = i;
@@ -1117,13 +1117,13 @@ TEST(InterpnTests, Symbolic4DLinear) {
     }
 
     // Symbolic query
-    Eigen::Matrix<janus::SymbolicScalar, Eigen::Dynamic, Eigen::Dynamic> xi(1, 4);
+    Eigen::Matrix<metis::SymbolicScalar, Eigen::Dynamic, Eigen::Dynamic> xi(1, 4);
     xi(0, 0) = casadi::MX(0.25);
     xi(0, 1) = casadi::MX(0.25);
     xi(0, 2) = casadi::MX(0.25);
     xi(0, 3) = casadi::MX(0.25);
 
-    auto result = janus::interpn<janus::SymbolicScalar>(points, values, xi);
+    auto result = metis::interpn<metis::SymbolicScalar>(points, values, xi);
 
     // Should give 1.0 (0.25 * 4)
     EXPECT_NEAR(eval_scalar(result(0)), 1.0, 1e-9);
@@ -1131,13 +1131,13 @@ TEST(InterpnTests, Symbolic4DLinear) {
 
 TEST(InterpnTests, Symbolic5DCorner) {
     // 5D symbolic at corner
-    janus::NumericVector pts(2);
+    metis::NumericVector pts(2);
     pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points(5, pts);
+    std::vector<metis::NumericVector> points(5, pts);
 
     // f = sum of coordinates
-    janus::NumericVector values(32);
+    metis::NumericVector values(32);
     for (int i = 0; i < 32; ++i) {
         int sum = 0;
         int temp = i;
@@ -1149,57 +1149,57 @@ TEST(InterpnTests, Symbolic5DCorner) {
     }
 
     // Query at (1,1,1,1,1) corner
-    Eigen::Matrix<janus::SymbolicScalar, Eigen::Dynamic, Eigen::Dynamic> xi(1, 5);
+    Eigen::Matrix<metis::SymbolicScalar, Eigen::Dynamic, Eigen::Dynamic> xi(1, 5);
     for (int d = 0; d < 5; ++d) {
         xi(0, d) = casadi::MX(1.0);
     }
 
-    auto result = janus::interpn<janus::SymbolicScalar>(points, values, xi);
+    auto result = metis::interpn<metis::SymbolicScalar>(points, values, xi);
 
     EXPECT_NEAR(eval_scalar(result(0)), 5.0, 1e-9);
 }
 
 TEST(InterpnTests, SymbolicBSpline4D) {
     // 4D B-spline symbolic interpolation (requires 4+ points per dim)
-    janus::NumericVector pts(4);
+    metis::NumericVector pts(4);
     pts << 0.0, 1.0, 2.0, 3.0;
 
-    std::vector<janus::NumericVector> points(4, pts);
+    std::vector<metis::NumericVector> points(4, pts);
 
     // f = 1 (constant for easy verification)
-    janus::NumericVector values(256); // 4^4 = 256
+    metis::NumericVector values(256); // 4^4 = 256
     values.setConstant(1.0);
 
     // Symbolic query at center
-    Eigen::Matrix<janus::SymbolicScalar, Eigen::Dynamic, Eigen::Dynamic> xi(1, 4);
+    Eigen::Matrix<metis::SymbolicScalar, Eigen::Dynamic, Eigen::Dynamic> xi(1, 4);
     for (int d = 0; d < 4; ++d) {
         xi(0, d) = casadi::MX(1.5);
     }
 
-    auto result = janus::interpn<janus::SymbolicScalar>(points, values, xi,
-                                                        janus::InterpolationMethod::BSpline);
+    auto result = metis::interpn<metis::SymbolicScalar>(points, values, xi,
+                                                        metis::InterpolationMethod::BSpline);
 
     EXPECT_NEAR(eval_scalar(result(0)), 1.0, 1e-9);
 }
 
 // ============================================================================
-// Tests Using Janus Types (API Best Practice Demonstration)
+// Tests Using Metis Types (API Best Practice Demonstration)
 // ============================================================================
 
-TEST(InterpnTests, JanusTypesNumeric3D) {
-    // Demonstrate using janus::NumericVector instead of janus::NumericVector
-    janus::NumericVector x_pts(3);
+TEST(InterpnTests, MetisTypesNumeric3D) {
+    // Demonstrate using metis::NumericVector instead of metis::NumericVector
+    metis::NumericVector x_pts(3);
     x_pts << 0.0, 1.0, 2.0;
-    janus::NumericVector y_pts(3);
+    metis::NumericVector y_pts(3);
     y_pts << 0.0, 1.0, 2.0;
-    janus::NumericVector z_pts(2);
+    metis::NumericVector z_pts(2);
     z_pts << 0.0, 1.0;
 
-    // Use vector of janus::NumericVector
-    std::vector<janus::NumericVector> points = {x_pts, y_pts, z_pts};
+    // Use vector of metis::NumericVector
+    std::vector<metis::NumericVector> points = {x_pts, y_pts, z_pts};
 
-    // Values using janus::NumericVector
-    janus::NumericVector values(18); // 3*3*2 = 18
+    // Values using metis::NumericVector
+    metis::NumericVector values(18); // 3*3*2 = 18
     int idx = 0;
     for (int k = 0; k < 2; ++k) {
         for (int j = 0; j < 3; ++j) {
@@ -1209,25 +1209,25 @@ TEST(InterpnTests, JanusTypesNumeric3D) {
         }
     }
 
-    // Query using janus::NumericMatrix
-    janus::NumericMatrix xi(2, 3);
+    // Query using metis::NumericMatrix
+    metis::NumericMatrix xi(2, 3);
     xi << 0.5, 0.5, 0.5, 1.0, 1.0, 0.5;
 
-    auto result = janus::interpn<janus::NumericScalar>(points, values, xi);
+    auto result = metis::interpn<metis::NumericScalar>(points, values, xi);
 
     EXPECT_NEAR(result(0), 1.5, 1e-10); // 0.5 + 0.5 + 0.5
     EXPECT_NEAR(result(1), 2.5, 1e-10); // 1.0 + 1.0 + 0.5
 }
 
-TEST(InterpnTests, JanusTypesSymbolic4D) {
-    // Demonstrate using janus::SymbolicMatrix for queries
-    janus::NumericVector pts(2);
+TEST(InterpnTests, MetisTypesSymbolic4D) {
+    // Demonstrate using metis::SymbolicMatrix for queries
+    metis::NumericVector pts(2);
     pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points(4, pts);
+    std::vector<metis::NumericVector> points(4, pts);
 
     // f = sum of coordinates
-    janus::NumericVector values(16);
+    metis::NumericVector values(16);
     for (int i = 0; i < 16; ++i) {
         int sum = 0;
         int temp = i;
@@ -1238,27 +1238,27 @@ TEST(InterpnTests, JanusTypesSymbolic4D) {
         values(i) = sum;
     }
 
-    // Query using janus::SymbolicMatrix
-    janus::SymbolicMatrix xi(1, 4);
+    // Query using metis::SymbolicMatrix
+    metis::SymbolicMatrix xi(1, 4);
     for (int d = 0; d < 4; ++d) {
         xi(0, d) = casadi::MX(0.5);
     }
 
-    auto result = janus::interpn<janus::SymbolicScalar>(points, values, xi);
+    auto result = metis::interpn<metis::SymbolicScalar>(points, values, xi);
 
     // Should give 2.0 (0.5 * 4)
     EXPECT_NEAR(eval_scalar(result(0)), 2.0, 1e-9);
 }
 
-TEST(InterpnTests, JanusTypesTemplated) {
-    // Template test using JanusVector<T> and JanusMatrix<T>
-    janus::JanusVector<double> pts(3);
+TEST(InterpnTests, MetisTypesTemplated) {
+    // Template test using MetisVector<T> and MetisMatrix<T>
+    metis::MetisVector<double> pts(3);
     pts << 0.0, 0.5, 1.0;
 
-    std::vector<janus::JanusVector<double>> points(2, pts);
+    std::vector<metis::MetisVector<double>> points(2, pts);
 
     // f = x + y
-    janus::JanusVector<double> values(9);
+    metis::MetisVector<double> values(9);
     int idx = 0;
     for (int j = 0; j < 3; ++j) {
         for (int i = 0; i < 3; ++i) {
@@ -1267,25 +1267,25 @@ TEST(InterpnTests, JanusTypesTemplated) {
     }
 
     // Query
-    janus::JanusMatrix<double> xi(3, 2);
+    metis::MetisMatrix<double> xi(3, 2);
     xi << 0.25, 0.25, 0.5, 0.5, 0.75, 0.75;
 
-    auto result = janus::interpn<double>(points, values, xi);
+    auto result = metis::interpn<double>(points, values, xi);
 
     EXPECT_NEAR(result(0), 0.5, 1e-10); // 0.25 + 0.25
     EXPECT_NEAR(result(1), 1.0, 1e-10); // 0.5 + 0.5
     EXPECT_NEAR(result(2), 1.5, 1e-10); // 0.75 + 0.75
 }
 
-TEST(InterpnTests, JanusTypesHighDim6D) {
-    // 6D test with Janus types
-    janus::NumericVector pts(2);
+TEST(InterpnTests, MetisTypesHighDim6D) {
+    // 6D test with Metis types
+    metis::NumericVector pts(2);
     pts << 0.0, 1.0;
 
-    std::vector<janus::NumericVector> points(6, pts);
+    std::vector<metis::NumericVector> points(6, pts);
 
     // f = sum of coordinates
-    janus::NumericVector values(64); // 2^6 = 64
+    metis::NumericVector values(64); // 2^6 = 64
     for (int i = 0; i < 64; ++i) {
         int sum = 0;
         int temp = i;
@@ -1297,10 +1297,10 @@ TEST(InterpnTests, JanusTypesHighDim6D) {
     }
 
     // Edge query: (0.5, 0.5, 0.5, 0.5, 0.5, 0)
-    janus::NumericMatrix xi(1, 6);
+    metis::NumericMatrix xi(1, 6);
     xi << 0.5, 0.5, 0.5, 0.5, 0.5, 0.0;
 
-    auto result = janus::interpn<janus::NumericScalar>(points, values, xi);
+    auto result = metis::interpn<metis::NumericScalar>(points, values, xi);
 
     EXPECT_NEAR(result(0), 2.5, 1e-10); // 0.5*5 + 0
 }
@@ -1311,20 +1311,20 @@ TEST(InterpnTests, JanusTypesHighDim6D) {
 
 TEST(InterpnTests, Hermite1D) {
     // 1D Hermite interpolation (via 1D grid)
-    janus::NumericVector x_pts(4);
+    metis::NumericVector x_pts(4);
     x_pts << 0.0, 1.0, 2.0, 3.0;
 
-    std::vector<janus::NumericVector> points = {x_pts};
+    std::vector<metis::NumericVector> points = {x_pts};
 
     // y = x^2 (quadratic function to test smoothness)
-    janus::NumericVector values(4);
+    metis::NumericVector values(4);
     values << 0.0, 1.0, 4.0, 9.0;
 
     // Query at interior points
-    janus::NumericMatrix xi(3, 1);
+    metis::NumericMatrix xi(3, 1);
     xi << 0.5, 1.5, 2.5;
 
-    auto result = janus::interpn<double>(points, values, xi, janus::InterpolationMethod::Hermite);
+    auto result = metis::interpn<double>(points, values, xi, metis::InterpolationMethod::Hermite);
 
     // Hermite should produce smooth interpolation
     // At x=0.5, linear would give 0.5, Hermite should be closer to 0.25
@@ -1342,21 +1342,21 @@ TEST(InterpnTests, Hermite1D) {
 
 TEST(InterpnTests, Hermite2DLinearFunction) {
     // 2D Hermite should exactly interpolate linear functions
-    janus::NumericVector x_pts(3);
+    metis::NumericVector x_pts(3);
     x_pts << 0.0, 1.0, 2.0;
-    janus::NumericVector y_pts(3);
+    metis::NumericVector y_pts(3);
     y_pts << 0.0, 1.0, 2.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
     // z = x + y (linear function)
-    janus::NumericVector values(9);
+    metis::NumericVector values(9);
     values << 0, 1, 2, 1, 2, 3, 2, 3, 4; // Fortran order
 
-    janus::NumericMatrix xi(4, 2);
+    metis::NumericMatrix xi(4, 2);
     xi << 0.5, 0.5, 1.0, 1.0, 0.25, 0.75, 1.5, 0.5;
 
-    auto result = janus::interpn<double>(points, values, xi, janus::InterpolationMethod::Hermite);
+    auto result = metis::interpn<double>(points, values, xi, metis::InterpolationMethod::Hermite);
 
     // Linear functions should be exactly interpolated
     EXPECT_NEAR(result(0), 1.0, 1e-10); // 0.5 + 0.5
@@ -1367,13 +1367,13 @@ TEST(InterpnTests, Hermite2DLinearFunction) {
 
 TEST(InterpnTests, Hermite3DSmoothness) {
     // Test 3D Hermite interpolation
-    janus::NumericVector pts(3);
+    metis::NumericVector pts(3);
     pts << 0.0, 1.0, 2.0;
 
-    std::vector<janus::NumericVector> points(3, pts);
+    std::vector<metis::NumericVector> points(3, pts);
 
     // f = x + y + z
-    janus::NumericVector values(27);
+    metis::NumericVector values(27);
     int idx = 0;
     for (int k = 0; k < 3; ++k) {
         for (int j = 0; j < 3; ++j) {
@@ -1384,33 +1384,33 @@ TEST(InterpnTests, Hermite3DSmoothness) {
     }
 
     // Query at center
-    janus::NumericMatrix xi(1, 3);
+    metis::NumericMatrix xi(1, 3);
     xi << 1.0, 1.0, 1.0;
 
-    auto result = janus::interpn<double>(points, values, xi, janus::InterpolationMethod::Hermite);
+    auto result = metis::interpn<double>(points, values, xi, metis::InterpolationMethod::Hermite);
 
     EXPECT_NEAR(result(0), 3.0, 1e-10); // 1+1+1
 }
 
 TEST(InterpnTests, HermiteVsLinearSmoother) {
     // Hermite should produce smoother results than linear for non-linear data
-    janus::NumericVector x_pts(5);
+    metis::NumericVector x_pts(5);
     x_pts << 0.0, 1.0, 2.0, 3.0, 4.0;
 
-    std::vector<janus::NumericVector> points = {x_pts};
+    std::vector<metis::NumericVector> points = {x_pts};
 
     // Sinusoidal function (highly non-linear)
-    janus::NumericVector values(5);
+    metis::NumericVector values(5);
     values << 0.0, 0.84147, 0.9093, 0.14112, -0.7568; // sin(0), sin(1), sin(2), sin(3), sin(4)
 
     // Query between grid points
-    janus::NumericMatrix xi(1, 1);
+    metis::NumericMatrix xi(1, 1);
     xi << 1.5;
 
     auto result_linear =
-        janus::interpn<double>(points, values, xi, janus::InterpolationMethod::Linear);
+        metis::interpn<double>(points, values, xi, metis::InterpolationMethod::Linear);
     auto result_hermite =
-        janus::interpn<double>(points, values, xi, janus::InterpolationMethod::Hermite);
+        metis::interpn<double>(points, values, xi, metis::InterpolationMethod::Hermite);
 
     // sin(1.5) ≈ 0.9975
     double true_val = 0.9974949866;
@@ -1425,13 +1425,13 @@ TEST(InterpnTests, HermiteVsLinearSmoother) {
 
 TEST(InterpnTests, HermiteHighDim4D) {
     // 4D Hermite interpolation
-    janus::NumericVector pts(3);
+    metis::NumericVector pts(3);
     pts << 0.0, 1.0, 2.0;
 
-    std::vector<janus::NumericVector> points(4, pts);
+    std::vector<metis::NumericVector> points(4, pts);
 
     // f = sum of coordinates
-    janus::NumericVector values(81); // 3^4
+    metis::NumericVector values(81); // 3^4
     int idx = 0;
     for (int i4 = 0; i4 < 3; ++i4) {
         for (int i3 = 0; i3 < 3; ++i3) {
@@ -1444,35 +1444,35 @@ TEST(InterpnTests, HermiteHighDim4D) {
     }
 
     // Query at center
-    janus::NumericMatrix xi(1, 4);
+    metis::NumericMatrix xi(1, 4);
     xi << 1.0, 1.0, 1.0, 1.0;
 
-    auto result = janus::interpn<double>(points, values, xi, janus::InterpolationMethod::Hermite);
+    auto result = metis::interpn<double>(points, values, xi, metis::InterpolationMethod::Hermite);
 
     EXPECT_NEAR(result(0), 4.0, 1e-10);
 }
 
 TEST(InterpnTests, HermiteEdgesAndCorners) {
     // Hermite at grid edges and corners
-    janus::NumericVector x_pts(3);
+    metis::NumericVector x_pts(3);
     x_pts << 0.0, 1.0, 2.0;
-    janus::NumericVector y_pts(3);
+    metis::NumericVector y_pts(3);
     y_pts << 0.0, 1.0, 2.0;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
     // Constant function (should interpolate exactly)
-    janus::NumericVector values(9);
+    metis::NumericVector values(9);
     values.setConstant(5.0);
 
     // Query at edge and corner
-    janus::NumericMatrix xi(4, 2);
+    metis::NumericMatrix xi(4, 2);
     xi << 0.0, 0.0, // corner
         2.0, 2.0,   // corner
         0.0, 1.0,   // edge
         1.0, 0.0;   // edge
 
-    auto result = janus::interpn<double>(points, values, xi, janus::InterpolationMethod::Hermite);
+    auto result = metis::interpn<double>(points, values, xi, metis::InterpolationMethod::Hermite);
 
     for (int i = 0; i < 4; ++i) {
         EXPECT_NEAR(result(i), 5.0, 1e-10) << "Failed at query " << i;
@@ -1481,20 +1481,20 @@ TEST(InterpnTests, HermiteEdgesAndCorners) {
 
 TEST(InterpnTests, HermiteFillValue) {
     // Hermite with fill_value for out-of-bounds
-    janus::NumericVector x_pts(3);
+    metis::NumericVector x_pts(3);
     x_pts << 0.0, 1.0, 2.0;
 
-    std::vector<janus::NumericVector> points = {x_pts};
+    std::vector<metis::NumericVector> points = {x_pts};
 
-    janus::NumericVector values(3);
+    metis::NumericVector values(3);
     values << 1.0, 2.0, 3.0;
 
     // In-bounds and out-of-bounds queries
-    janus::NumericMatrix xi(3, 1);
+    metis::NumericMatrix xi(3, 1);
     xi << 0.5, -1.0, 3.0;
 
     double fill = -999.0;
-    auto result = janus::interpn<double>(points, values, xi, janus::InterpolationMethod::Hermite,
+    auto result = metis::interpn<double>(points, values, xi, metis::InterpolationMethod::Hermite,
                                          std::optional<double>(fill));
 
     EXPECT_GT(result(0), 1.0); // In bounds
@@ -1505,21 +1505,21 @@ TEST(InterpnTests, HermiteFillValue) {
 
 TEST(InterpnTests, HermiteSymbolicNotSupported) {
     // Hermite should throw for symbolic types
-    janus::NumericVector x_pts(3);
+    metis::NumericVector x_pts(3);
     x_pts << 0.0, 1.0, 2.0;
 
-    std::vector<janus::NumericVector> points = {x_pts};
-    janus::NumericVector values(3);
+    std::vector<metis::NumericVector> points = {x_pts};
+    metis::NumericVector values(3);
     values << 1.0, 2.0, 3.0;
 
-    janus::SymbolicMatrix xi(1, 1);
+    metis::SymbolicMatrix xi(1, 1);
     xi(0, 0) = casadi::MX(0.5);
 
     try {
-        static_cast<void>(janus::interpn<janus::SymbolicScalar>(
-            points, values, xi, janus::InterpolationMethod::Hermite));
+        static_cast<void>(metis::interpn<metis::SymbolicScalar>(
+            points, values, xi, metis::InterpolationMethod::Hermite));
         FAIL() << "Expected InterpolationError for symbolic Hermite interpn query";
-    } catch (const janus::InterpolationError &err) {
+    } catch (const metis::InterpolationError &err) {
         expect_hermite_symbolic_error(err);
     }
 }
@@ -1531,13 +1531,13 @@ TEST(InterpnTests, HermiteSymbolicNotSupported) {
 TEST(ExtrapConfigTests, LinearExtrap1D_LeftSide) {
     // Test linear extrapolation below x_min
     // y = x^2 sampled at [0, 1, 2, 3, 4]
-    janus::NumericVector x(5), y(5);
+    metis::NumericVector x(5), y(5);
     x << 0, 1, 2, 3, 4;
     y << 0, 1, 4, 9, 16;
 
     // Left slope at x=0: (y[1] - y[0]) / (x[1] - x[0]) = 1
-    janus::Interpolator interp(x, y, janus::InterpolationMethod::BSpline,
-                               janus::ExtrapolationConfig::linear());
+    metis::Interpolator interp(x, y, metis::InterpolationMethod::BSpline,
+                               metis::ExtrapolationConfig::linear());
 
     // Query at x = -2: expect y[0] + slope * (x - x_min) = 0 + 1 * (-2 - 0) = -2
     double result = interp(-2.0);
@@ -1551,13 +1551,13 @@ TEST(ExtrapConfigTests, LinearExtrap1D_LeftSide) {
 TEST(ExtrapConfigTests, LinearExtrap1D_RightSide) {
     // Test linear extrapolation above x_max
     // y = x^2 sampled at [0, 1, 2, 3, 4]
-    janus::NumericVector x(5), y(5);
+    metis::NumericVector x(5), y(5);
     x << 0, 1, 2, 3, 4;
     y << 0, 1, 4, 9, 16;
 
     // Right slope at x=4: (y[4] - y[3]) / (x[4] - x[3]) = (16-9)/(4-3) = 7
-    janus::Interpolator interp(x, y, janus::InterpolationMethod::Linear,
-                               janus::ExtrapolationConfig::linear());
+    metis::Interpolator interp(x, y, metis::InterpolationMethod::Linear,
+                               metis::ExtrapolationConfig::linear());
 
     // Query at x = 5: expect y[4] + slope * (x - x_max) = 16 + 7 * (5 - 4) = 23
     double result = interp(5.0);
@@ -1570,13 +1570,13 @@ TEST(ExtrapConfigTests, LinearExtrap1D_RightSide) {
 
 TEST(ExtrapConfigTests, LinearExtrap1D_WithBounds) {
     // Test that output bounds are applied after extrapolation
-    janus::NumericVector x(3), y(3);
+    metis::NumericVector x(3), y(3);
     x << 0, 1, 2;
     y << 10, 20, 30; // slope = 10
 
     // Linear extrapolation with bounds [0, 50]
-    janus::Interpolator interp(x, y, janus::InterpolationMethod::Linear,
-                               janus::ExtrapolationConfig::linear(0.0, 50.0));
+    metis::Interpolator interp(x, y, metis::InterpolationMethod::Linear,
+                               metis::ExtrapolationConfig::linear(0.0, 50.0));
 
     // Query at x = -2: expect 10 + 10*(-2-0) = -10, but clamped to 0
     double result_left = interp(-2.0);
@@ -1593,21 +1593,21 @@ TEST(ExtrapConfigTests, LinearExtrap1D_WithBounds) {
 
 TEST(ExtrapConfigTests, LinearExtrap1D_Symbolic) {
     // Test symbolic linear extrapolation with automatic differentiation
-    janus::NumericVector x(4), y(4);
+    metis::NumericVector x(4), y(4);
     x << 0, 1, 2, 3;
     y << 0, 2, 4, 6; // y = 2x (linear function)
 
-    janus::Interpolator interp(x, y, janus::InterpolationMethod::Linear,
-                               janus::ExtrapolationConfig::linear());
+    metis::Interpolator interp(x, y, metis::InterpolationMethod::Linear,
+                               metis::ExtrapolationConfig::linear());
 
     // Symbolic query
-    auto x_sym = janus::sym("x");
+    auto x_sym = metis::sym("x");
     auto y_sym = interp(x_sym);
 
     // Compute derivative
-    auto dy_dx = janus::jacobian(y_sym, x_sym);
+    auto dy_dx = metis::jacobian(y_sym, x_sym);
 
-    janus::Function f("extrap_test", {x_sym}, {y_sym, dy_dx});
+    metis::Function f("extrap_test", {x_sym}, {y_sym, dy_dx});
 
     // Query at x = -1 (extrapolation left)
     // Left slope = (y[1] - y[0]) / (x[1] - x[0]) = 2
@@ -1627,11 +1627,11 @@ TEST(ExtrapConfigTests, LinearExtrap1D_Symbolic) {
 
 TEST(ExtrapConfigTests, BackwardsCompatibility_DefaultClamp) {
     // Verify that default constructor still uses clamping
-    janus::NumericVector x(3), y(3);
+    metis::NumericVector x(3), y(3);
     x << 0, 1, 2;
     y << 0, 10, 0;
 
-    janus::Interpolator interp(x, y); // No extrapolation config = clamp
+    metis::Interpolator interp(x, y); // No extrapolation config = clamp
 
     // Query outside bounds should clamp
     double result_left = interp(-1.0); // Should clamp to x=0, y=0
@@ -1643,12 +1643,12 @@ TEST(ExtrapConfigTests, BackwardsCompatibility_DefaultClamp) {
 
 TEST(ExtrapConfigTests, ExplicitClamp) {
     // Test explicit ExtrapolationConfig::clamp()
-    janus::NumericVector x(3), y(3);
+    metis::NumericVector x(3), y(3);
     x << 0, 1, 2;
     y << 5, 10, 15;
 
-    janus::Interpolator interp(x, y, janus::InterpolationMethod::Linear,
-                               janus::ExtrapolationConfig::clamp());
+    metis::Interpolator interp(x, y, metis::InterpolationMethod::Linear,
+                               metis::ExtrapolationConfig::clamp());
 
     // Query outside bounds should clamp
     double result_left = interp(-1.0); // Clamps to x=0, y=5
@@ -1661,20 +1661,20 @@ TEST(ExtrapConfigTests, ExplicitClamp) {
 TEST(ExtrapConfigTests, LinearExtrap2D_SingleDimOutOfBounds) {
     // Test 2D extrapolation when only one dimension is out of bounds
     // z = x + y grid
-    janus::NumericVector x_pts(3), y_pts(3);
+    metis::NumericVector x_pts(3), y_pts(3);
     x_pts << 0, 1, 2;
     y_pts << 0, 1, 2;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
     // z = x + y in Fortran order
-    janus::NumericVector values(9);
+    metis::NumericVector values(9);
     values << 0, 1, 2, 1, 2, 3, 2, 3, 4; // z[i,j] = x[i] + y[j]
 
-    janus::Interpolator interp(points, values, janus::InterpolationMethod::Linear,
-                               janus::ExtrapolationConfig::linear());
+    metis::Interpolator interp(points, values, metis::InterpolationMethod::Linear,
+                               metis::ExtrapolationConfig::linear());
 
     // Query with x out of bounds, y in bounds
-    janus::NumericVector query1(2);
+    metis::NumericVector query1(2);
     query1 << 3.0, 1.0; // x=3 (out), y=1 (in)
     double result1 = interp(query1);
     // Clamped interp at (2, 1) = 3, plus slope_x * (3-2) = 1 * 1 = 1
@@ -1682,7 +1682,7 @@ TEST(ExtrapConfigTests, LinearExtrap2D_SingleDimOutOfBounds) {
     EXPECT_NEAR(result1, 4.0, 0.1); // Allow some tolerance for FD slopes
 
     // Query with x in bounds, y out of bounds
-    janus::NumericVector query2(2);
+    metis::NumericVector query2(2);
     query2 << 1.0, 3.0; // x=1 (in), y=3 (out)
     double result2 = interp(query2);
     // Clamped interp at (1, 2) = 3, plus slope_y * (3-2) = 1 * 1 = 1
@@ -1692,20 +1692,20 @@ TEST(ExtrapConfigTests, LinearExtrap2D_SingleDimOutOfBounds) {
 
 TEST(ExtrapConfigTests, LinearExtrap2D_BothDimsOutOfBounds) {
     // Test 2D extrapolation at a corner (both dims out of bounds)
-    janus::NumericVector x_pts(3), y_pts(3);
+    metis::NumericVector x_pts(3), y_pts(3);
     x_pts << 0, 1, 2;
     y_pts << 0, 1, 2;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
     // z = x + y
-    janus::NumericVector values(9);
+    metis::NumericVector values(9);
     values << 0, 1, 2, 1, 2, 3, 2, 3, 4;
 
-    janus::Interpolator interp(points, values, janus::InterpolationMethod::Linear,
-                               janus::ExtrapolationConfig::linear());
+    metis::Interpolator interp(points, values, metis::InterpolationMethod::Linear,
+                               metis::ExtrapolationConfig::linear());
 
     // Query at corner: x=3, y=3 (both out)
-    janus::NumericVector query(2);
+    metis::NumericVector query(2);
     query << 3.0, 3.0;
     double result = interp(query);
     // Clamped at (2,2) = 4, plus slope_x * 1 + slope_y * 1 = 1 + 1 = 2
@@ -1715,20 +1715,20 @@ TEST(ExtrapConfigTests, LinearExtrap2D_BothDimsOutOfBounds) {
 
 TEST(ExtrapConfigTests, LinearExtrap2D_WithBounds) {
     // Test 2D extrapolation with output bounds
-    janus::NumericVector x_pts(3), y_pts(3);
+    metis::NumericVector x_pts(3), y_pts(3);
     x_pts << 0, 1, 2;
     y_pts << 0, 1, 2;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
-    janus::NumericVector values(9);
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
+    metis::NumericVector values(9);
     values << 0, 1, 2, 1, 2, 3, 2, 3, 4;
 
     // Extrapolate with bounds [0, 5]
-    janus::Interpolator interp(points, values, janus::InterpolationMethod::Linear,
-                               janus::ExtrapolationConfig::linear(0.0, 5.0));
+    metis::Interpolator interp(points, values, metis::InterpolationMethod::Linear,
+                               metis::ExtrapolationConfig::linear(0.0, 5.0));
 
     // Query at corner that would exceed bounds
-    janus::NumericVector query(2);
+    metis::NumericVector query(2);
     query << 4.0, 4.0; // Would extrapolate to ~8, but clamped to 5
     double result = interp(query);
     EXPECT_NEAR(result, 5.0, 0.1); // Should be clamped to upper bound
@@ -1736,26 +1736,26 @@ TEST(ExtrapConfigTests, LinearExtrap2D_WithBounds) {
 
 TEST(ExtrapConfigTests, LinearExtrap2D_Symbolic) {
     // Test 2D symbolic extrapolation with AD
-    janus::NumericVector x_pts(3), y_pts(3);
+    metis::NumericVector x_pts(3), y_pts(3);
     x_pts << 0, 1, 2;
     y_pts << 0, 1, 2;
 
-    std::vector<janus::NumericVector> points = {x_pts, y_pts};
-    janus::NumericVector values(9);
+    std::vector<metis::NumericVector> points = {x_pts, y_pts};
+    metis::NumericVector values(9);
     values << 0, 1, 2, 1, 2, 3, 2, 3, 4; // z = x + y
 
-    janus::Interpolator interp(points, values, janus::InterpolationMethod::Linear,
-                               janus::ExtrapolationConfig::linear());
+    metis::Interpolator interp(points, values, metis::InterpolationMethod::Linear,
+                               metis::ExtrapolationConfig::linear());
 
     // Symbolic query
-    auto x_sym = janus::sym("x");
-    auto y_sym = janus::sym("y");
-    janus::SymbolicVector query_sym(2);
+    auto x_sym = metis::sym("x");
+    auto y_sym = metis::sym("y");
+    metis::SymbolicVector query_sym(2);
     query_sym << x_sym, y_sym;
 
     auto z_sym = interp(query_sym);
 
-    janus::Function f("extrap2d", {x_sym, y_sym}, {z_sym});
+    metis::Function f("extrap2d", {x_sym, y_sym}, {z_sym});
 
     // Query outside bounds
     auto res = f(3.0, 3.0);

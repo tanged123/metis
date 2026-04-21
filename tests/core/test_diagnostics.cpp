@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
-#include <janus/core/Diagnostics.hpp>
-#include <janus/core/Function.hpp>
-#include <janus/core/JanusError.hpp>
-#include <janus/core/JanusTypes.hpp>
+#include <metis/core/Diagnostics.hpp>
+#include <metis/core/Function.hpp>
+#include <metis/core/MetisError.hpp>
+#include <metis/core/MetisTypes.hpp>
 
 #include <algorithm>
 #include <string>
 #include <vector>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 

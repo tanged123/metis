@@ -2,17 +2,17 @@
 #include <Eigen/Dense>
 #include <casadi/casadi.hpp>
 #include <iostream>
-#include <janus/core/JanusIO.hpp>
-#include <janus/math/Linalg.hpp>
+#include <metis/core/MetisIO.hpp>
+#include <metis/math/Linalg.hpp>
 #include <vector>
 
 // Helper to evaluate 0-argument CasADi MX to double
-inline double eval_scalar(const casadi::MX &x) { return janus::eval(x); }
+inline double eval_scalar(const casadi::MX &x) { return metis::eval(x); }
 
 // Helper to evaluate CasADi MX to Eigen Matrix
 inline Eigen::MatrixXd eval_matrix(const casadi::MX &x) {
     if (x.is_scalar()) {
-        double val = janus::eval(x);
+        double val = metis::eval(x);
         Eigen::MatrixXd mat(1, 1);
         mat(0, 0) = val;
         return mat;
@@ -39,7 +39,7 @@ inline Eigen::MatrixXd eval_matrix(const casadi::MX &x) {
 // Overload for Eigen matrix of MX
 template <typename Derived>
 inline Eigen::MatrixXd eval_matrix(const Eigen::MatrixBase<Derived> &x) {
-    return janus::eval(x);
+    return metis::eval(x);
 }
 
 // Overload for scalar double (passthrough)

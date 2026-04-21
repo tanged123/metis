@@ -1,7 +1,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 /**
  * Scattered Data Interpolation Demo
@@ -20,12 +20,12 @@ int main() {
     std::cout << "\n--- 1D Scattered Interpolation ---\n";
     {
         // Non-uniformly spaced data points
-        janus::NumericVector x(8);
-        janus::NumericVector y(8);
+        metis::NumericVector x(8);
+        metis::NumericVector y(8);
         x << 0.0, 0.3, 0.7, 1.2, 2.0, 2.8, 3.5, 4.0;
         y << 0.0, 0.29, 0.64, 1.0, 0.91, 0.33, -0.35, -0.75; // sin(x)
 
-        janus::ScatteredInterpolator interp(x, y);
+        metis::ScatteredInterpolator interp(x, y);
 
         std::cout << "Data points: " << x.transpose() << "\n";
         std::cout << "Values:      " << y.transpose() << "\n";
@@ -48,8 +48,8 @@ int main() {
     {
         // Simple 2D test: z = x + y
         int n_points = 16;
-        janus::NumericMatrix points(n_points, 2);
-        janus::NumericVector values(n_points);
+        metis::NumericMatrix points(n_points, 2);
+        metis::NumericVector values(n_points);
 
         // Scattered points in [0, 3] x [0, 3]
         double xs[] = {0.2, 0.8, 1.5, 2.3, 0.5, 1.2, 2.0, 2.8,
@@ -63,14 +63,14 @@ int main() {
             values(i) = xs[i] + ys[i]; // z = x + y
         }
 
-        janus::ScatteredInterpolator interp(points, values, 30);
+        metis::ScatteredInterpolator interp(points, values, 30);
 
         std::cout << "Function: z = x + y\n";
         std::cout << "Input: " << n_points << " scattered (x, y) points\n";
         std::cout << "Reconstruction error: " << interp.reconstruction_error() << "\n";
 
         // Query at test point
-        janus::NumericVector query(2);
+        metis::NumericVector query(2);
         query << 1.5, 1.5;
         double result = interp(query);
         double expected = 3.0; // 1.5 + 1.5
@@ -86,8 +86,8 @@ int main() {
     // =========================================================================
     std::cout << "\n--- RBF Kernel Comparison ---\n";
     {
-        janus::NumericVector x(10);
-        janus::NumericVector y(10);
+        metis::NumericVector x(10);
+        metis::NumericVector y(10);
         for (int i = 0; i < 10; ++i) {
             x(i) = static_cast<double>(i) * 0.5;
             y(i) = std::exp(-x(i) * 0.3) * std::sin(x(i));
@@ -96,10 +96,10 @@ int main() {
         double query_pt = 2.25;
         double exact = std::exp(-query_pt * 0.3) * std::sin(query_pt);
 
-        janus::ScatteredInterpolator tps(x, y, 50, janus::RBFKernel::ThinPlateSpline);
-        janus::ScatteredInterpolator mq(x, y, 50, janus::RBFKernel::Multiquadric);
-        janus::ScatteredInterpolator gauss(x, y, 50, janus::RBFKernel::Gaussian);
-        janus::ScatteredInterpolator linear(x, y, 50, janus::RBFKernel::Linear);
+        metis::ScatteredInterpolator tps(x, y, 50, metis::RBFKernel::ThinPlateSpline);
+        metis::ScatteredInterpolator mq(x, y, 50, metis::RBFKernel::Multiquadric);
+        metis::ScatteredInterpolator gauss(x, y, 50, metis::RBFKernel::Gaussian);
+        metis::ScatteredInterpolator linear(x, y, 50, metis::RBFKernel::Linear);
 
         std::cout << "Query at x=" << query_pt << " (exact: " << exact << ")\n";
         std::cout << "  Thin Plate Spline: " << tps(query_pt)
@@ -117,22 +117,22 @@ int main() {
     // =========================================================================
     std::cout << "\n--- Symbolic Interpolation & Gradient ---\n";
     {
-        janus::NumericVector x(10);
-        janus::NumericVector y(10);
+        metis::NumericVector x(10);
+        metis::NumericVector y(10);
         for (int i = 0; i < 10; ++i) {
             x(i) = static_cast<double>(i);
             y(i) = x(i) * x(i); // y = x^2
         }
 
-        janus::ScatteredInterpolator interp(x, y, 100);
+        metis::ScatteredInterpolator interp(x, y, 100);
 
         // Create symbolic function
-        auto sym_x = janus::sym("x");
+        auto sym_x = metis::sym("x");
         auto sym_result = interp(sym_x);
 
         // Compute derivative
-        auto grad = janus::jacobian(sym_result, sym_x);
-        janus::Function df("df", {sym_x}, {grad});
+        auto grad = metis::jacobian(sym_result, sym_x);
+        metis::Function df("df", {sym_x}, {grad});
 
         // Evaluate at x=3
         double query_pt = 3.0;

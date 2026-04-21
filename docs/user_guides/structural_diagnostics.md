@@ -1,20 +1,20 @@
 # Structural Diagnostics
 
-Janus exposes a structural preflight layer that answers two common model-quality questions: (1) are the selected states structurally observable from the chosen outputs, and (2) are the selected parameters structurally identifiable from the chosen outputs. The implementation works from the symbolic Jacobian sparsity pattern of a `janus::Function` and lives in `<janus/core/Diagnostics.hpp>`. This is a **symbolic-mode** analysis -- it answers whether the measurement layout can separate variables based on symbolic dependence alone, not numeric coefficient values.
+Metis exposes a structural preflight layer that answers two common model-quality questions: (1) are the selected states structurally observable from the chosen outputs, and (2) are the selected parameters structurally identifiable from the chosen outputs. The implementation works from the symbolic Jacobian sparsity pattern of a `metis::Function` and lives in `<metis/core/Diagnostics.hpp>`. This is a **symbolic-mode** analysis -- it answers whether the measurement layout can separate variables based on symbolic dependence alone, not numeric coefficient values.
 
 ## Quick Start
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-auto x = janus::sym("x", 3, 1);
-auto y = janus::SymbolicScalar::vertcat({
+auto x = metis::sym("x", 3, 1);
+auto y = metis::SymbolicScalar::vertcat({
     x(0) + x(1),
     x(1),
 });
 
-janus::Function h("sensor_model", {x}, {y});
-auto obs = janus::analyze_structural_observability(h);
+metis::Function h("sensor_model", {x}, {y});
+auto obs = metis::analyze_structural_observability(h);
 
 // obs.structural_rank, obs.rank_deficiency, obs.deficient_local_indices, etc.
 ```
@@ -22,19 +22,19 @@ auto obs = janus::analyze_structural_observability(h);
 ## Core API
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 // Observability analysis on input block 0
-auto obs = janus::analyze_structural_observability(h, 0);
+auto obs = metis::analyze_structural_observability(h, 0);
 
 // Identifiability analysis on input block 1
-auto id = janus::analyze_structural_identifiability(h, 1);
+auto id = metis::analyze_structural_identifiability(h, 1);
 
 // Combined diagnostics
-janus::StructuralDiagnosticsOptions opts;
+metis::StructuralDiagnosticsOptions opts;
 opts.state_input_idx = 0;
 opts.parameter_input_idx = 1;
-auto both = janus::analyze_structural_diagnostics(h, opts);
+auto both = metis::analyze_structural_diagnostics(h, opts);
 ```
 
 **`StructuralSensitivityOptions`** exposes:
@@ -68,7 +68,7 @@ Use structural diagnostics before:
 Typical setup:
 
 ```cpp
-janus::Function h("h", {x, p}, {y});
+metis::Function h("h", {x, p}, {y});
 ```
 
 where `x` is a dense column-vector state block, `p` is a dense column-vector parameter block, and `y` contains the measured or otherwise selected outputs.
@@ -76,14 +76,14 @@ where `x` is a dense column-vector state block, `p` is a dense column-vector par
 ### Observability Analysis
 
 ```cpp
-auto x = janus::sym("x", 3, 1);
-auto y = janus::SymbolicScalar::vertcat({
+auto x = metis::sym("x", 3, 1);
+auto y = metis::SymbolicScalar::vertcat({
     x(0) + x(1),
     x(1),
 });
 
-janus::Function h("sensor_model", {x}, {y});
-auto obs = janus::analyze_structural_observability(h);
+metis::Function h("sensor_model", {x}, {y});
+auto obs = metis::analyze_structural_observability(h);
 ```
 
 Here:
@@ -94,15 +94,15 @@ Here:
 ### Identifiability Analysis
 
 ```cpp
-auto x = janus::sym("x");
-auto p = janus::sym("p", 4, 1);
-auto y = janus::SymbolicScalar::vertcat({
+auto x = metis::sym("x");
+auto p = metis::sym("p", 4, 1);
+auto y = metis::SymbolicScalar::vertcat({
     p(0) + p(1) + x,
     p(1) + p(2),
 });
 
-janus::Function h("calibration_model", {x, p}, {y});
-auto id = janus::analyze_structural_identifiability(h, 1);
+metis::Function h("calibration_model", {x, p}, {y});
+auto id = metis::analyze_structural_identifiability(h, 1);
 ```
 
 Here:
@@ -115,11 +115,11 @@ Here:
 If one measurement model carries both estimation states and calibration parameters, run both checks together:
 
 ```cpp
-janus::StructuralDiagnosticsOptions opts;
+metis::StructuralDiagnosticsOptions opts;
 opts.state_input_idx = 0;
 opts.parameter_input_idx = 1;
 
-auto report = janus::analyze_structural_diagnostics(h, opts);
+auto report = metis::analyze_structural_diagnostics(h, opts);
 // report.observability
 // report.identifiability
 // report.has_deficiency()
@@ -157,4 +157,4 @@ That makes this pass useful as an early symbolic filter before you spend time on
 - [Sparsity Guide](sparsity.md) -- Sparsity pattern extraction and visualization
 - [Structural Transforms Guide](structural_transforms.md) -- Alias elimination, BLT decomposition, and tearing
 - [structural_diagnostics_demo.cpp](../../examples/math/structural_diagnostics_demo.cpp) -- Full example source
-- [Diagnostics.hpp](../../include/janus/core/Diagnostics.hpp) -- API reference
+- [Diagnostics.hpp](../../include/metis/core/Diagnostics.hpp) -- API reference

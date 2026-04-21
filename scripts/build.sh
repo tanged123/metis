@@ -27,7 +27,7 @@ show_help() {
     cat << EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Build the Janus project.
+Build the Metis project.
 
 Build Type Options:
   --debug           Build with debug symbols (default)

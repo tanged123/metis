@@ -1,13 +1,13 @@
 #include "../utils/TestUtils.hpp"
 #include <gtest/gtest.h>
-#include <janus/core/Function.hpp>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/math/Linalg.hpp> // for to_mx
-#include <janus/math/Logic.hpp>
+#include <metis/core/Function.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/math/Linalg.hpp> // for to_mx
+#include <metis/math/Logic.hpp>
 
 namespace {
 
-bool contains_op(const janus::SymbolicScalar &expr, casadi_int op) {
+bool contains_op(const metis::SymbolicScalar &expr, casadi_int op) {
     if (expr.n_dep() > 0 && expr.op() == op) {
         return true;
     }
@@ -28,22 +28,22 @@ template <typename Scalar> void test_logic_ops() {
     Scalar b = 2.0;
 
     // Test where with comparison
-    auto res_where = janus::where(a < b, a, b);
+    auto res_where = metis::where(a < b, a, b);
 
     // Test min/max/clamp
-    auto res_min = janus::min(a, b);
-    auto res_max = janus::max(a, b);
+    auto res_min = metis::min(a, b);
+    auto res_max = metis::max(a, b);
 
     Scalar val = 5.0;
     Scalar low = 0.0;
     Scalar high = 3.0;
-    auto res_clamp = janus::clamp(val, low, high); // Should be 3.0
+    auto res_clamp = metis::clamp(val, low, high); // Should be 3.0
 
     // Test sigmoid blend
     Scalar val_low = 10.0;
     Scalar val_high = 20.0;
-    auto blend_low = janus::sigmoid_blend(static_cast<Scalar>(-10.0), val_low, val_high);
-    auto blend_high = janus::sigmoid_blend(static_cast<Scalar>(10.0), val_low, val_high);
+    auto blend_low = metis::sigmoid_blend(static_cast<Scalar>(-10.0), val_low, val_high);
+    auto blend_high = metis::sigmoid_blend(static_cast<Scalar>(10.0), val_low, val_high);
 
     if constexpr (std::is_same_v<Scalar, double>) {
         EXPECT_DOUBLE_EQ(res_where, 1.0);
@@ -53,28 +53,28 @@ template <typename Scalar> void test_logic_ops() {
         EXPECT_NEAR(blend_low, 10.0, 1e-3);
         EXPECT_NEAR(blend_high, 20.0, 1e-3);
     } else {
-        EXPECT_DOUBLE_EQ(janus::eval(res_where), 1.0);
-        EXPECT_DOUBLE_EQ(janus::eval(res_min), 1.0);
-        EXPECT_DOUBLE_EQ(janus::eval(res_max), 2.0);
-        EXPECT_DOUBLE_EQ(janus::eval(res_clamp), 3.0);
-        EXPECT_NEAR(janus::eval(blend_low), 10.0, 1e-3);
-        EXPECT_NEAR(janus::eval(blend_high), 20.0, 1e-3);
+        EXPECT_DOUBLE_EQ(metis::eval(res_where), 1.0);
+        EXPECT_DOUBLE_EQ(metis::eval(res_min), 1.0);
+        EXPECT_DOUBLE_EQ(metis::eval(res_max), 2.0);
+        EXPECT_DOUBLE_EQ(metis::eval(res_clamp), 3.0);
+        EXPECT_NEAR(metis::eval(blend_low), 10.0, 1e-3);
+        EXPECT_NEAR(metis::eval(blend_high), 20.0, 1e-3);
     }
 }
 
 template <typename Scalar> void test_logic_matrix() {
-    using Matrix = janus::JanusMatrix<Scalar>;
+    using Matrix = metis::MetisMatrix<Scalar>;
     Matrix A(2, 2);
     A << 1.0, 4.0, 2.0, 5.0;
     Matrix B(2, 2);
     B << 3.0, 2.0, 1.0, 6.0;
 
     // Element-wise min: [1, 2], [1, 5]
-    auto M = janus::min(A, B);
-    auto cond = janus::lt(A, B);
+    auto M = metis::min(A, B);
+    auto cond = metis::lt(A, B);
 
     // For numeric, cond is Array<bool>. For symbolic, Matrix<MX>.
-    // janus::where expects ArrayBase.
+    // metis::where expects ArrayBase.
     // If Matrix<MX>, .array() makes it ArrayWrapper, which is ArrayBase.
     // If Array<bool>, it is ArrayBase.
 
@@ -86,29 +86,29 @@ template <typename Scalar> void test_logic_matrix() {
     // Let's use auto and .array() or pass derived if compatible.
     // Our where loop calls .coeff().
 
-    auto where_mat = janus::where(cond.array(), A, B);
+    auto where_mat = metis::where(cond.array(), A, B);
 
     // Test new comparisons
     // A: [[1, 4], [2, 5]]
     // B: [[3, 2], [1, 6]]
 
     // A > B: [[F, T], [T, F]] -> where(A>B, 10, -10)
-    auto cond_gt = janus::gt(A, B);
+    auto cond_gt = metis::gt(A, B);
     Matrix Ones = Matrix::Ones(2, 2) * 10;
     Matrix NegOnes = Matrix::Ones(2, 2) * -10;
-    auto check_gt = janus::where(cond_gt.array(), Ones, NegOnes);
+    auto check_gt = metis::where(cond_gt.array(), Ones, NegOnes);
 
     // A <= B: [[T, F], [F, T]] (Inverse of >)
-    auto cond_le = janus::le(A, B);
-    auto check_le = janus::where(cond_le.array(), Ones, NegOnes);
+    auto cond_le = metis::le(A, B);
+    auto check_le = metis::where(cond_le.array(), Ones, NegOnes);
 
     // A == A
-    auto cond_eq = janus::eq(A, A);
-    auto check_eq = janus::where(cond_eq.array(), Ones, NegOnes);
+    auto cond_eq = metis::eq(A, A);
+    auto check_eq = metis::where(cond_eq.array(), Ones, NegOnes);
 
     // A != B (All true as scalars different everywhere)
-    auto cond_neq = janus::neq(A, B);
-    auto check_neq = janus::where(cond_neq.array(), Ones, NegOnes);
+    auto cond_neq = metis::neq(A, B);
+    auto check_neq = metis::where(cond_neq.array(), Ones, NegOnes);
 
     if constexpr (std::is_same_v<Scalar, double>) {
         EXPECT_DOUBLE_EQ(M(0, 0), 1.0);
@@ -134,33 +134,33 @@ template <typename Scalar> void test_logic_matrix() {
         // neq: All true
         EXPECT_DOUBLE_EQ(check_neq(0, 0), 10.0);
     } else {
-        auto M_eval = janus::eval(M);
+        auto M_eval = metis::eval(M);
         EXPECT_DOUBLE_EQ(M_eval(0, 0), 1.0);
         EXPECT_DOUBLE_EQ(M_eval(0, 1), 2.0);
         EXPECT_DOUBLE_EQ(M_eval(1, 0), 1.0);
         EXPECT_DOUBLE_EQ(M_eval(1, 1), 5.0);
 
-        auto W_eval = janus::eval(where_mat);
+        auto W_eval = metis::eval(where_mat);
         EXPECT_DOUBLE_EQ(W_eval(0, 1), 2.0);
 
-        auto G_eval = janus::eval(check_gt);
+        auto G_eval = metis::eval(check_gt);
         EXPECT_DOUBLE_EQ(G_eval(0, 0), -10.0);
         EXPECT_DOUBLE_EQ(G_eval(0, 1), 10.0);
 
-        auto L_eval = janus::eval(check_le);
+        auto L_eval = metis::eval(check_le);
         EXPECT_DOUBLE_EQ(L_eval(0, 0), 10.0);
         EXPECT_DOUBLE_EQ(L_eval(0, 1), -10.0);
 
-        auto E_eval = janus::eval(check_eq);
+        auto E_eval = metis::eval(check_eq);
         EXPECT_DOUBLE_EQ(E_eval(0, 0), 10.0);
 
-        auto N_eval = janus::eval(check_neq);
+        auto N_eval = metis::eval(check_neq);
         EXPECT_DOUBLE_EQ(N_eval(0, 0), 10.0);
     }
 }
 
 template <typename Scalar> void test_extended_logic() {
-    using Matrix = janus::JanusMatrix<Scalar>;
+    using Matrix = metis::MetisMatrix<Scalar>;
     Matrix A(2, 2);
     A << 1.0, 0.0, 1.0, 1.0;
     Matrix B(2, 2);
@@ -168,21 +168,21 @@ template <typename Scalar> void test_extended_logic() {
 
     // AND: [1, 0; 0, 1]
     // OR:  [1, 1; 1, 1]
-    auto res_and = janus::logical_and(A, B);
-    auto res_or = janus::logical_or(A, B);
+    auto res_and = metis::logical_and(A, B);
+    auto res_or = metis::logical_or(A, B);
 
     // NOT A: [0, 1; 0, 0]
-    auto res_not = janus::logical_not(A);
+    auto res_not = metis::logical_not(A);
 
     // All/Any
     // A has zeros -> all = false, any = true
-    auto res_all = janus::all(A);
-    auto res_any = janus::any(A);
+    auto res_all = metis::all(A);
+    auto res_any = metis::any(A);
 
     // Clamp
     Matrix C(2, 2);
     C << -5.0, 5.0, 0.0, 10.0;
-    auto res_clip = janus::clamp(C, 0.0, 2.0); // -> [0, 2; 0, 2]
+    auto res_clip = metis::clamp(C, 0.0, 2.0); // -> [0, 2; 0, 2]
 
     if constexpr (std::is_same_v<Scalar, double>) {
         // Numeric checks
@@ -211,40 +211,40 @@ template <typename Scalar> void test_extended_logic() {
         EXPECT_DOUBLE_EQ(res_clip(1, 1), 2.0);
 
         // Scalar Logic
-        EXPECT_TRUE(janus::logical_and(1.0, 1.0));
-        EXPECT_FALSE(janus::logical_and(1.0, 0.0));
-        EXPECT_TRUE(janus::logical_or(0.0, 1.0));
-        EXPECT_FALSE(janus::logical_not(1.0));
+        EXPECT_TRUE(metis::logical_and(1.0, 1.0));
+        EXPECT_FALSE(metis::logical_and(1.0, 0.0));
+        EXPECT_TRUE(metis::logical_or(0.0, 1.0));
+        EXPECT_FALSE(metis::logical_not(1.0));
 
     } else {
         // Symbolic checks
-        auto and_eval = janus::eval(res_and);
+        auto and_eval = metis::eval(res_and);
         EXPECT_NEAR(and_eval(0, 0), 1.0, 1e-9);
         EXPECT_NEAR(and_eval(0, 1), 0.0, 1e-9);
 
-        auto or_eval = janus::eval(res_or);
+        auto or_eval = metis::eval(res_or);
         EXPECT_NEAR(or_eval(0, 0), 1.0, 1e-9);
 
-        auto not_eval = janus::eval(res_not);
+        auto not_eval = metis::eval(res_not);
         EXPECT_NEAR(not_eval(0, 0), 0.0, 1e-9);
         EXPECT_NEAR(not_eval(0, 1), 1.0, 1e-9);
 
-        auto all_val = janus::eval(res_all);
+        auto all_val = metis::eval(res_all);
         EXPECT_NEAR(all_val, 0.0, 1e-9);
 
-        auto any_val = janus::eval(res_any);
+        auto any_val = metis::eval(res_any);
         EXPECT_NEAR(any_val, 1.0, 1e-9);
 
-        auto clip_eval = janus::eval(res_clip);
+        auto clip_eval = metis::eval(res_clip);
         EXPECT_NEAR(clip_eval(0, 0), 0.0, 1e-9);
         EXPECT_NEAR(clip_eval(0, 1), 2.0, 1e-9);
 
         // Scalar Logic
         EXPECT_NEAR(
-            janus::eval(janus::logical_and(janus::SymbolicScalar(1.0), janus::SymbolicScalar(1.0))),
+            metis::eval(metis::logical_and(metis::SymbolicScalar(1.0), metis::SymbolicScalar(1.0))),
             1.0, 1e-9);
         EXPECT_NEAR(
-            janus::eval(janus::logical_and(janus::SymbolicScalar(1.0), janus::SymbolicScalar(0.0))),
+            metis::eval(metis::logical_and(metis::SymbolicScalar(1.0), metis::SymbolicScalar(0.0))),
             0.0, 1e-9);
     }
 }
@@ -256,119 +256,119 @@ TEST(LogicTests, Numeric) {
 }
 
 TEST(LogicTests, Symbolic) {
-    test_logic_ops<janus::SymbolicScalar>();
-    test_logic_matrix<janus::SymbolicScalar>();
+    test_logic_ops<metis::SymbolicScalar>();
+    test_logic_matrix<metis::SymbolicScalar>();
 }
 
-TEST(LogicTests, ExtendedLogicSymbolic) { test_extended_logic<janus::SymbolicScalar>(); }
+TEST(LogicTests, ExtendedLogicSymbolic) { test_extended_logic<metis::SymbolicScalar>(); }
 
 // --- Tests for select() function ---
 
 template <typename Scalar> void test_select() {
     // Test 1: Basic 3-way select
     Scalar x = 15.0;
-    auto result1 = janus::select({x < 10.0, x < 20.0, x < 30.0},
+    auto result1 = metis::select({x < 10.0, x < 20.0, x < 30.0},
                                  {Scalar(1.0), Scalar(2.0), Scalar(3.0)}, Scalar(4.0));
 
     if constexpr (std::is_same_v<Scalar, double>) {
         EXPECT_DOUBLE_EQ(result1, 2.0); // 10 <= 15 < 20
     } else {
-        EXPECT_DOUBLE_EQ(janus::eval(result1), 2.0);
+        EXPECT_DOUBLE_EQ(metis::eval(result1), 2.0);
     }
 
     // Test 2: First condition matches
     Scalar y = 5.0;
     auto result2 =
-        janus::select({y < 10.0, y < 20.0}, {Scalar(100.0), Scalar(200.0)}, Scalar(300.0));
+        metis::select({y < 10.0, y < 20.0}, {Scalar(100.0), Scalar(200.0)}, Scalar(300.0));
 
     if constexpr (std::is_same_v<Scalar, double>) {
         EXPECT_DOUBLE_EQ(result2, 100.0);
     } else {
-        EXPECT_DOUBLE_EQ(janus::eval(result2), 100.0);
+        EXPECT_DOUBLE_EQ(metis::eval(result2), 100.0);
     }
 
     // Test 3: Default value (no condition matches)
     Scalar z = 100.0;
-    auto result3 = janus::select({z < 10.0, z < 20.0, z < 30.0},
+    auto result3 = metis::select({z < 10.0, z < 20.0, z < 30.0},
                                  {Scalar(1.0), Scalar(2.0), Scalar(3.0)}, Scalar(99.0));
 
     if constexpr (std::is_same_v<Scalar, double>) {
         EXPECT_DOUBLE_EQ(result3, 99.0); // Default
     } else {
-        EXPECT_DOUBLE_EQ(janus::eval(result3), 99.0);
+        EXPECT_DOUBLE_EQ(metis::eval(result3), 99.0);
     }
 
     // Test 4: Single condition
     Scalar w = 15.0;
-    auto result4 = janus::select({w > 10.0}, {Scalar(42.0)}, Scalar(7.0));
+    auto result4 = metis::select({w > 10.0}, {Scalar(42.0)}, Scalar(7.0));
 
     if constexpr (std::is_same_v<Scalar, double>) {
         EXPECT_DOUBLE_EQ(result4, 42.0);
     } else {
-        EXPECT_DOUBLE_EQ(janus::eval(result4), 42.0);
+        EXPECT_DOUBLE_EQ(metis::eval(result4), 42.0);
     }
 }
 
 TEST(LogicTests, SelectNumeric) { test_select<double>(); }
 
-TEST(LogicTests, SelectSymbolic) { test_select<janus::SymbolicScalar>(); }
+TEST(LogicTests, SelectSymbolic) { test_select<metis::SymbolicScalar>(); }
 
 // Test select() vs nested where() equivalence
 TEST(LogicTests, SelectEquivalence) {
     double x = 15.0;
 
     // Using select
-    auto result_select = janus::select({x < 10.0, x < 20.0, x < 30.0}, {1.0, 2.0, 3.0}, 4.0);
+    auto result_select = metis::select({x < 10.0, x < 20.0, x < 30.0}, {1.0, 2.0, 3.0}, 4.0);
 
     // Using nested where
     auto result_where =
-        janus::where(x < 10.0, 1.0, janus::where(x < 20.0, 2.0, janus::where(x < 30.0, 3.0, 4.0)));
+        metis::where(x < 10.0, 1.0, metis::where(x < 20.0, 2.0, metis::where(x < 30.0, 3.0, 4.0)));
 
     EXPECT_DOUBLE_EQ(result_select, result_where);
 }
 
 TEST(LogicTests, SelectError) {
-    EXPECT_THROW(janus::select({true, false}, {1.0}, 0.0), janus::InvalidArgument);
+    EXPECT_THROW(metis::select({true, false}, {1.0}, 0.0), metis::InvalidArgument);
 }
 
 TEST(LogicTests, SelectInitializerList) {
     double x = 5.0;
-    auto res = janus::select({x < 0.0, x > 0.0}, {-1.0, 1.0}, 0.0);
+    auto res = metis::select({x < 0.0, x > 0.0}, {-1.0, 1.0}, 0.0);
     EXPECT_DOUBLE_EQ(res, 1.0);
 }
 
 TEST(LogicTests, NumericAllAny) {
-    janus::NumericMatrix M(2, 2);
+    metis::NumericMatrix M(2, 2);
     M << 1, 0, 1, 1;
     // all should be false
-    EXPECT_FALSE(janus::all(M));
+    EXPECT_FALSE(metis::all(M));
     // any should be true
-    EXPECT_TRUE(janus::any(M));
+    EXPECT_TRUE(metis::any(M));
 
-    janus::NumericMatrix AllOnes = janus::NumericMatrix::Ones(2, 2);
-    EXPECT_TRUE(janus::all(AllOnes));
+    metis::NumericMatrix AllOnes = metis::NumericMatrix::Ones(2, 2);
+    EXPECT_TRUE(metis::all(AllOnes));
 
-    janus::NumericMatrix AllZeros = janus::NumericMatrix::Zero(2, 2);
-    EXPECT_FALSE(janus::any(AllZeros));
+    metis::NumericMatrix AllZeros = metis::NumericMatrix::Zero(2, 2);
+    EXPECT_FALSE(metis::any(AllZeros));
 }
 
 TEST(LogicTests, SymbolicAllAnyTruthiness) {
-    auto [v, v_mx] = janus::sym_vec_pair("v", 2);
-    janus::Function f({v_mx}, {janus::all(v), janus::any(v)});
+    auto [v, v_mx] = metis::sym_vec_pair("v", 2);
+    metis::Function f({v_mx}, {metis::all(v), metis::any(v)});
 
-    janus::NumericVector both_nonzero(2);
+    metis::NumericVector both_nonzero(2);
     both_nonzero << 2.0, -3.0;
     auto both_nonzero_eval = f(both_nonzero);
     EXPECT_DOUBLE_EQ(both_nonzero_eval[0](0, 0), 1.0);
     EXPECT_DOUBLE_EQ(both_nonzero_eval[1](0, 0), 1.0);
 
-    janus::NumericVector one_zero(2);
+    metis::NumericVector one_zero(2);
     one_zero << 2.0, 0.0;
     auto one_zero_eval = f(one_zero);
     EXPECT_DOUBLE_EQ(one_zero_eval[0](0, 0), 0.0);
     EXPECT_DOUBLE_EQ(one_zero_eval[1](0, 0), 1.0);
 
-    janus::NumericVector all_zero(2);
+    metis::NumericVector all_zero(2);
     all_zero << 0.0, 0.0;
     auto all_zero_eval = f(all_zero);
     EXPECT_DOUBLE_EQ(all_zero_eval[0](0, 0), 0.0);
@@ -376,9 +376,9 @@ TEST(LogicTests, SymbolicAllAnyTruthiness) {
 }
 
 TEST(LogicTests, SymbolicAllAnyUseConstraintReductionOps) {
-    auto v = janus::sym_vec("v", 2);
-    auto all_expr = janus::all(v);
-    auto any_expr = janus::any(v);
+    auto v = metis::sym_vec("v", 2);
+    auto all_expr = metis::all(v);
+    auto any_expr = metis::any(v);
 
     EXPECT_TRUE(contains_op(all_expr, casadi::OP_ADD));
     EXPECT_FALSE(contains_op(all_expr, casadi::OP_NORMINF));
@@ -390,15 +390,15 @@ TEST(LogicTests, SymbolicAllAnyUseConstraintReductionOps) {
 TEST(LogicTests, MixedTypeLogic) {
     // Test mixed double/Symbolic for min/max/clamp to hit those branches
     double d = 1.0;
-    janus::SymbolicScalar s(2.0);
+    metis::SymbolicScalar s(2.0);
 
-    auto res_min = janus::min(d, s); // Should convert to fmin(double, MX) -> MX
-    auto res_max = janus::max(d, s);
+    auto res_min = metis::min(d, s); // Should convert to fmin(double, MX) -> MX
+    auto res_max = metis::max(d, s);
 
-    EXPECT_DOUBLE_EQ(janus::eval(res_min), 1.0);
-    EXPECT_DOUBLE_EQ(janus::eval(res_max), 2.0);
+    EXPECT_DOUBLE_EQ(metis::eval(res_min), 1.0);
+    EXPECT_DOUBLE_EQ(metis::eval(res_max), 2.0);
 
     // Test clamp with mixed
-    auto res_clamp = janus::clamp(janus::SymbolicScalar(5.0), 0.0, 3.0);
-    EXPECT_DOUBLE_EQ(janus::eval(res_clamp), 3.0);
+    auto res_clamp = metis::clamp(metis::SymbolicScalar(5.0), 0.0, 3.0);
+    EXPECT_DOUBLE_EQ(metis::eval(res_clamp), 3.0);
 }

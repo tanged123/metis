@@ -10,12 +10,12 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <sstream>
 #include <string>
 #include <vector>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 
@@ -39,9 +39,9 @@ SymbolicVector brachistochrone_ode(const SymbolicVector &state, const SymbolicVe
     SymbolicScalar theta = control(0);
 
     SymbolicVector dxdt(3);
-    dxdt(0) = v * janus::sin(theta);
-    dxdt(1) = -v * janus::cos(theta);
-    dxdt(2) = g * janus::cos(theta);
+    dxdt(0) = v * metis::sin(theta);
+    dxdt(1) = -v * metis::cos(theta);
+    dxdt(2) = g * metis::cos(theta);
     return dxdt;
 }
 

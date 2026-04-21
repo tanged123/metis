@@ -1,8 +1,8 @@
-PROJECT_NAME           = "Janus"
+PROJECT_NAME           = "Metis"
 PROJECT_NUMBER         = 2.0.0
 PROJECT_BRIEF          = "High-performance C++20 dual-mode numerical framework"
 OUTPUT_DIRECTORY       = build/docs
-INPUT                  = README.md include docs/design_overview.md docs/janus_usage_guide.md docs/user_guides docs/patterns
+INPUT                  = README.md include docs/design_overview.md docs/metis_usage_guide.md docs/user_guides docs/patterns
 RECURSIVE              = YES
 FILE_PATTERNS          = *.hpp *.cpp *.md
 USE_MDFILE_AS_MAINPAGE = README.md

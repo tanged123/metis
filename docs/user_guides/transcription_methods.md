@@ -1,19 +1,19 @@
 # Transcription Methods
 
-Janus provides four transcription methods for converting continuous-time optimal control problems into discrete NLPs: **Direct Collocation**, **Multiple Shooting**, **Pseudospectral**, and **Birkhoff Pseudospectral**. This guide compares all four, explains when to choose each, and documents the unified API they share. All transcription classes work in **symbolic mode** via the `janus::Opti` interface.
+Metis provides four transcription methods for converting continuous-time optimal control problems into discrete NLPs: **Direct Collocation**, **Multiple Shooting**, **Pseudospectral**, and **Birkhoff Pseudospectral**. This guide compares all four, explains when to choose each, and documents the unified API they share. All transcription classes work in **symbolic mode** via the `metis::Opti` interface.
 
 ## Quick Start
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-janus::Opti opti;
+metis::Opti opti;
 
 // Pick any transcription -- the API is the same
-janus::DirectCollocation transcription(opti);
-// janus::MultipleShooting transcription(opti);
-// janus::Pseudospectral transcription(opti);
-// janus::BirkhoffPseudospectral transcription(opti);
+metis::DirectCollocation transcription(opti);
+// metis::MultipleShooting transcription(opti);
+// metis::Pseudospectral transcription(opti);
+// metis::BirkhoffPseudospectral transcription(opti);
 
 auto [x, u, tau] = transcription.setup(n_states, n_controls, t0, tf, opts);
 
@@ -186,4 +186,4 @@ Birkhoff Pseudospectral (31 nodes, 3 states, 1 control):
 - [Pseudospectral Guide](pseudospectral.md) -- Detailed pseudospectral usage
 - [Birkhoff Pseudospectral Guide](birkhoff_pseudospectral.md) -- Detailed Birkhoff usage
 - [transcription_comparison_demo.cpp](../../examples/optimization/transcription_comparison_demo.cpp) -- Unified comparison example
-- [TranscriptionBase.hpp](../../include/janus/optimization/TranscriptionBase.hpp) -- Base class API reference
+- [TranscriptionBase.hpp](../../include/metis/optimization/TranscriptionBase.hpp) -- Base class API reference

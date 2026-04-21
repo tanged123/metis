@@ -1,40 +1,40 @@
 # Structural Transforms
 
-Janus provides a structural-analysis layer for dense square residual systems built as `janus::Function`s. The current pipeline covers alias elimination on trivial affine rows, block-triangular decomposition (BLT), and tearing recommendations inside coupled blocks. This works in **symbolic mode** only, operating on the Jacobian sparsity pattern of a compiled function. Code lives in `<janus/core/StructuralTransforms.hpp>`.
+Metis provides a structural-analysis layer for dense square residual systems built as `metis::Function`s. The current pipeline covers alias elimination on trivial affine rows, block-triangular decomposition (BLT), and tearing recommendations inside coupled blocks. This works in **symbolic mode** only, operating on the Jacobian sparsity pattern of a compiled function. Code lives in `<metis/core/StructuralTransforms.hpp>`.
 
 ## Quick Start
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-auto x = janus::sym("x", 3, 1);
-auto p = janus::sym("p");
-janus::SymbolicScalar x0 = x(0), x1 = x(1), x2 = x(2);
+auto x = metis::sym("x", 3, 1);
+auto p = metis::sym("p");
+metis::SymbolicScalar x0 = x(0), x1 = x(1), x2 = x(2);
 
-auto residual = janus::SymbolicScalar::vertcat({
+auto residual = metis::SymbolicScalar::vertcat({
     x0 - x1,
     x2 - p,
-    janus::sin(x0) + x2 - 2.0,
+    metis::sin(x0) + x2 - 2.0,
 });
 
-janus::Function fn("system", {x, p}, {residual});
+metis::Function fn("system", {x, p}, {residual});
 
 // Full pipeline: alias elimination -> BLT -> tearing
-auto analysis = janus::structural_analyze(fn);
+auto analysis = metis::structural_analyze(fn);
 ```
 
 ## Core API
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-janus::StructuralTransformOptions opts;
+metis::StructuralTransformOptions opts;
 opts.input_idx = 0;   // which input block is the variable vector
 opts.output_idx = 0;  // which output block is the residual vector
 
-auto alias = janus::alias_eliminate(fn, opts);
-auto blt   = janus::block_triangularize(fn, opts);
-auto analysis = janus::structural_analyze(fn, opts);
+auto alias = metis::alias_eliminate(fn, opts);
+auto blt   = metis::block_triangularize(fn, opts);
+auto analysis = metis::structural_analyze(fn, opts);
 ```
 
 **`StructuralTransformOptions`** exposes:
@@ -43,7 +43,7 @@ auto analysis = janus::structural_analyze(fn, opts);
 - `max_alias_row_nnz`: maximum number of structural variable coefficients allowed in an alias row
 - `require_constant_alias_coefficients`: whether alias rows must have constant coefficients
 
-The selected input/output pair must be dense column vectors with equal dimension. If not, Janus throws `janus::InvalidArgument`.
+The selected input/output pair must be dense column vectors with equal dimension. If not, Metis throws `metis::InvalidArgument`.
 
 **`AliasEliminationResult`** returns:
 - `reduced_function`: same input ordering, but with the selected input block reduced to kept variables and the output containing only kept residual rows
@@ -73,18 +73,18 @@ Typical use cases:
 `alias_eliminate()` removes rows that are affine in the selected variables and structurally simple enough to solve directly.
 
 ```cpp
-auto x = janus::sym("x", 3, 1);
-auto p = janus::sym("p");
-janus::SymbolicScalar x0 = x(0), x1 = x(1), x2 = x(2);
+auto x = metis::sym("x", 3, 1);
+auto p = metis::sym("p");
+metis::SymbolicScalar x0 = x(0), x1 = x(1), x2 = x(2);
 
-auto residual = janus::SymbolicScalar::vertcat({
+auto residual = metis::SymbolicScalar::vertcat({
     x0 - x1,
     x2 - p,
-    janus::sin(x0) + x2 - 2.0,
+    metis::sin(x0) + x2 - 2.0,
 });
 
-janus::Function fn("alias_system", {x, p}, {residual});
-auto alias = janus::alias_eliminate(fn);
+metis::Function fn("alias_system", {x, p}, {residual});
+auto alias = metis::alias_eliminate(fn);
 ```
 
 For this system:
@@ -95,11 +95,11 @@ For this system:
 ### Reconstructing The Full State
 
 ```cpp
-janus::NumericMatrix x_reduced(1, 1);
+metis::NumericMatrix x_reduced(1, 1);
 x_reduced(0, 0) = 1.25;
 
-janus::NumericMatrix x_full = alias.reconstruct_full_input.eval(x_reduced, 0.5);
-janus::NumericMatrix r_reduced = alias.reduced_function.eval(x_reduced, 0.5);
+metis::NumericMatrix x_full = alias.reconstruct_full_input.eval(x_reduced, 0.5);
+metis::NumericMatrix r_reduced = alias.reduced_function.eval(x_reduced, 0.5);
 ```
 
 This is useful when a solver operates on the reduced coordinates but downstream code still expects the original state layout.
@@ -109,16 +109,16 @@ This is useful when a solver operates on the reduced coordinates but downstream 
 `block_triangularize()` uses the Jacobian sparsity of the selected residual block with respect to the selected variable block and runs CasADi's block-triangular factorization.
 
 ```cpp
-auto x = janus::sym("x", 4, 1);
-auto residual = janus::SymbolicScalar::vertcat({
+auto x = metis::sym("x", 4, 1);
+auto residual = metis::SymbolicScalar::vertcat({
     x(0) - 1.0,
     x(1) + x(2),
     x(1) - x(2),
     x(3) - 3.0,
 });
 
-janus::Function fn("blt_blocks", {x}, {residual});
-auto blt = janus::block_triangularize(fn);
+metis::Function fn("blt_blocks", {x}, {residual});
+auto blt = metis::block_triangularize(fn);
 ```
 
 Each `StructuralBlock` stores `residual_indices`, `variable_indices`, and `tear_variable_indices`. These indices are local to the selected input/output block, not global NLP variable numbers.
@@ -141,7 +141,7 @@ The result is a recommendation, not a mandatory solve policy. It gives you a sta
 3. tearing inside each reduced BLT block
 
 ```cpp
-auto analysis = janus::structural_analyze(fn);
+auto analysis = metis::structural_analyze(fn);
 ```
 
 This ordering matters. Alias elimination is first so obvious substitutions simplify the incidence graph before block detection and tearing run.
@@ -180,4 +180,4 @@ That makes this layer useful for inspection and reduction now without pretending
 - [Structural Diagnostics Guide](structural_diagnostics.md) -- Observability and identifiability analysis
 - [Sparsity Guide](sparsity.md) -- Sparsity pattern extraction underpinning these transforms
 - [structural_transforms_demo.cpp](../../examples/math/structural_transforms_demo.cpp) -- Full example source
-- [StructuralTransforms.hpp](../../include/janus/core/StructuralTransforms.hpp) -- API reference
+- [StructuralTransforms.hpp](../../include/metis/core/StructuralTransforms.hpp) -- API reference

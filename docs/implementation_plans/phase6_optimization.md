@@ -1,6 +1,6 @@
-# Janus Phase 6: Optimization Framework Implementation Plan
+# Metis Phase 6: Optimization Framework Implementation Plan
 
-**Goal**: Implement a high-level optimization interface (`janus::Opti`) that wraps CasADi's IPOPT backend, mirroring AeroSandbox's `asb.Opti` API in C++.
+**Goal**: Implement a high-level optimization interface (`metis::Opti`) that wraps CasADi's IPOPT backend, mirroring AeroSandbox's `asb.Opti` API in C++.
 
 **Status**: Planning Draft
 **Created**: 2025-12-16
@@ -9,26 +9,26 @@
 
 ## Executive Summary
 
-Phase 6 introduces the **Optimization Engines & Strategies** layer to Janus, enabling users to formulate and solve nonlinear optimization problems using a clean, Janus-native C++ API. This builds upon the existing `janus::Function` infrastructure and symbolic tracing capabilities.
+Phase 6 introduces the **Optimization Engines & Strategies** layer to Metis, enabling users to formulate and solve nonlinear optimization problems using a clean, Metis-native C++ API. This builds upon the existing `metis::Function` infrastructure and symbolic tracing capabilities.
 
 Key deliverables:
-1. **`janus::Opti`** — Optimization environment class for variable, parameter, and constraint management
-2. **`janus::OptiSol`** — Solution wrapper for extracting optimized values
+1. **`metis::Opti`** — Optimization environment class for variable, parameter, and constraint management
+2. **`metis::OptiSol`** — Solution wrapper for extracting optimized values
 3. **Derivative Helpers** — `derivative_of()` and `constrain_derivative()` for trajectory optimization
 4. **NaN Propagation Sparsity** — Research feasibility (may defer to Phase 7)
 
 > [!IMPORTANT]
-> This phase unlocks trajectory optimization capabilities. The Brachistochrone example ([brachistochrone.cpp](file:///home/tanged/sources/janus/examples/brachistochrone.cpp)) currently demonstrates the ODE, but optimal control requires the optimization layer.
+> This phase unlocks trajectory optimization capabilities. The Brachistochrone example ([brachistochrone.cpp](file:///home/tanged/sources/metis/examples/brachistochrone.cpp)) currently demonstrates the ODE, but optimal control requires the optimization layer.
 
 ---
 
 ## Reference Analysis: AeroSandbox Opti
 
-Source: [opti.py](file:///home/tanged/sources/janus/reference/AeroSandbox/aerosandbox/optimization/opti.py)
+Source: [opti.py](file:///home/tanged/sources/metis/reference/AeroSandbox/aerosandbox/optimization/opti.py)
 
 ### Key API Methods (Python → C++ Mapping)
 
-| AeroSandbox Method | Janus Equivalent | Notes |
+| AeroSandbox Method | Metis Equivalent | Notes |
 |--------------------|-----------------|-------|
 | `opti.variable(init_guess, scale, bounds, freeze)` | `opti.variable(init, scale, lower, upper)` | Simplified, no freeze/category |
 | `opti.parameter(value)` | `opti.parameter(value)` | Fixed values in optimization |
@@ -50,7 +50,7 @@ Source: [opti.py](file:///home/tanged/sources/janus/reference/AeroSandbox/aerosa
 ## User Review Required
 
 > [!IMPORTANT]
-> **Scope Decision**: The AeroSandbox `Opti` class has many features (caching, freeze/categories, solve_sweep). For Janus v1, I propose a **minimal core API**. Please confirm this scope:
+> **Scope Decision**: The AeroSandbox `Opti` class has many features (caching, freeze/categories, solve_sweep). For Metis v1, I propose a **minimal core API**. Please confirm this scope:
 >
 > **Included in Phase 6:**
 > - `variable()`, `parameter()`, `subject_to()`, `minimize()`/`maximize()`, `solve()`
@@ -72,13 +72,13 @@ Source: [opti.py](file:///home/tanged/sources/janus/reference/AeroSandbox/aerosa
 ## Proposed Implementation Structure
 
 ```
-include/janus/optimization/
+include/metis/optimization/
 ├── Opti.hpp           # [NEW] Main optimization class
 ├── OptiSol.hpp        # [NEW] Solution wrapper
 └── OptiOptions.hpp    # [NEW] Solver configuration
 
-include/janus/
-├── janus.hpp          # [EXTEND] Include optimization headers
+include/metis/
+├── metis.hpp          # [EXTEND] Include optimization headers
 
 tests/optimization/
 ├── test_opti.cpp      # [NEW] Core optimization tests
@@ -95,19 +95,19 @@ docs/implementation_plans/
 
 ## Detailed Implementation Specifications
 
-### Component 1: `janus::Opti` Class — **P0**
+### Component 1: `metis::Opti` Class — **P0**
 
-#### [NEW] `include/janus/optimization/Opti.hpp`
+#### [NEW] `include/metis/optimization/Opti.hpp`
 
 ```cpp
 #pragma once
 
-#include "janus/core/JanusTypes.hpp"
+#include "metis/core/MetisTypes.hpp"
 #include <casadi/casadi.hpp>
 #include <optional>
 #include <string>
 
-namespace janus {
+namespace metis {
 
 // Forward declaration
 class OptiSol;
@@ -126,11 +126,11 @@ struct OptiOptions {
 /**
  * @brief Main optimization environment class
  *
- * Wraps CasADi's Opti interface to provide Janus-native types
+ * Wraps CasADi's Opti interface to provide Metis-native types
  * and a clean C++ API for nonlinear programming.
  *
  * Example:
- *   janus::Opti opti;
+ *   metis::Opti opti;
  *   auto x = opti.variable(0.0);  // scalar, init_guess=0
  *   auto y = opti.variable(0.0);
  *   opti.minimize((1 - x) * (1 - x) + 100 * (y - x * x) * (y - x * x));
@@ -242,7 +242,7 @@ class Opti {
     std::vector<VarInfo> variables_;
 };
 
-} // namespace janus
+} // namespace metis
 ```
 
 **Implementation Notes**:
@@ -253,17 +253,17 @@ class Opti {
 
 ---
 
-### Component 2: `janus::OptiSol` Class — **P0**
+### Component 2: `metis::OptiSol` Class — **P0**
 
-#### [NEW] `include/janus/optimization/OptiSol.hpp`
+#### [NEW] `include/metis/optimization/OptiSol.hpp`
 
 ```cpp
 #pragma once
 
-#include "janus/core/JanusTypes.hpp"
+#include "metis/core/MetisTypes.hpp"
 #include <casadi/casadi.hpp>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Solution wrapper for optimization results
@@ -298,7 +298,7 @@ class OptiSol {
     casadi::OptiSol cas_sol_;
 };
 
-} // namespace janus
+} // namespace metis
 ```
 
 ---
@@ -317,9 +317,9 @@ The `derivative_of()` and `constrain_derivative()` methods are critical for traj
 
 **Example Usage** (from AeroSandbox test):
 ```cpp
-janus::Opti opti;
+metis::Opti opti;
 
-Eigen::VectorXd time = janus::linspace(0.0, 1.0, 100);
+Eigen::VectorXd time = metis::linspace(0.0, 1.0, 100);
 auto position = opti.variable(100, 0.0);  // N-element vector
 auto velocity = opti.derivative_of(position, time, 0.0);
 auto accel = opti.derivative_of(velocity, time, 0.0);
@@ -348,11 +348,11 @@ auto sol = opti.solve();
 
 ### Milestone 1: Core Opti Class (3-4 days)
 
-- [ ] Create directory structure `include/janus/optimization/`
+- [ ] Create directory structure `include/metis/optimization/`
 - [ ] Implement `Opti.hpp` with `variable()`, `parameter()`, `subject_to()`, `minimize()`
 - [ ] Implement `OptiSol.hpp` with `value()` extraction
 - [ ] Add `OptiOptions.hpp` for solver configuration
-- [ ] Update `janus.hpp` to include optimization headers
+- [ ] Update `metis.hpp` to include optimization headers
 - [ ] Update `CMakeLists.txt` to include new headers
 
 ### Milestone 2: Derivative Helpers (2-3 days)
@@ -397,7 +397,7 @@ cd build && ctest -R test_opti --output-on-failure
 
 #### Rosenbrock Tests
 
-Based on [test_opti_rosenbrock.py](file:///home/tanged/sources/janus/reference/AeroSandbox/aerosandbox/optimization/test_optimization/test_opti_rosenbrock.py):
+Based on [test_opti_rosenbrock.py](file:///home/tanged/sources/metis/reference/AeroSandbox/aerosandbox/optimization/test_optimization/test_opti_rosenbrock.py):
 
 | Test | Expected Result |
 |------|-----------------|
@@ -407,7 +407,7 @@ Based on [test_opti_rosenbrock.py](file:///home/tanged/sources/janus/reference/A
 
 #### Rocket Trajectory Test
 
-Based on [test_opti_optimal_control_manual_integration.py](file:///home/tanged/sources/janus/reference/AeroSandbox/aerosandbox/optimization/test_optimization/test_opti_optimal_control_manual_integration.py):
+Based on [test_opti_optimal_control_manual_integration.py](file:///home/tanged/sources/metis/reference/AeroSandbox/aerosandbox/optimization/test_optimization/test_opti_optimal_control_manual_integration.py):
 
 | Test | Expected Result |
 |------|-----------------|
@@ -419,10 +419,10 @@ Based on [test_opti_optimal_control_manual_integration.py](file:///home/tanged/s
 // tests/optimization/test_opti.cpp
 
 #include <gtest/gtest.h>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 TEST(OptiTests, Rosenbrock2D_Unconstrained) {
-    janus::Opti opti;
+    metis::Opti opti;
     auto x = opti.variable(0.0);
     auto y = opti.variable(0.0);
     
@@ -435,7 +435,7 @@ TEST(OptiTests, Rosenbrock2D_Unconstrained) {
 }
 
 TEST(OptiTests, Rosenbrock2D_Constrained) {
-    janus::Opti opti;
+    metis::Opti opti;
     auto x = opti.variable(0.0);
     auto y = opti.variable(0.0);
     
@@ -488,8 +488,8 @@ TEST(OptiTests, RocketTrajectory) {
 
 ## Success Criteria
 
-1. ☐ `janus::Opti` class implemented with core methods
-2. ☐ `janus::OptiSol` provides correct value extraction
+1. ☐ `metis::Opti` class implemented with core methods
+2. ☐ `metis::OptiSol` provides correct value extraction
 3. ☐ `derivative_of()` and `constrain_derivative()` work for trajectory problems
 4. ☐ Rosenbrock tests pass (2D, constrained, N-D)
 5. ☐ Rocket trajectory test passes (`a_max ≈ 0.0218`)
@@ -503,28 +503,28 @@ TEST(OptiTests, RocketTrajectory) {
 
 ### Example 1: `optimization_intro.cpp` — Rosenbrock Benchmark
 
-Based on [nd_rosenbrock/run_times.py](file:///home/tanged/sources/janus/reference/AeroSandbox/tutorial/01%20-%20Optimization%20and%20Math/01%20-%20Optimization%20Benchmark%20Problems/nd_rosenbrock/run_times.py)
+Based on [nd_rosenbrock/run_times.py](file:///home/tanged/sources/metis/reference/AeroSandbox/tutorial/01%20-%20Optimization%20and%20Math/01%20-%20Optimization%20Benchmark%20Problems/nd_rosenbrock/run_times.py)
 
 ```cpp
 /**
  * @file optimization_intro.cpp
  * @brief Rosenbrock optimization benchmark
  * 
- * Demonstrates core janus::Opti API with the classic Rosenbrock problem:
+ * Demonstrates core metis::Opti API with the classic Rosenbrock problem:
  *   minimize sum(100*(x[i+1] - x[i]^2)^2 + (1 - x[i])^2)
  * 
  * Global optimum: x = [1, 1, ..., 1], objective = 0
  */
 
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <iostream>
 
 template <typename Scalar>
-Scalar rosenbrock_objective(const janus::JanusVector<Scalar>& x) {
+Scalar rosenbrock_objective(const metis::MetisVector<Scalar>& x) {
     Scalar obj = 0.0;
     for (int i = 0; i < x.size() - 1; ++i) {
-        Scalar term1 = 100 * janus::pow(x(i+1) - x(i) * x(i), 2);
-        Scalar term2 = janus::pow(1 - x(i), 2);
+        Scalar term1 = 100 * metis::pow(x(i+1) - x(i) * x(i), 2);
+        Scalar term2 = metis::pow(1 - x(i), 2);
         obj = obj + term1 + term2;
     }
     return obj;
@@ -535,7 +535,7 @@ int main() {
     
     // 2D Rosenbrock (unconstrained)
     {
-        janus::Opti opti;
+        metis::Opti opti;
         auto x = opti.variable(0.0);
         auto y = opti.variable(0.0);
         
@@ -549,7 +549,7 @@ int main() {
     
     // 2D Rosenbrock (constrained to unit circle)
     {
-        janus::Opti opti;
+        metis::Opti opti;
         auto x = opti.variable(0.0);
         auto y = opti.variable(0.0);
         
@@ -566,7 +566,7 @@ int main() {
     // N-D Rosenbrock
     {
         constexpr int N = 10;
-        janus::Opti opti;
+        metis::Opti opti;
         auto x = opti.variable(N, 0.0);  // N variables, init_guess=0
         
         opti.subject_to(x >= 0);  // Keep unimodal
@@ -583,7 +583,7 @@ int main() {
 
 ### Example 2: `beam_deflection.cpp` — Structural Analysis
 
-Based on [gp_beam/demo_code.py](file:///home/tanged/sources/janus/reference/AeroSandbox/tutorial/01%20-%20Optimization%20and%20Math/01%20-%20Optimization%20Benchmark%20Problems/gp_beam/demo_code.py)
+Based on [gp_beam/demo_code.py](file:///home/tanged/sources/metis/reference/AeroSandbox/tutorial/01%20-%20Optimization%20and%20Math/01%20-%20Optimization%20Benchmark%20Problems/gp_beam/demo_code.py)
 
 This elegantly demonstrates the `derivative_of()` chain for structural analysis:
 
@@ -598,7 +598,7 @@ This elegantly demonstrates the `derivative_of()` chain for structural analysis:
  *   dV/dx = q       (distributed load)
  */
 
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <iostream>
 
 int main() {
@@ -606,10 +606,10 @@ int main() {
     constexpr double L = 6.0;      // Beam length [m]
     constexpr double EI = 1.1e4;   // Bending stiffness [N·m²]
     
-    Eigen::VectorXd x = janus::linspace(0.0, L, N);
+    Eigen::VectorXd x = metis::linspace(0.0, L, N);
     Eigen::VectorXd q = Eigen::VectorXd::Constant(N, 110);  // Distributed load [N/m]
     
-    janus::Opti opti;
+    metis::Opti opti;
     
     auto w = opti.variable(N, 0.0);   // Displacement [m]
     
@@ -670,7 +670,7 @@ class Opti {
 - Track variable categories in `std::map<std::string, std::vector<MX>>`
 - Support `freeze_style`: "parameter" (symbolic) vs "value" (numeric substitution)
 
-**Reference**: [opti.py L72-L366](file:///home/tanged/sources/janus/reference/AeroSandbox/aerosandbox/optimization/opti.py#L72-L366)
+**Reference**: [opti.py L72-L366](file:///home/tanged/sources/metis/reference/AeroSandbox/aerosandbox/optimization/opti.py#L72-L366)
 
 ---
 
@@ -697,7 +697,7 @@ class OptiSol {
 - Store: variable values, categories, solve stats
 - Handle version mismatches gracefully
 
-**Reference**: [opti.py L952-L997](file:///home/tanged/sources/janus/reference/AeroSandbox/aerosandbox/optimization/opti.py#L952-L997)
+**Reference**: [opti.py L952-L997](file:///home/tanged/sources/metis/reference/AeroSandbox/aerosandbox/optimization/opti.py#L952-L997)
 
 ---
 
@@ -723,7 +723,7 @@ SweepResult solve_sweep(
 - Optionally warm-start from previous solution
 - Parallelize with OpenMP or similar
 
-**Reference**: [opti.py L734-L837](file:///home/tanged/sources/janus/reference/AeroSandbox/aerosandbox/optimization/opti.py#L734-L837)
+**Reference**: [opti.py L734-L837](file:///home/tanged/sources/metis/reference/AeroSandbox/aerosandbox/optimization/opti.py#L734-L837)
 
 ---
 
@@ -796,4 +796,4 @@ struct OptiOptions {
 
 ---
 
-*Generated by Janus Dev Team - Phase 6 Planning*
+*Generated by Metis Dev Team - Phase 6 Planning*

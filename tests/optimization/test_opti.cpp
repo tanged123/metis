@@ -1,6 +1,6 @@
 /**
  * @file test_opti.cpp
- * @brief Tests for janus::Opti optimization interface
+ * @brief Tests for metis::Opti optimization interface
  *
  * Tests cover:
  * - Rosenbrock 2D unconstrained
@@ -10,22 +10,22 @@
  */
 
 #include <gtest/gtest.h>
-#include <janus/core/Function.hpp>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/math/Arithmetic.hpp>
-#include <janus/math/AutoDiff.hpp>
-#include <janus/math/Logic.hpp>
-#include <janus/math/Spacing.hpp>
-#include <janus/math/Trig.hpp>
-#include <janus/optimization/Opti.hpp>
-#include <janus/optimization/OptiOptions.hpp>
+#include <metis/core/Function.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/math/Arithmetic.hpp>
+#include <metis/math/AutoDiff.hpp>
+#include <metis/math/Logic.hpp>
+#include <metis/math/Spacing.hpp>
+#include <metis/math/Trig.hpp>
+#include <metis/optimization/Opti.hpp>
+#include <metis/optimization/OptiOptions.hpp>
 
 // =============================================================================
 // Rosenbrock Tests (based on AeroSandbox benchmarks)
 // =============================================================================
 
 TEST(OptiTest, Rosenbrock2D_Unconstrained) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0);
     auto y = opti.variable(0.0);
@@ -42,7 +42,7 @@ TEST(OptiTest, Rosenbrock2D_Unconstrained) {
 
 TEST(OptiTest, Rosenbrock2D_Constrained) {
     // Constrained to unit circle: x^2 + y^2 <= 1
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0);
     auto y = opti.variable(0.0);
@@ -62,7 +62,7 @@ TEST(OptiTest, Rosenbrock2D_Constrained) {
 TEST(OptiTest, RosenbrockND) {
     // N-dimensional Rosenbrock with non-negativity constraint
     constexpr int N = 10;
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(N, 1.0); // init_guess = 1 (near solution)
 
@@ -70,16 +70,16 @@ TEST(OptiTest, RosenbrockND) {
     opti.subject_to_lower(x, 0.0);
 
     // Objective: sum(100*(x[i+1] - x[i]^2)^2 + (1 - x[i])^2)
-    janus::SymbolicScalar obj = 0;
+    metis::SymbolicScalar obj = 0;
     for (int i = 0; i < N - 1; ++i) {
-        obj = obj + 100 * janus::pow(x(i + 1) - x(i) * x(i), 2) + janus::pow(1 - x(i), 2);
+        obj = obj + 100 * metis::pow(x(i + 1) - x(i) * x(i), 2) + metis::pow(1 - x(i), 2);
     }
     opti.minimize(obj);
 
     auto sol = opti.solve({.verbose = false});
 
     // All elements should be ~1.0 at optimum
-    janus::NumericVector x_opt = sol.value(x);
+    metis::NumericVector x_opt = sol.value(x);
     for (int i = 0; i < N; ++i) {
         EXPECT_NEAR(x_opt(i), 1.0, 1e-4);
     }
@@ -90,7 +90,7 @@ TEST(OptiTest, RosenbrockND) {
 // =============================================================================
 
 TEST(OptiTest, EqualityConstraint) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0);
     auto y = opti.variable(0.0);
@@ -106,7 +106,7 @@ TEST(OptiTest, EqualityConstraint) {
 }
 
 TEST(OptiTest, MultipleConstraints) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.5);
     auto y = opti.variable(0.5);
@@ -122,27 +122,27 @@ TEST(OptiTest, MultipleConstraints) {
 }
 
 TEST(OptiTest, AllConstraintConjunction) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(2, -0.5);
-    janus::SymbolicVector cond(2);
+    metis::SymbolicVector cond(2);
     cond(0) = x(0) >= 0.0;
     cond(1) = x(1) >= 0.0;
 
-    opti.subject_to(janus::all(cond));
+    opti.subject_to(metis::all(cond));
 
     auto objective = (x(0) - 1.0) * (x(0) - 1.0) + (x(1) - 2.0) * (x(1) - 2.0);
     opti.minimize(objective);
 
     auto sol = opti.solve({.verbose = false});
-    janus::NumericVector x_opt = sol.value(x);
+    metis::NumericVector x_opt = sol.value(x);
 
     EXPECT_NEAR(x_opt(0), 1.0, 1e-6);
     EXPECT_NEAR(x_opt(1), 2.0, 1e-6);
 }
 
 TEST(OptiTest, VariableBounds) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0, std::nullopt, -1.0, 1.0); // -1 <= x <= 1
 
@@ -158,7 +158,7 @@ TEST(OptiTest, VariableBounds) {
 // =============================================================================
 
 TEST(OptiTest, ParameterUsage) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0);
     auto p = opti.parameter(5.0); // Fixed parameter
@@ -178,9 +178,9 @@ TEST(OptiTest, ParameterUsage) {
 TEST(OptiTest, DerivativeOf_Trapezoidal) {
     // Simple test: x(t) = t, so dx/dt = 1
     constexpr int N = 10;
-    janus::Opti opti;
+    metis::Opti opti;
 
-    janus::NumericVector t = janus::linspace(0.0, 1.0, N);
+    metis::NumericVector t = metis::linspace(0.0, 1.0, N);
     auto x = opti.variable(t); // Init guess is t itself
 
     auto xdot = opti.derivative_of(x, t, 1.0); // Expect derivative ~= 1
@@ -190,7 +190,7 @@ TEST(OptiTest, DerivativeOf_Trapezoidal) {
     opti.subject_to(x(N - 1) == 1);
 
     // Minimize deviation from constant derivative
-    janus::SymbolicScalar obj = 0;
+    metis::SymbolicScalar obj = 0;
     for (int i = 0; i < N; ++i) {
         obj = obj + (xdot(i) - 1) * (xdot(i) - 1);
     }
@@ -198,7 +198,7 @@ TEST(OptiTest, DerivativeOf_Trapezoidal) {
 
     auto sol = opti.solve({.verbose = false});
 
-    janus::NumericVector xdot_opt = sol.value(xdot);
+    metis::NumericVector xdot_opt = sol.value(xdot);
     for (int i = 0; i < N; ++i) {
         EXPECT_NEAR(xdot_opt(i), 1.0, 0.1);
     }
@@ -208,9 +208,9 @@ TEST(OptiTest, ConstrainDerivative_DoubleIntegrator) {
     // Double integrator: position -> velocity -> acceleration(=0)
     // With a(t) = 0, v = constant, x = linear
     constexpr int N = 20;
-    janus::Opti opti;
+    metis::Opti opti;
 
-    janus::NumericVector t = janus::linspace(0.0, 1.0, N);
+    metis::NumericVector t = metis::linspace(0.0, 1.0, N);
     auto x = opti.variable(N, 0.0); // Position
     auto v = opti.variable(N, 1.0); // Velocity
     auto a = opti.variable(N, 0.0); // Acceleration
@@ -226,7 +226,7 @@ TEST(OptiTest, ConstrainDerivative_DoubleIntegrator) {
     opti.subject_to(v(N - 1) == 1);
 
     // Minimize acceleration squared
-    janus::SymbolicScalar obj = 0;
+    metis::SymbolicScalar obj = 0;
     for (int i = 0; i < N; ++i) {
         obj = obj + a(i) * a(i);
     }
@@ -235,7 +235,7 @@ TEST(OptiTest, ConstrainDerivative_DoubleIntegrator) {
     auto sol = opti.solve({.verbose = false});
 
     // With constant velocity, acceleration should be ~0
-    janus::NumericVector a_opt = sol.value(a);
+    metis::NumericVector a_opt = sol.value(a);
     for (int i = 0; i < N; ++i) {
         EXPECT_NEAR(a_opt(i), 0.0, 0.1);
     }
@@ -246,7 +246,7 @@ TEST(OptiTest, ConstrainDerivative_DoubleIntegrator) {
 // =============================================================================
 
 TEST(OptiTest, Maximize) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0);
     opti.subject_to(x <= 5);
@@ -262,7 +262,7 @@ TEST(OptiTest, Maximize) {
 // =============================================================================
 
 TEST(OptiTest, SolverStats) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0);
     opti.minimize(x * x);
@@ -278,25 +278,25 @@ TEST(OptiTest, SolverStats) {
 // =============================================================================
 
 /**
- * Test 1: Using janus::Function output as constraint in Opti
+ * Test 1: Using metis::Function output as constraint in Opti
  *
  * Demonstrates: Pre-compiled symbolic functions can be reused in optimization
  */
 TEST(OptiIntegration, FunctionAsConstraint) {
     // Define a reusable constraint function: circle constraint
-    auto x_sym = janus::sym("x");
-    auto y_sym = janus::sym("y");
+    auto x_sym = metis::sym("x");
+    auto y_sym = metis::sym("y");
     auto circle_expr = x_sym * x_sym + y_sym * y_sym;
 
     // Create compiled function
-    janus::Function circle_fn("circle", {x_sym, y_sym}, {circle_expr});
+    metis::Function circle_fn("circle", {x_sym, y_sym}, {circle_expr});
 
     // Verify function works numerically
     auto result = circle_fn.eval(3.0, 4.0); // 3^2 + 4^2 = 25
     EXPECT_NEAR(result(0, 0), 25.0, 1e-10);
 
     // Now use in optimization
-    janus::Opti opti;
+    metis::Opti opti;
     auto x = opti.variable(0.5);
     auto y = opti.variable(0.5);
 
@@ -314,21 +314,21 @@ TEST(OptiIntegration, FunctionAsConstraint) {
 }
 
 /**
- * Test 2: Using janus::jacobian for gradient analysis
+ * Test 2: Using metis::jacobian for gradient analysis
  *
  * Demonstrates: Computing explicit gradients of objective for analysis
  */
 TEST(OptiIntegration, JacobianForGradientAnalysis) {
     // Define Rosenbrock function symbolically
-    auto x = janus::sym("x");
-    auto y = janus::sym("y");
+    auto x = metis::sym("x");
+    auto y = metis::sym("y");
     auto rosenbrock = (1 - x) * (1 - x) + 100 * (y - x * x) * (y - x * x);
 
-    // Compute gradient symbolically using janus::jacobian
-    auto gradient = janus::jacobian({rosenbrock}, {x, y});
+    // Compute gradient symbolically using metis::jacobian
+    auto gradient = metis::jacobian({rosenbrock}, {x, y});
 
     // Compile gradient into a function for efficient evaluation
-    janus::Function grad_fn("rosenbrock_grad", {x, y}, {gradient});
+    metis::Function grad_fn("rosenbrock_grad", {x, y}, {gradient});
 
     // Evaluate gradient at optimum (x=1, y=1)
     auto grad_at_opt = grad_fn.eval(1.0, 1.0);
@@ -353,9 +353,9 @@ TEST(OptiIntegration, JacobianForGradientAnalysis) {
  */
 TEST(OptiIntegration, ConstraintJacobianAnalysis) {
     // Variables
-    auto x = janus::sym("x");
-    auto y = janus::sym("y");
-    auto z = janus::sym("z");
+    auto x = metis::sym("x");
+    auto y = metis::sym("y");
+    auto z = metis::sym("z");
 
     // Constraints:
     //   g1(x,y,z) = x + 2y + 3z - 6  (plane)
@@ -364,10 +364,10 @@ TEST(OptiIntegration, ConstraintJacobianAnalysis) {
     auto g2 = x * x + y * y - z;
 
     // Compute constraint Jacobian
-    auto constraint_jac = janus::jacobian({g1, g2}, {x, y, z});
+    auto constraint_jac = metis::jacobian({g1, g2}, {x, y, z});
 
     // Compile to function
-    janus::Function jac_fn("constraint_jac", {x, y, z}, {constraint_jac});
+    metis::Function jac_fn("constraint_jac", {x, y, z}, {constraint_jac});
 
     // Evaluate at point (1, 1, 1)
     auto J = jac_fn.eval(1.0, 1.0, 1.0);
@@ -397,16 +397,16 @@ TEST(OptiIntegration, PhysicsModelInOptimization) {
     constexpr double v0 = 10.0; // Initial velocity [m/s]
     constexpr double g = 9.81;  // Gravity [m/s^2]
 
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto theta = opti.variable(M_PI / 4); // Initial guess: 45 degrees
-    opti.subject_to_bounds(janus::SymbolicVector::Constant(1, theta), 0.01, M_PI / 2 - 0.01);
+    opti.subject_to_bounds(metis::SymbolicVector::Constant(1, theta), 0.01, M_PI / 2 - 0.01);
 
     // Time of flight: t_f = 2*v0*sin(theta)/g
-    auto t_flight = 2 * v0 * janus::sin(theta) / g;
+    auto t_flight = 2 * v0 * metis::sin(theta) / g;
 
     // Range: x(t_f) = v0*cos(theta)*t_f
-    auto range = v0 * janus::cos(theta) * t_flight;
+    auto range = v0 * metis::cos(theta) * t_flight;
 
     opti.maximize(range);
 
@@ -423,12 +423,12 @@ TEST(OptiIntegration, PhysicsModelInOptimization) {
  */
 TEST(OptiIntegration, HessianComputation) {
     // Quadratic function: f(x,y) = x^2 + 2*y^2 + x*y
-    auto x = janus::sym("x");
-    auto y = janus::sym("y");
+    auto x = metis::sym("x");
+    auto y = metis::sym("y");
     auto f = x * x + 2 * y * y + x * y;
 
     // First compute gradient
-    auto grad = janus::jacobian({f}, {x, y}); // 1x2 row vector
+    auto grad = metis::jacobian({f}, {x, y}); // 1x2 row vector
 
     // Compute Hessian by differentiating gradient
     // grad = [df/dx, df/dy] as MX
@@ -437,15 +437,15 @@ TEST(OptiIntegration, HessianComputation) {
     auto df_dy = grad(0, 1);
 
     // Compute second derivatives
-    auto d2f_dxx = janus::jacobian({df_dx}, {x});
-    auto d2f_dxy = janus::jacobian({df_dx}, {y});
-    auto d2f_dyx = janus::jacobian({df_dy}, {x});
-    auto d2f_dyy = janus::jacobian({df_dy}, {y});
+    auto d2f_dxx = metis::jacobian({df_dx}, {x});
+    auto d2f_dxy = metis::jacobian({df_dx}, {y});
+    auto d2f_dyx = metis::jacobian({df_dy}, {x});
+    auto d2f_dyy = metis::jacobian({df_dy}, {y});
 
     // Compile to functions
-    janus::Function hxx_fn({x, y}, {d2f_dxx});
-    janus::Function hxy_fn({x, y}, {d2f_dxy});
-    janus::Function hyy_fn({x, y}, {d2f_dyy});
+    metis::Function hxx_fn({x, y}, {d2f_dxx});
+    metis::Function hxy_fn({x, y}, {d2f_dxy});
+    metis::Function hyy_fn({x, y}, {d2f_dyy});
 
     // Evaluate (should be constant for quadratic)
     auto hxx = hxx_fn.eval(0.0, 0.0);
@@ -467,20 +467,20 @@ TEST(OptiIntegration, HessianComputation) {
  */
 TEST(OptiIntegration, SharedSymbolicExpressions) {
     // Create shared symbolic variables
-    auto x = janus::sym("x");
-    auto y = janus::sym("y");
+    auto x = metis::sym("x");
+    auto y = metis::sym("y");
 
     // Define shared objective expression
     auto objective_expr = x * x + y * y;
 
     // Create callable function from expression
-    janus::Function obj_fn("objective", {x, y}, {objective_expr});
+    metis::Function obj_fn("objective", {x, y}, {objective_expr});
 
     // Verify numeric evaluation
     EXPECT_NEAR(obj_fn.eval(3.0, 4.0)(0, 0), 25.0, 1e-10);
 
     // Use SAME expression structure in optimization
-    janus::Opti opti;
+    metis::Opti opti;
     auto opt_x = opti.variable(1.0);
     auto opt_y = opti.variable(1.0);
 
@@ -505,10 +505,10 @@ TEST(OptiIntegration, SharedSymbolicExpressions) {
 // =============================================================================
 
 TEST(OptiTest, VectorParameter) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     // Create a vector parameter
-    janus::NumericVector p_vals(3);
+    metis::NumericVector p_vals(3);
     p_vals << 1.0, 2.0, 3.0;
     auto p = opti.parameter(p_vals);
 
@@ -528,7 +528,7 @@ TEST(OptiTest, VectorParameter) {
 // =============================================================================
 
 TEST(OptiTest, ScalarBounds_Lower) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0);
     opti.subject_to_lower(x, 3.0); // x >= 3
@@ -540,7 +540,7 @@ TEST(OptiTest, ScalarBounds_Lower) {
 }
 
 TEST(OptiTest, ScalarBounds_Upper) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0);
     opti.subject_to_upper(x, -2.0); // x <= -2
@@ -552,7 +552,7 @@ TEST(OptiTest, ScalarBounds_Upper) {
 }
 
 TEST(OptiTest, ScalarBounds_Both) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0);
     opti.subject_to_bounds(x, -1.0, 1.0); // -1 <= x <= 1
@@ -569,9 +569,9 @@ TEST(OptiTest, ScalarBounds_Both) {
 
 TEST(OptiTest, ConstrainDerivative_ForwardEuler) {
     constexpr int N = 10;
-    janus::Opti opti;
+    metis::Opti opti;
 
-    janus::NumericVector t = janus::linspace(0.0, 1.0, N);
+    metis::NumericVector t = metis::linspace(0.0, 1.0, N);
     auto x = opti.variable(N, 0.0);
     auto v = opti.variable(N, 1.0);
 
@@ -581,7 +581,7 @@ TEST(OptiTest, ConstrainDerivative_ForwardEuler) {
     opti.subject_to(x(0) == 0);
     opti.subject_to(x(N - 1) == 1);
 
-    janus::SymbolicScalar obj = 0;
+    metis::SymbolicScalar obj = 0;
     for (int i = 0; i < N; ++i) {
         obj = obj + (v(i) - 1.0) * (v(i) - 1.0);
     }
@@ -590,16 +590,16 @@ TEST(OptiTest, ConstrainDerivative_ForwardEuler) {
     auto sol = opti.solve({.verbose = false});
 
     // x should go from 0 to 1 linearly
-    janus::NumericVector x_opt = sol.value(x);
+    metis::NumericVector x_opt = sol.value(x);
     EXPECT_NEAR(x_opt(0), 0.0, 1e-4);
     EXPECT_NEAR(x_opt(N - 1), 1.0, 1e-4);
 }
 
 TEST(OptiTest, ConstrainDerivative_BackwardEuler) {
     constexpr int N = 10;
-    janus::Opti opti;
+    metis::Opti opti;
 
-    janus::NumericVector t = janus::linspace(0.0, 1.0, N);
+    metis::NumericVector t = metis::linspace(0.0, 1.0, N);
     auto x = opti.variable(N, 0.0);
     auto v = opti.variable(N, 1.0);
 
@@ -609,7 +609,7 @@ TEST(OptiTest, ConstrainDerivative_BackwardEuler) {
     opti.subject_to(x(0) == 0);
     opti.subject_to(x(N - 1) == 1);
 
-    janus::SymbolicScalar obj = 0;
+    metis::SymbolicScalar obj = 0;
     for (int i = 0; i < N; ++i) {
         obj = obj + (v(i) - 1.0) * (v(i) - 1.0);
     }
@@ -617,7 +617,7 @@ TEST(OptiTest, ConstrainDerivative_BackwardEuler) {
 
     auto sol = opti.solve({.verbose = false});
 
-    janus::NumericVector x_opt = sol.value(x);
+    metis::NumericVector x_opt = sol.value(x);
     EXPECT_NEAR(x_opt(0), 0.0, 1e-4);
     EXPECT_NEAR(x_opt(N - 1), 1.0, 1e-4);
 }
@@ -627,7 +627,7 @@ TEST(OptiTest, ConstrainDerivative_BackwardEuler) {
 // =============================================================================
 
 TEST(OptiTest, SolverOptions_DetectBounds) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0);
     opti.subject_to_bounds(x, 0.0, 10.0);
@@ -643,16 +643,16 @@ TEST(OptiTest, SolverOptions_DetectBounds) {
 // =============================================================================
 
 TEST(OptiTest, DerivativeOf_SizeMismatch) {
-    janus::Opti opti;
+    metis::Opti opti;
 
-    janus::NumericVector t = janus::linspace(0.0, 1.0, 10);
+    metis::NumericVector t = metis::linspace(0.0, 1.0, 10);
     auto x = opti.variable(5, 0.0); // Size 5, but t is size 10
 
-    EXPECT_THROW(opti.derivative_of(x, t, 0.0), janus::InvalidArgument);
+    EXPECT_THROW(opti.derivative_of(x, t, 0.0), metis::InvalidArgument);
 }
 
 TEST(OptiTest, VectorBounds_Combined) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(5, 0.5);
 
@@ -660,7 +660,7 @@ TEST(OptiTest, VectorBounds_Combined) {
     opti.subject_to_bounds(x, 0.0, 1.0);
 
     // Objective: minimize sum(x)
-    janus::SymbolicScalar obj = 0;
+    metis::SymbolicScalar obj = 0;
     for (int i = 0; i < 5; ++i) {
         obj = obj + x(i);
     }
@@ -669,19 +669,19 @@ TEST(OptiTest, VectorBounds_Combined) {
     auto sol = opti.solve({.verbose = false});
 
     // All elements should be at lower bound
-    janus::NumericVector x_opt = sol.value(x);
+    metis::NumericVector x_opt = sol.value(x);
     for (int i = 0; i < 5; ++i) {
         EXPECT_NEAR(x_opt(i), 0.0, 1e-6);
     }
 }
 
 TEST(OptiTest, VectorBounds_Upper) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(3, 0.0);
     opti.subject_to_upper(x, 2.0); // All x[i] <= 2
 
-    janus::SymbolicScalar obj = 0;
+    metis::SymbolicScalar obj = 0;
     for (int i = 0; i < 3; ++i) {
         obj = obj - x(i); // Maximize sum(x)
     }
@@ -689,7 +689,7 @@ TEST(OptiTest, VectorBounds_Upper) {
 
     auto sol = opti.solve({.verbose = false});
 
-    janus::NumericVector x_opt = sol.value(x);
+    metis::NumericVector x_opt = sol.value(x);
     for (int i = 0; i < 3; ++i) {
         EXPECT_NEAR(x_opt(i), 2.0, 1e-6);
     }
@@ -700,7 +700,7 @@ TEST(OptiTest, VectorBounds_Upper) {
 // =============================================================================
 
 TEST(OptiTest, VariableFreezing_SingleVariable) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     // x is optimized, y is frozen at 2.0
     auto x = opti.variable(0.0);
@@ -710,7 +710,7 @@ TEST(OptiTest, VariableFreezing_SingleVariable) {
     // If y were free, optimal is x=y=1 gives 0
     // With y frozen at 2.0, optimal x minimizes (x-1)^2 + (2-x)^2
     // d/dx = 2(x-1) - 2(2-x) = 0 => x-1 = 2-x => 2x = 3 => x = 1.5
-    opti.minimize(janus::pow(x - 1, 2) + janus::pow(y - x, 2));
+    opti.minimize(metis::pow(x - 1, 2) + metis::pow(y - x, 2));
 
     auto sol = opti.solve({.verbose = false});
 
@@ -720,7 +720,7 @@ TEST(OptiTest, VariableFreezing_SingleVariable) {
 
 TEST(OptiTest, VariableFreezing_Category) {
     // Freeze "Wing" category via constructor
-    janus::Opti opti({"Wing"});
+    metis::Opti opti({"Wing"});
 
     // x is in "Wing" -> should be frozen
     // y is in "Fuselage" -> should be free
@@ -730,7 +730,7 @@ TEST(OptiTest, VariableFreezing_Category) {
     // Minimize (x - 5)^2 + (y - 5)^2
     // If both free: x=5, y=5
     // With x frozen at 10: x=10, y=5
-    opti.minimize(janus::pow(x - 5, 2) + janus::pow(y - 5, 2));
+    opti.minimize(metis::pow(x - 5, 2) + metis::pow(y - 5, 2));
 
     auto sol = opti.solve({.verbose = false});
 
@@ -744,13 +744,13 @@ TEST(OptiTest, VariableFreezing_ExplicitOverride) {
     // So we can only force freeze, not force unfreeze against category.
     // Let's test force freeze in non-frozen category.
 
-    janus::Opti opti; // No categories frozen
+    metis::Opti opti; // No categories frozen
 
     // x is "Wing" (not frozen), but explicitly frozen
     auto x = opti.variable(10.0, {.category = "Wing", .freeze = true});
     auto y = opti.variable(0.0, {.category = "Wing"}); // Implicitly free
 
-    opti.minimize(janus::pow(x - 5, 2) + janus::pow(y - 5, 2));
+    opti.minimize(metis::pow(x - 5, 2) + metis::pow(y - 5, 2));
     auto sol = opti.solve({.verbose = false});
 
     EXPECT_NEAR(sol.value(x), 10.0, 1e-6);
@@ -758,7 +758,7 @@ TEST(OptiTest, VariableFreezing_ExplicitOverride) {
 }
 
 TEST(OptiTest, CategoryTracking) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(1.0, {.category = "A"});
     auto y = opti.variable(2.0, {.category = "A"});
@@ -786,7 +786,7 @@ TEST(OptiTest, CategoryTracking) {
 // =============================================================================
 
 TEST(OptiTest, ScalingAnalysisUsesFiniteBoundsForDefaultVariableScale) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0, std::nullopt, -1e6, 1e6);
     opti.minimize((x - 2.0) * (x - 2.0));
@@ -800,11 +800,11 @@ TEST(OptiTest, ScalingAnalysisUsesFiniteBoundsForDefaultVariableScale) {
 }
 
 TEST(OptiTest, ExplicitObjectiveAndConstraintScaling) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0);
     opti.subject_to(x == 1e6, 1e6);
-    opti.minimize(janus::pow(x - 1e6, 2), 1e12);
+    opti.minimize(metis::pow(x - 1e6, 2), 1e12);
 
     auto report = opti.analyze_scaling();
 
@@ -822,11 +822,11 @@ TEST(OptiTest, ExplicitObjectiveAndConstraintScaling) {
 }
 
 TEST(OptiTest, ScalingAnalysisWarnsForLargeUnscaledObjectiveAndConstraint) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(0.0);
     opti.subject_to(x == 1e6);
-    opti.minimize(janus::pow(x - 1e6, 2));
+    opti.minimize(metis::pow(x - 1e6, 2));
 
     auto report = opti.analyze_scaling();
 
@@ -835,8 +835,8 @@ TEST(OptiTest, ScalingAnalysisWarnsForLargeUnscaledObjectiveAndConstraint) {
     bool saw_constraint_warning = false;
     bool saw_objective_warning = false;
     for (const auto &issue : report.issues) {
-        saw_constraint_warning |= issue.kind == janus::ScalingIssueKind::Constraint;
-        saw_objective_warning |= issue.kind == janus::ScalingIssueKind::Objective;
+        saw_constraint_warning |= issue.kind == metis::ScalingIssueKind::Constraint;
+        saw_objective_warning |= issue.kind == metis::ScalingIssueKind::Objective;
     }
 
     EXPECT_TRUE(saw_constraint_warning);
@@ -844,30 +844,30 @@ TEST(OptiTest, ScalingAnalysisWarnsForLargeUnscaledObjectiveAndConstraint) {
 }
 
 TEST(OptiTest, ScaleValidationErrors) {
-    EXPECT_THROW(janus::detail::validate_positive_scale(0.0, "scale"), janus::InvalidArgument);
+    EXPECT_THROW(metis::detail::validate_positive_scale(0.0, "scale"), metis::InvalidArgument);
     EXPECT_THROW(
-        janus::detail::validate_positive_scale(std::numeric_limits<double>::quiet_NaN(), "scale"),
-        janus::InvalidArgument);
-    EXPECT_DOUBLE_EQ(janus::detail::max_finite_abs(-3.0, std::numeric_limits<double>::infinity()),
+        metis::detail::validate_positive_scale(std::numeric_limits<double>::quiet_NaN(), "scale"),
+        metis::InvalidArgument);
+    EXPECT_DOUBLE_EQ(metis::detail::max_finite_abs(-3.0, std::numeric_limits<double>::infinity()),
                      3.0);
-    EXPECT_DOUBLE_EQ(janus::detail::constraint_violation(5.0, 0.0, true, 4.0, true), 1.0);
+    EXPECT_DOUBLE_EQ(metis::detail::constraint_violation(5.0, 0.0, true, 4.0, true), 1.0);
 
-    janus::Opti opti;
-    EXPECT_THROW(opti.variable(0.0, std::optional<double>(0.0)), janus::InvalidArgument);
-    EXPECT_THROW(opti.variable(3, 0.0, std::optional<double>(0.0)), janus::InvalidArgument);
+    metis::Opti opti;
+    EXPECT_THROW(opti.variable(0.0, std::optional<double>(0.0)), metis::InvalidArgument);
+    EXPECT_THROW(opti.variable(3, 0.0, std::optional<double>(0.0)), metis::InvalidArgument);
 
-    janus::NumericVector init(2);
+    metis::NumericVector init(2);
     init << 1.0, 2.0;
-    EXPECT_THROW(opti.variable(init, std::optional<double>(0.0)), janus::InvalidArgument);
+    EXPECT_THROW(opti.variable(init, std::optional<double>(0.0)), metis::InvalidArgument);
 
     auto x = opti.variable(0.0);
-    EXPECT_THROW(opti.minimize(x * x, 0.0), janus::InvalidArgument);
+    EXPECT_THROW(opti.minimize(x * x, 0.0), metis::InvalidArgument);
     EXPECT_THROW(opti.maximize(x, std::numeric_limits<double>::quiet_NaN()),
-                 janus::InvalidArgument);
+                 metis::InvalidArgument);
 }
 
 TEST(OptiTest, ScalingAnalysisWarnsForTinyVariableAndScaleSpan) {
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto x = opti.variable(1e-9, std::optional<double>(1e4));
     auto y = opti.variable(1.0, std::optional<double>(1e-3));
@@ -878,8 +878,8 @@ TEST(OptiTest, ScalingAnalysisWarnsForTinyVariableAndScaleSpan) {
     bool saw_variable_warning = false;
     bool saw_summary_warning = false;
     for (const auto &issue : report.issues) {
-        saw_variable_warning |= issue.kind == janus::ScalingIssueKind::Variable;
-        saw_summary_warning |= issue.kind == janus::ScalingIssueKind::Summary;
+        saw_variable_warning |= issue.kind == metis::ScalingIssueKind::Variable;
+        saw_summary_warning |= issue.kind == metis::ScalingIssueKind::Summary;
     }
 
     EXPECT_TRUE(saw_variable_warning);
@@ -894,12 +894,12 @@ TEST(OptiTest, ScalingAnalysisWarnsForTinyVariableAndScaleSpan) {
 TEST(OptiTest, ParametricSweep_Basic) {
     // Minimize (x - k)^2 where k is a parameter
     // Optimal x* = k for each parameter value
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto k = opti.parameter(1.0); // Parameter to sweep
     auto x = opti.variable(0.0);
 
-    opti.minimize(janus::pow(x - k, 2));
+    opti.minimize(metis::pow(x - k, 2));
 
     // Sweep k from 1 to 5
     std::vector<double> k_values = {1.0, 2.0, 3.0, 4.0, 5.0};
@@ -917,14 +917,14 @@ TEST(OptiTest, ParametricSweep_Basic) {
 
 TEST(OptiTest, ParametricSweep_WarmStart) {
     // Verify warm-starting reduces iterations
-    janus::Opti opti;
+    metis::Opti opti;
 
     auto k = opti.parameter(0.0);
     auto x = opti.variable(0.0);
     auto y = opti.variable(0.0);
 
     // Rosenbrock with shifted minimum at (k, k^2)
-    opti.minimize(janus::pow(k - x, 2) + 100 * janus::pow(y - janus::pow(x, 2), 2));
+    opti.minimize(metis::pow(k - x, 2) + 100 * metis::pow(y - metis::pow(x, 2), 2));
 
     // Sweep with small steps (warm start should help)
     std::vector<double> k_values;

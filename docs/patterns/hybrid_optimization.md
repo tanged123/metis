@@ -1,6 +1,6 @@
 # Hybrid Optimization Patterns
 
-How to handle simulations with **unknown end-times** or **event detection** in Janus (AutoDiff/Optimization).
+How to handle simulations with **unknown end-times** or **event detection** in Metis (AutoDiff/Optimization).
 
 ## The Problem
 Standard AutoDiff requires a **fixed computational graph**. 
@@ -23,7 +23,7 @@ int steps = find_steps_until_impact_numeric(params);
 auto result = simulate_fixed_steps_symbolic(params, steps);
 
 // 3. Optimize
-auto grad = janus::jacobian({result}, {params});
+auto grad = metis::jacobian({result}, {params});
 ```
 
 ## Pattern 2: Free-Time Formulation (Time Scaling)
@@ -37,14 +37,14 @@ Problem: Find $T$ such that $y(T) = 0$.
 ```cpp
 // Fix N=100
 int N = 100;
-auto T_sym = janus::sym("T");
+auto T_sym = metis::sym("T");
 
 // Timestep scales with T
 // dt = T / N; 
 auto y_final = simulate_scaled_time(y0, v0, T_sym, N);
 
 // Optimize T to make y_final == 0
-auto dy_dT = janus::jacobian({y_final}, {T_sym});
+auto dy_dT = metis::jacobian({y_final}, {T_sym});
 // Use Newton's method on T...
 ```
 

@@ -1,10 +1,10 @@
-# Janus Refinement Implementation Plan
+# Metis Refinement Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Implement all fixes from the refinement audit across 5 phases: bug fixes, dead code removal, architectural refactoring, naming standardization, and minor cleanup.
 
-**Architecture:** Header-only C++20 library using CasADi + Eigen. All changes are in `include/janus/`. Tests in `tests/`, examples in `examples/`. Build with `cmake -B build && cmake --build build`.
+**Architecture:** Header-only C++20 library using CasADi + Eigen. All changes are in `include/metis/`. Tests in `tests/`, examples in `examples/`. Build with `cmake -B build && cmake --build build`.
 
 **Tech Stack:** C++20, CasADi (symbolic), Eigen 3.4 (linear algebra), GTest (testing)
 
@@ -25,13 +25,13 @@ cd build && ctest --output-on-failure
 ### Task 1: Fix solve_sweep() Silent Data Loss (C6)
 
 **Files:**
-- Modify: `include/janus/optimization/OptiSweep.hpp` (add error tracking fields)
-- Modify: `include/janus/optimization/Opti.hpp:672-691` (fix catch block)
+- Modify: `include/metis/optimization/OptiSweep.hpp` (add error tracking fields)
+- Modify: `include/metis/optimization/Opti.hpp:672-691` (fix catch block)
 - Modify: `tests/optimization/test_opti.cpp` (add sweep error test)
 
 - [ ] **Step 1: Add error tracking to SweepResult**
 
-In `include/janus/optimization/OptiSweep.hpp`, add fields to `SweepResult`:
+In `include/metis/optimization/OptiSweep.hpp`, add fields to `SweepResult`:
 
 ```cpp
 struct SweepResult {
@@ -52,7 +52,7 @@ struct SweepResult {
 
 - [ ] **Step 2: Fix the catch block in solve_sweep()**
 
-In `include/janus/optimization/Opti.hpp`, replace lines 672-691 (the for loop in `solve_sweep`):
+In `include/metis/optimization/Opti.hpp`, replace lines 672-691 (the for loop in `solve_sweep`):
 
 ```cpp
 for (size_t idx = 0; idx < values.size(); ++idx) {
@@ -94,7 +94,7 @@ cd build && ctest --output-on-failure -R test_opti
 - [ ] **Step 5: Commit**
 
 ```bash
-git add include/janus/optimization/OptiSweep.hpp include/janus/optimization/Opti.hpp
+git add include/metis/optimization/OptiSweep.hpp include/metis/optimization/Opti.hpp
 git commit -m "fix: solve_sweep continues on failure, reports per-point errors (C6)"
 ```
 
@@ -103,8 +103,8 @@ git commit -m "fix: solve_sweep continues on failure, reports per-point errors (
 ### Task 2: Fix OptiSweep::objective() Hardcoded 0.0 (C7)
 
 **Files:**
-- Modify: `include/janus/optimization/OptiSweep.hpp:39-52`
-- Modify: `include/janus/optimization/Opti.hpp` (store objective expression in SweepResult)
+- Modify: `include/metis/optimization/OptiSweep.hpp:39-52`
+- Modify: `include/metis/optimization/Opti.hpp` (store objective expression in SweepResult)
 
 - [ ] **Step 1: Replace hardcoded objective with proper evaluation**
 
@@ -133,7 +133,7 @@ cd build && ctest --output-on-failure -R test_opti
 - [ ] **Step 3: Commit**
 
 ```bash
-git add include/janus/optimization/OptiSweep.hpp
+git add include/metis/optimization/OptiSweep.hpp
 git commit -m "fix: SweepResult::objective() evaluates actual expression instead of returning 0.0 (C7)"
 ```
 
@@ -142,7 +142,7 @@ git commit -m "fix: SweepResult::objective() evaluates actual expression instead
 ### Task 3: Fix OptiSol Silent Fallbacks (M9)
 
 **Files:**
-- Modify: `include/janus/optimization/OptiSol.hpp:87-104`
+- Modify: `include/metis/optimization/OptiSol.hpp:87-104`
 
 - [ ] **Step 1: Change return type to std::optional<int>**
 
@@ -188,7 +188,7 @@ cd build && ctest --output-on-failure
 - [ ] **Step 4: Commit**
 
 ```bash
-git add include/janus/optimization/OptiSol.hpp
+git add include/metis/optimization/OptiSol.hpp
 git commit -m "fix: OptiSol num_iterations/num_function_evals return optional instead of -1 (M9)"
 ```
 
@@ -197,38 +197,38 @@ git commit -m "fix: OptiSol num_iterations/num_function_evals return optional in
 ### Task 4: Fix Quaternion from_rotation_matrix() Symbolic Branch (C8)
 
 **Files:**
-- Modify: `include/janus/math/Quaternion.hpp:230-244`
+- Modify: `include/metis/math/Quaternion.hpp:230-244`
 
-- [ ] **Step 1: Implement full 4-branch symbolic conversion using janus::where**
+- [ ] **Step 1: Implement full 4-branch symbolic conversion using metis::where**
 
 Replace the symbolic branch (lines 230-244) in `from_rotation_matrix()`:
 
 ```cpp
 } else {
-    // Symbolic: Full 4-branch using nested janus::where (Shepperd's method)
+    // Symbolic: Full 4-branch using nested metis::where (Shepperd's method)
     // Branch 0: trace > 0
-    Scalar s0 = half / janus::sqrt(trace + one);
+    Scalar s0 = half / metis::sqrt(trace + one);
     Scalar w0 = static_cast<Scalar>(0.25) / s0;
     Scalar x0 = (mat(2, 1) - mat(1, 2)) * s0;
     Scalar y0 = (mat(0, 2) - mat(2, 0)) * s0;
     Scalar z0 = (mat(1, 0) - mat(0, 1)) * s0;
 
     // Branch 1: mat(0,0) is largest diagonal
-    Scalar s1 = two * janus::sqrt(one + mat(0, 0) - mat(1, 1) - mat(2, 2));
+    Scalar s1 = two * metis::sqrt(one + mat(0, 0) - mat(1, 1) - mat(2, 2));
     Scalar w1 = (mat(2, 1) - mat(1, 2)) / s1;
     Scalar x1 = static_cast<Scalar>(0.25) * s1;
     Scalar y1 = (mat(0, 1) + mat(1, 0)) / s1;
     Scalar z1 = (mat(0, 2) + mat(2, 0)) / s1;
 
     // Branch 2: mat(1,1) is largest diagonal
-    Scalar s2 = two * janus::sqrt(one + mat(1, 1) - mat(0, 0) - mat(2, 2));
+    Scalar s2 = two * metis::sqrt(one + mat(1, 1) - mat(0, 0) - mat(2, 2));
     Scalar w2 = (mat(0, 2) - mat(2, 0)) / s2;
     Scalar x2 = (mat(0, 1) + mat(1, 0)) / s2;
     Scalar y2 = static_cast<Scalar>(0.25) * s2;
     Scalar z2 = (mat(1, 2) + mat(2, 1)) / s2;
 
     // Branch 3: mat(2,2) is largest diagonal
-    Scalar s3 = two * janus::sqrt(one + mat(2, 2) - mat(0, 0) - mat(1, 1));
+    Scalar s3 = two * metis::sqrt(one + mat(2, 2) - mat(0, 0) - mat(1, 1));
     Scalar w3 = (mat(1, 0) - mat(0, 1)) / s3;
     Scalar x3 = (mat(0, 2) + mat(2, 0)) / s3;
     Scalar y3 = (mat(1, 2) + mat(2, 1)) / s3;
@@ -236,26 +236,26 @@ Replace the symbolic branch (lines 230-244) in `from_rotation_matrix()`:
 
     // Select using nested where: trace>0 ? branch0 : (R00>R11 && R00>R22) ? branch1 : R11>R22 ? branch2 : branch3
     auto cond_trace = trace > static_cast<Scalar>(0.0);
-    auto cond_r00 = janus::logical_and(mat(0, 0) > mat(1, 1), mat(0, 0) > mat(2, 2));
+    auto cond_r00 = metis::logical_and(mat(0, 0) > mat(1, 1), mat(0, 0) > mat(2, 2));
     auto cond_r11 = mat(1, 1) > mat(2, 2);
 
     // Inner: branch2 vs branch3
-    Scalar wi = janus::where(cond_r11, w2, w3);
-    Scalar xi = janus::where(cond_r11, x2, x3);
-    Scalar yi = janus::where(cond_r11, y2, y3);
-    Scalar zi = janus::where(cond_r11, z2, z3);
+    Scalar wi = metis::where(cond_r11, w2, w3);
+    Scalar xi = metis::where(cond_r11, x2, x3);
+    Scalar yi = metis::where(cond_r11, y2, y3);
+    Scalar zi = metis::where(cond_r11, z2, z3);
 
     // Middle: branch1 vs inner
-    Scalar wm = janus::where(cond_r00, w1, wi);
-    Scalar xm = janus::where(cond_r00, x1, xi);
-    Scalar ym = janus::where(cond_r00, y1, yi);
-    Scalar zm = janus::where(cond_r00, z1, zi);
+    Scalar wm = metis::where(cond_r00, w1, wi);
+    Scalar xm = metis::where(cond_r00, x1, xi);
+    Scalar ym = metis::where(cond_r00, y1, yi);
+    Scalar zm = metis::where(cond_r00, z1, zi);
 
     // Outer: branch0 vs middle
-    q_w = janus::where(cond_trace, w0, wm);
-    q_x = janus::where(cond_trace, x0, xm);
-    q_y = janus::where(cond_trace, y0, ym);
-    q_z = janus::where(cond_trace, z0, zm);
+    q_w = metis::where(cond_trace, w0, wm);
+    q_x = metis::where(cond_trace, x0, xm);
+    q_y = metis::where(cond_trace, y0, ym);
+    q_z = metis::where(cond_trace, z0, zm);
 }
 ```
 
@@ -269,7 +269,7 @@ cd build && ctest --output-on-failure -R test_math
 - [ ] **Step 3: Commit**
 
 ```bash
-git add include/janus/math/Quaternion.hpp
+git add include/metis/math/Quaternion.hpp
 git commit -m "fix: from_rotation_matrix() symbolic path handles all rotation angles via nested where (C8)"
 ```
 
@@ -278,7 +278,7 @@ git commit -m "fix: from_rotation_matrix() symbolic path handles all rotation an
 ### Task 5: Fix Arithmetic fmod() Infinite Recursion (C8)
 
 **Files:**
-- Modify: `include/janus/math/Arithmetic.hpp:365-375`
+- Modify: `include/metis/math/Arithmetic.hpp:365-375`
 
 - [ ] **Step 1: Fix the recursive call**
 
@@ -294,7 +294,7 @@ auto fmod(const Eigen::MatrixBase<Derived> &x, const Scalar &y) {
             x.rows(), x.cols());
         for (Eigen::Index i = 0; i < x.rows(); ++i) {
             for (Eigen::Index j = 0; j < x.cols(); ++j) {
-                result(i, j) = janus::fmod(x(i, j), static_cast<MatScalar>(y));
+                result(i, j) = metis::fmod(x(i, j), static_cast<MatScalar>(y));
             }
         }
         return result;
@@ -315,7 +315,7 @@ cd build && ctest --output-on-failure -R test_math
 - [ ] **Step 3: Commit**
 
 ```bash
-git add include/janus/math/Arithmetic.hpp
+git add include/metis/math/Arithmetic.hpp
 git commit -m "fix: fmod matrix variant uses element-wise dispatch instead of infinite recursion (C8)"
 ```
 
@@ -324,7 +324,7 @@ git commit -m "fix: fmod matrix variant uses element-wise dispatch instead of in
 ### Task 6: Fix SurrogateModel softplus_scalar() Symbolic Stability (C8)
 
 **Files:**
-- Modify: `include/janus/math/SurrogateModel.hpp:147-150`
+- Modify: `include/metis/math/SurrogateModel.hpp:147-150`
 
 - [ ] **Step 1: Add stabilization to symbolic softplus**
 
@@ -360,7 +360,7 @@ cd build && ctest --output-on-failure -R test_math
 - [ ] **Step 3: Commit**
 
 ```bash
-git add include/janus/math/SurrogateModel.hpp
+git add include/metis/math/SurrogateModel.hpp
 git commit -m "docs: clarify softplus_scalar symbolic stability (C8)"
 ```
 
@@ -371,18 +371,18 @@ git commit -m "docs: clarify softplus_scalar symbolic stability (C8)"
 ### Task 7: Remove DiffOps.hpp (M3)
 
 **Files:**
-- Delete: `include/janus/math/DiffOps.hpp`
-- Verify: `include/janus/math/JanusMath.hpp` (already commented out)
+- Delete: `include/metis/math/DiffOps.hpp`
+- Verify: `include/metis/math/MetisMath.hpp` (already commented out)
 
 - [ ] **Step 1: Delete the file**
 
-Delete `include/janus/math/DiffOps.hpp` (15-line deprecated redirect).
+Delete `include/metis/math/DiffOps.hpp` (15-line deprecated redirect).
 
-- [ ] **Step 2: Verify JanusMath.hpp doesn't include it**
+- [ ] **Step 2: Verify MetisMath.hpp doesn't include it**
 
-Confirm line 32 in `JanusMath.hpp` is still commented out:
+Confirm line 32 in `MetisMath.hpp` is still commented out:
 ```cpp
-// #include "janus/math/DiffOps.hpp"
+// #include "metis/math/DiffOps.hpp"
 ```
 
 - [ ] **Step 3: Search for any remaining references**
@@ -401,7 +401,7 @@ cd build && ctest --output-on-failure
 - [ ] **Step 5: Commit**
 
 ```bash
-git rm include/janus/math/DiffOps.hpp
+git rm include/metis/math/DiffOps.hpp
 git commit -m "chore: delete deprecated DiffOps.hpp redirect (M3)"
 ```
 
@@ -410,11 +410,11 @@ git commit -m "chore: delete deprecated DiffOps.hpp redirect (M3)"
 ### Task 8: Remove Backward-Compat Aliases (M3)
 
 **Files:**
-- Modify: `include/janus/math/Interpolate.hpp:1093-1106` (remove aliases)
-- Modify: `include/janus/math/Interpolate.hpp:1237-1275` (remove interpn2d)
-- Modify: `include/janus/math/Logic.hpp:548-552` (remove clip)
+- Modify: `include/metis/math/Interpolate.hpp:1093-1106` (remove aliases)
+- Modify: `include/metis/math/Interpolate.hpp:1237-1275` (remove interpn2d)
+- Modify: `include/metis/math/Logic.hpp:548-552` (remove clip)
 
-- [ ] **Step 1: Remove Interp1D and JanusInterpolator aliases**
+- [ ] **Step 1: Remove Interp1D and MetisInterpolator aliases**
 
 In `Interpolate.hpp`, delete lines 1093-1106:
 ```cpp
@@ -431,7 +431,7 @@ using Interp1D = Interpolator;
 /**
  * @deprecated Use Interpolator directly
  */
-using JanusInterpolator = Interpolator;
+using MetisInterpolator = Interpolator;
 ```
 
 - [ ] **Step 2: Remove interpn2d deprecated wrappers**
@@ -456,7 +456,7 @@ Check if `using.hpp` exports `clip` and remove if so.
 - [ ] **Step 5: Search for any internal uses**
 
 ```bash
-grep -r "Interp1D\|JanusInterpolator\|interpn2d\|janus::clip\b" include/ tests/ examples/
+grep -r "Interp1D\|MetisInterpolator\|interpn2d\|metis::clip\b" include/ tests/ examples/
 ```
 
 Fix any found references.
@@ -471,8 +471,8 @@ cd build && ctest --output-on-failure
 - [ ] **Step 7: Commit**
 
 ```bash
-git add include/janus/math/Interpolate.hpp include/janus/math/Logic.hpp
-git commit -m "chore: remove deprecated aliases Interp1D, JanusInterpolator, interpn2d, clip (M3)"
+git add include/metis/math/Interpolate.hpp include/metis/math/Logic.hpp
+git commit -m "chore: remove deprecated aliases Interp1D, MetisInterpolator, interpn2d, clip (M3)"
 ```
 
 ---
@@ -480,9 +480,9 @@ git commit -m "chore: remove deprecated aliases Interp1D, JanusInterpolator, int
 ### Task 9: Inline OptiCache into OptiSol (M3)
 
 **Files:**
-- Modify: `include/janus/optimization/OptiSol.hpp` (add static load method)
-- Delete: `include/janus/optimization/OptiCache.hpp`
-- Modify: `include/janus/optimization/Opti.hpp:1` (remove OptiCache include)
+- Modify: `include/metis/optimization/OptiSol.hpp` (add static load method)
+- Delete: `include/metis/optimization/OptiCache.hpp`
+- Modify: `include/metis/optimization/Opti.hpp:1` (remove OptiCache include)
 - Modify: `tests/optimization/test_opti_cache.cpp` (update references)
 - Modify: `tests/CMakeLists.txt` if needed
 
@@ -499,7 +499,7 @@ In `OptiSol.hpp`, add a static method:
  * @throws RuntimeError if file cannot be read or parsed
  */
 static std::map<std::string, std::vector<double>> load(const std::string &filename) {
-    return janus::utils::read_json(filename);
+    return metis::utils::read_json(filename);
 }
 ```
 
@@ -529,8 +529,8 @@ cd build && ctest --output-on-failure
 - [ ] **Step 7: Commit**
 
 ```bash
-git rm include/janus/optimization/OptiCache.hpp
-git add include/janus/optimization/OptiSol.hpp include/janus/optimization/Opti.hpp tests/
+git rm include/metis/optimization/OptiCache.hpp
+git add include/metis/optimization/OptiSol.hpp include/metis/optimization/Opti.hpp tests/
 git commit -m "chore: inline OptiCache::load into OptiSol, delete OptiCache.hpp (M3)"
 ```
 
@@ -538,10 +538,10 @@ git commit -m "chore: inline OptiCache::load into OptiSol, delete OptiCache.hpp 
 
 ## Phase 3: Architectural Refactoring
 
-### Task 10: Deduplicate JanusIO.hpp HTML Template (C3)
+### Task 10: Deduplicate MetisIO.hpp HTML Template (C3)
 
 **Files:**
-- Modify: `include/janus/core/JanusIO.hpp`
+- Modify: `include/metis/core/MetisIO.hpp`
 
 The two HTML export functions (`export_graph_html` at line 375 and `export_sx_graph_html` at line 1055) share nearly identical HTML/CSS/JS (~200 lines each). Extract the shared template.
 
@@ -832,8 +832,8 @@ cd build && ctest --output-on-failure -R test_core
 - [ ] **Step 6: Commit**
 
 ```bash
-git add include/janus/core/JanusIO.hpp
-git commit -m "refactor: deduplicate HTML graph template in JanusIO.hpp, ~400 lines removed (C3)"
+git add include/metis/core/MetisIO.hpp
+git commit -m "refactor: deduplicate HTML graph template in MetisIO.hpp, ~400 lines removed (C3)"
 ```
 
 ---
@@ -841,7 +841,7 @@ git commit -m "refactor: deduplicate HTML graph template in JanusIO.hpp, ~400 li
 ### Task 11: Consolidate Opti.hpp variable() Overloads (C4, M7)
 
 **Files:**
-- Modify: `include/janus/optimization/Opti.hpp:191-337`
+- Modify: `include/metis/optimization/Opti.hpp:191-337`
 
 The 4 `variable()` overloads share duplicated scaling/bounds logic. Consolidate into 2 clean overloads (scalar + vector) that delegate to a shared internal helper.
 
@@ -878,7 +878,7 @@ private:
         if (upper_bound.has_value()) { opti_.subject_to(scaled_var <= upper_bound.value()); }
 
         register_variable_block(init_guess, category, s, scale.has_value(), lower_bound, upper_bound);
-        return janus::to_eigen(scaled_var);
+        return metis::to_eigen(scaled_var);
     }
 ```
 
@@ -894,7 +894,7 @@ cd build && ctest --output-on-failure -R test_opti
 - [ ] **Step 3: Commit**
 
 ```bash
-git add include/janus/optimization/Opti.hpp
+git add include/metis/optimization/Opti.hpp
 git commit -m "refactor: consolidate variable() vector overloads via shared helper (C4, M7)"
 ```
 
@@ -903,7 +903,7 @@ git commit -m "refactor: consolidate variable() vector overloads via shared help
 ### Task 12: Make casadi_opti() Return Const Reference (M11)
 
 **Files:**
-- Modify: `include/janus/optimization/Opti.hpp:951`
+- Modify: `include/metis/optimization/Opti.hpp:951`
 
 - [ ] **Step 1: Remove the mutable overload**
 
@@ -935,8 +935,8 @@ cd build && ctest --output-on-failure
 - [ ] **Step 4: Commit**
 
 ```bash
-git add include/janus/optimization/Opti.hpp
-git commit -m "refactor: casadi_opti() returns const ref to prevent bypassing Janus invariants (M11)"
+git add include/metis/optimization/Opti.hpp
+git commit -m "refactor: casadi_opti() returns const ref to prevent bypassing Metis invariants (M11)"
 ```
 
 ---
@@ -946,14 +946,14 @@ git commit -m "refactor: casadi_opti() returns const ref to prevent bypassing Ja
 ### Task 13: Unify Detail Namespaces to Plain `detail` (C2)
 
 **Files (8 renames):**
-- Modify: `include/janus/core/StructuralTransforms.hpp` — `structural_detail` → `detail`
-- Modify: `include/janus/core/Diagnostics.hpp` — `diagnostics_detail` → `detail`
-- Modify: `include/janus/optimization/Opti.hpp` — `opti_detail` → `detail`
-- Modify: `include/janus/math/PolynomialChaos.hpp` — `polynomial_chaos_detail` → `detail`
-- Modify: `include/janus/math/Integrate.hpp` — `integrate_detail` → `detail`
-- Modify: `include/janus/math/Quadrature.hpp` — `quadrature_detail` → `detail`
-- Modify: `include/janus/math/AutoDiff.hpp` — `autodiff_detail` → `detail`
-- Modify: `include/janus/math/Logic.hpp` — `logic_detail` → `detail`
+- Modify: `include/metis/core/StructuralTransforms.hpp` — `structural_detail` → `detail`
+- Modify: `include/metis/core/Diagnostics.hpp` — `diagnostics_detail` → `detail`
+- Modify: `include/metis/optimization/Opti.hpp` — `opti_detail` → `detail`
+- Modify: `include/metis/math/PolynomialChaos.hpp` — `polynomial_chaos_detail` → `detail`
+- Modify: `include/metis/math/Integrate.hpp` — `integrate_detail` → `detail`
+- Modify: `include/metis/math/Quadrature.hpp` — `quadrature_detail` → `detail`
+- Modify: `include/metis/math/AutoDiff.hpp` — `autodiff_detail` → `detail`
+- Modify: `include/metis/math/Logic.hpp` — `logic_detail` → `detail`
 
 - [ ] **Step 1: Rename all prefixed detail namespaces**
 
@@ -971,7 +971,7 @@ For each file:
 
 Also rename the namespace declarations themselves.
 
-**Note:** Multiple files already use `namespace detail` — this is fine in C++ as long as they're all within `namespace janus`. Multiple `namespace detail` blocks in different headers just extend the same namespace.
+**Note:** Multiple files already use `namespace detail` — this is fine in C++ as long as they're all within `namespace metis`. Multiple `namespace detail` blocks in different headers just extend the same namespace.
 
 - [ ] **Step 2: Handle AutoDiff.hpp which uses both patterns**
 
@@ -996,7 +996,7 @@ git commit -m "refactor: unify all *_detail namespaces to plain detail (C2)"
 ### Task 14: Standardize Enum Values to PascalCase (C1)
 
 **Files:**
-- Modify: `include/janus/optimization/OptiOptions.hpp:14-18`
+- Modify: `include/metis/optimization/OptiOptions.hpp:14-18`
 - Modify: All files that reference `Solver::IPOPT`, `Solver::SNOPT`, `Solver::QPOASES`
 
 - [ ] **Step 1: Rename Solver enum values**
@@ -1048,19 +1048,19 @@ git commit -m "refactor: rename Solver enum values to PascalCase: Ipopt, Snopt, 
 ### Task 15: Fix FiniteDifference.hpp Relative Includes (M4)
 
 **Files:**
-- Modify: `include/janus/math/FiniteDifference.hpp:3-4`
+- Modify: `include/metis/math/FiniteDifference.hpp:3-4`
 
 - [ ] **Step 1: Replace relative with absolute paths**
 
 Change:
 ```cpp
-#include "../core/JanusError.hpp"
-#include "../core/JanusTypes.hpp"
+#include "../core/MetisError.hpp"
+#include "../core/MetisTypes.hpp"
 ```
 To:
 ```cpp
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
 ```
 
 - [ ] **Step 2: Build and test**
@@ -1073,7 +1073,7 @@ cd build && ctest --output-on-failure -R test_math
 - [ ] **Step 3: Commit**
 
 ```bash
-git add include/janus/math/FiniteDifference.hpp
+git add include/metis/math/FiniteDifference.hpp
 git commit -m "fix: use absolute include paths in FiniteDifference.hpp (M4)"
 ```
 
@@ -1082,13 +1082,13 @@ git commit -m "fix: use absolute include paths in FiniteDifference.hpp (M4)"
 ### Task 16: Name Magic Numbers (M5)
 
 **Files:**
-- Modify: `include/janus/math/ScatteredInterpolator.hpp`
-- Modify: `include/janus/math/IntegrateDiscrete.hpp`
-- Modify: `include/janus/math/OrthogonalPolynomials.hpp`
+- Modify: `include/metis/math/ScatteredInterpolator.hpp`
+- Modify: `include/metis/math/IntegrateDiscrete.hpp`
+- Modify: `include/metis/math/OrthogonalPolynomials.hpp`
 
 - [ ] **Step 1: Add named constants in ScatteredInterpolator.hpp**
 
-Near the top of the file (inside namespace janus or the relevant detail namespace), add:
+Near the top of the file (inside namespace metis or the relevant detail namespace), add:
 
 ```cpp
 namespace detail {
@@ -1133,7 +1133,7 @@ cd build && ctest --output-on-failure -R test_math
 - [ ] **Step 5: Commit**
 
 ```bash
-git add include/janus/math/ScatteredInterpolator.hpp include/janus/math/IntegrateDiscrete.hpp include/janus/math/OrthogonalPolynomials.hpp
+git add include/metis/math/ScatteredInterpolator.hpp include/metis/math/IntegrateDiscrete.hpp include/metis/math/OrthogonalPolynomials.hpp
 git commit -m "refactor: name magic numbers with constexpr constants (M5)"
 ```
 
@@ -1142,8 +1142,8 @@ git commit -m "refactor: name magic numbers with constexpr constants (M5)"
 ### Task 17: Rename BirkhoffOptions and Normalize MultiShootingOptions (M10)
 
 **Files:**
-- Modify: `include/janus/optimization/BirkhoffPseudospectral.hpp`
-- Modify: `include/janus/optimization/MultiShooting.hpp`
+- Modify: `include/metis/optimization/BirkhoffPseudospectral.hpp`
+- Modify: `include/metis/optimization/MultiShooting.hpp`
 - Update any test/example files that use these options
 
 - [ ] **Step 1: Rename BirkhoffOptions to BirkhoffPseudospectralOptions**
@@ -1183,7 +1183,7 @@ git commit -m "refactor: rename BirkhoffOptions to BirkhoffPseudospectralOptions
 
 - [ ] **Step 1: Fix the stale reference**
 
-Replace any reference to `include/janus/linalg/` with `include/janus/math/Linalg.hpp`.
+Replace any reference to `include/metis/linalg/` with `include/metis/math/Linalg.hpp`.
 
 - [ ] **Step 2: Commit**
 
@@ -1194,14 +1194,14 @@ git commit -m "docs: fix stale linalg path reference in .cursorrules (m1)"
 
 ---
 
-### Task 19: Remove Redundant Include from JanusMath.hpp (m2)
+### Task 19: Remove Redundant Include from MetisMath.hpp (m2)
 
 **Files:**
-- Modify: `include/janus/math/JanusMath.hpp:9`
+- Modify: `include/metis/math/MetisMath.hpp:9`
 
 - [ ] **Step 1: Remove the redundant include**
 
-Remove `#include "janus/core/JanusError.hpp"` from line 9 — it's already transitively included through every math header.
+Remove `#include "metis/core/MetisError.hpp"` from line 9 — it's already transitively included through every math header.
 
 - [ ] **Step 2: Build and test**
 
@@ -1213,8 +1213,8 @@ cd build && ctest --output-on-failure
 - [ ] **Step 3: Commit**
 
 ```bash
-git add include/janus/math/JanusMath.hpp
-git commit -m "chore: remove redundant JanusError.hpp include from JanusMath.hpp (m2)"
+git add include/metis/math/MetisMath.hpp
+git commit -m "chore: remove redundant MetisError.hpp include from MetisMath.hpp (m2)"
 ```
 
 ---
@@ -1222,7 +1222,7 @@ git commit -m "chore: remove redundant JanusError.hpp include from JanusMath.hpp
 ### Task 20: Mark JsonUtils as Internal (M12)
 
 **Files:**
-- Modify: `include/janus/utils/JsonUtils.hpp`
+- Modify: `include/metis/utils/JsonUtils.hpp`
 
 - [ ] **Step 1: Fix silent error handling**
 
@@ -1232,7 +1232,7 @@ In `JsonUtils.hpp` line 117, replace the silent catch:
 try {
     vec.push_back(std::stod(number_str));
 } catch (const std::exception &e) {
-    throw janus::RuntimeError("Malformed JSON: could not parse number '" +
+    throw metis::RuntimeError("Malformed JSON: could not parse number '" +
                               number_str + "': " + e.what());
 }
 ```
@@ -1247,7 +1247,7 @@ cd build && ctest --output-on-failure
 - [ ] **Step 3: Commit**
 
 ```bash
-git add include/janus/utils/JsonUtils.hpp
+git add include/metis/utils/JsonUtils.hpp
 git commit -m "fix: JsonUtils throws on parse errors instead of silently dropping values (M12)"
 ```
 

@@ -1,33 +1,33 @@
 # Pseudospectral
 
-`janus::Pseudospectral` implements global polynomial optimal-control transcription using spectral differentiation matrices. It enforces dynamics globally via `D * X = (dt / 2) * F(X, U, t)`, where `D` is a differentiation matrix on Lobatto nodes. For smooth problems this gives spectral convergence, so high accuracy is often possible with fewer nodes than local collocation. This works in **symbolic mode** via the `janus::Opti` interface. The class lives in `<janus/optimization/Pseudospectral.hpp>`.
+`metis::Pseudospectral` implements global polynomial optimal-control transcription using spectral differentiation matrices. It enforces dynamics globally via `D * X = (dt / 2) * F(X, U, t)`, where `D` is a differentiation matrix on Lobatto nodes. For smooth problems this gives spectral convergence, so high accuracy is often possible with fewer nodes than local collocation. This works in **symbolic mode** via the `metis::Opti` interface. The class lives in `<metis/optimization/Pseudospectral.hpp>`.
 
 ## Quick Start
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-janus::Opti opti;
-janus::Pseudospectral ps(opti);
+metis::Opti opti;
+metis::Pseudospectral ps(opti);
 
-janus::PseudospectralOptions opts;
-opts.scheme = janus::PseudospectralScheme::LGL;
+metis::PseudospectralOptions opts;
+opts.scheme = metis::PseudospectralScheme::LGL;
 opts.n_nodes = 31;
 
 auto [x, u, tau] = ps.setup(3, 1, 0.0, 2.0, opts);
 
-ps.set_dynamics([](const janus::SymbolicVector& x,
-                    const janus::SymbolicVector& u,
-                    const janus::SymbolicScalar& t) {
-    janus::SymbolicVector dxdt(3);
-    dxdt(0) = x(2) * janus::sin(u(0));
-    dxdt(1) = -x(2) * janus::cos(u(0));
-    dxdt(2) = 9.81 * janus::cos(u(0));
+ps.set_dynamics([](const metis::SymbolicVector& x,
+                    const metis::SymbolicVector& u,
+                    const metis::SymbolicScalar& t) {
+    metis::SymbolicVector dxdt(3);
+    dxdt(0) = x(2) * metis::sin(u(0));
+    dxdt(1) = -x(2) * metis::cos(u(0));
+    dxdt(2) = 9.81 * metis::cos(u(0));
     return dxdt;
 });
 
 ps.add_dynamics_constraints();
-ps.set_initial_state(janus::NumericVector{{0.0, 10.0, 0.001}});
+ps.set_initial_state(metis::NumericVector{{0.0, 10.0, 0.001}});
 ps.set_final_state(0, 10.0);
 ps.set_final_state(1, 5.0);
 
@@ -39,7 +39,7 @@ auto sol = opti.solve();
 
 | Method | Description |
 |--------|-------------|
-| `Pseudospectral(opti)` | Construct with a `janus::Opti` instance |
+| `Pseudospectral(opti)` | Construct with a `metis::Opti` instance |
 | `setup(n_states, n_controls, t0, tf, opts)` | Create decision variables and time grid |
 | `set_dynamics(ode)` | Set the ODE function: `(x, u, t) -> dxdt` |
 | `add_dynamics_constraints()` | Apply spectral differentiation matrix constraints |
@@ -86,7 +86,7 @@ auto sol = opti.solve();
 Use `quadrature()` for Lagrange objectives:
 
 ```cpp
-janus::SymbolicVector integrand(ps.n_nodes());
+metis::SymbolicVector integrand(ps.n_nodes());
 for (int k = 0; k < ps.n_nodes(); ++k) {
     integrand(k) = u(k, 0) * u(k, 0);
 }
@@ -121,4 +121,4 @@ const auto &w = ps.quadrature_weights();
 - [Multiple Shooting Guide](multiple_shooting.md) -- Integrator-based transcription
 - [Birkhoff Pseudospectral Guide](birkhoff_pseudospectral.md) -- Birkhoff-form with integration matrix
 - [transcription_comparison_demo.cpp](../../examples/optimization/transcription_comparison_demo.cpp) -- Unified comparison example
-- [Pseudospectral.hpp](../../include/janus/optimization/Pseudospectral.hpp) -- API reference
+- [Pseudospectral.hpp](../../include/metis/optimization/Pseudospectral.hpp) -- API reference

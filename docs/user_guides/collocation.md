@@ -1,33 +1,33 @@
 # Direct Collocation
 
-Direct collocation transforms continuous-time optimal control problems into large sparse NLPs by discretizing time into nodes and enforcing dynamics at each segment using defect constraints. Janus provides the `janus::DirectCollocation` class in `<janus/optimization/Collocation.hpp>`. It supports trapezoidal (2nd order) and Hermite-Simpson (4th order) schemes and works in **symbolic mode** via the `janus::Opti` interface.
+Direct collocation transforms continuous-time optimal control problems into large sparse NLPs by discretizing time into nodes and enforcing dynamics at each segment using defect constraints. Metis provides the `metis::DirectCollocation` class in `<metis/optimization/Collocation.hpp>`. It supports trapezoidal (2nd order) and Hermite-Simpson (4th order) schemes and works in **symbolic mode** via the `metis::Opti` interface.
 
 ## Quick Start
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-janus::Opti opti;
-janus::DirectCollocation dc(opti);
+metis::Opti opti;
+metis::DirectCollocation dc(opti);
 
 auto [x, u, tau] = dc.setup(
     2, 1, 0.0, 2.0,
-    {.scheme = janus::CollocationScheme::HermiteSimpson, .n_nodes = 31}
+    {.scheme = metis::CollocationScheme::HermiteSimpson, .n_nodes = 31}
 );
 
 dc.set_dynamics([](const auto& x, const auto& u, const auto& t) {
-    janus::SymbolicVector dxdt(2);
+    metis::SymbolicVector dxdt(2);
     dxdt(0) = x(1);
     dxdt(1) = u(0);
     return dxdt;
 });
 
 dc.add_defect_constraints();
-dc.set_initial_state(janus::NumericVector{{0.0, 0.0}});
-dc.set_final_state(janus::NumericVector{{1.0, 0.0}});
+dc.set_initial_state(metis::NumericVector{{0.0, 0.0}});
+dc.set_final_state(metis::NumericVector{{1.0, 0.0}});
 
 // Minimize control effort: sum of u^2 at each node
-janus::SymbolicScalar obj = 0;
+metis::SymbolicScalar obj = 0;
 for (int k = 0; k < dc.n_nodes(); ++k)
     obj = obj + u(k, 0) * u(k, 0);
 opti.minimize(obj);
@@ -38,7 +38,7 @@ auto sol = opti.solve();
 
 | Method | Description |
 |--------|-------------|
-| `DirectCollocation(opti)` | Construct with a `janus::Opti` instance |
+| `DirectCollocation(opti)` | Construct with a `metis::Opti` instance |
 | `setup(n_states, n_controls, t0, tf, opts)` | Create decision variables and time grid |
 | `set_dynamics(ode)` | Set the ODE function: `(x, u, t) -> dxdt` |
 | `add_defect_constraints()` | Apply collocation defect constraints |
@@ -74,36 +74,36 @@ The brachistochrone problem finds the fastest path for a bead sliding under grav
 
 **Dynamics:**
 ```cpp
-janus::SymbolicVector brachistochrone_dynamics(
-    const janus::SymbolicVector &state,    // [x, y, v]
-    const janus::SymbolicVector &control,  // [theta]
-    const janus::SymbolicScalar &t)
+metis::SymbolicVector brachistochrone_dynamics(
+    const metis::SymbolicVector &state,    // [x, y, v]
+    const metis::SymbolicVector &control,  // [theta]
+    const metis::SymbolicScalar &t)
 {
-    janus::SymbolicScalar v = state(2);
-    janus::SymbolicScalar theta = control(0);
+    metis::SymbolicScalar v = state(2);
+    metis::SymbolicScalar theta = control(0);
 
-    janus::SymbolicVector dxdt(3);
-    dxdt(0) = v * janus::sin(theta);    // x' = v*sin(theta)
-    dxdt(1) = -v * janus::cos(theta);   // y' = -v*cos(theta)
-    dxdt(2) = 9.81 * janus::cos(theta); // v' = g*cos(theta)
+    metis::SymbolicVector dxdt(3);
+    dxdt(0) = v * metis::sin(theta);    // x' = v*sin(theta)
+    dxdt(1) = -v * metis::cos(theta);   // y' = -v*cos(theta)
+    dxdt(2) = 9.81 * metis::cos(theta); // v' = g*cos(theta)
     return dxdt;
 }
 ```
 
 **Setup:**
 ```cpp
-janus::Opti opti;
-janus::DirectCollocation dc(opti);
+metis::Opti opti;
+metis::DirectCollocation dc(opti);
 
 auto T = opti.variable(2.0, std::nullopt, 0.1, 10.0);
 
 auto [x, u, tau] = dc.setup(3, 1, 0.0, T,
-    {.scheme = janus::CollocationScheme::HermiteSimpson, .n_nodes = 31});
+    {.scheme = metis::CollocationScheme::HermiteSimpson, .n_nodes = 31});
 
 dc.set_dynamics(brachistochrone_dynamics);
 dc.add_defect_constraints();
 
-dc.set_initial_state(janus::NumericVector{{0.0, 10.0, 0.001}});
+dc.set_initial_state(metis::NumericVector{{0.0, 10.0, 0.001}});
 dc.set_final_state(0, 10.0);  // Final x
 dc.set_final_state(1, 5.0);   // Final y
 
@@ -132,7 +132,7 @@ opti.minimize(T);  // Minimize time
 **Manual collocation** (50+ lines):
 ```cpp
 for (int i = 0; i < N - 1; ++i) {
-    janus::SymbolicVector state_i(3), state_ip1(3);
+    metis::SymbolicVector state_i(3), state_ip1(3);
     state_i << x(i), y(i), v(i);
     state_ip1 << x(i+1), y(i+1), v(i+1);
     auto f_i = ode(state_i, theta(i));
@@ -171,4 +171,4 @@ The file `examples/optimization/transcription_comparison_demo.cpp` solves the sa
 - [Pseudospectral Guide](pseudospectral.md) -- Global polynomial transcription
 - [Birkhoff Pseudospectral Guide](birkhoff_pseudospectral.md) -- Birkhoff-form transcription
 - [transcription_comparison_demo.cpp](../../examples/optimization/transcription_comparison_demo.cpp) -- Unified comparison example
-- [Collocation.hpp](../../include/janus/optimization/Collocation.hpp) -- API reference
+- [Collocation.hpp](../../include/metis/optimization/Collocation.hpp) -- API reference

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(
-  janus
+  metis
   VERSION 2.0.0
   LANGUAGES CXX)
 
@@ -29,13 +29,13 @@ find_package(Eigen3 3.4 REQUIRED)
 find_package(casadi REQUIRED)
 
 # --- Main Library ---
-add_library(janus INTERFACE)
+add_library(metis INTERFACE)
 target_include_directories(
-  janus INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  metis INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 # Link Dependencies
-target_link_libraries(janus INTERFACE Eigen3::Eigen casadi)
+target_link_libraries(metis INTERFACE Eigen3::Eigen casadi)
 
 # --- Coverage ---
 option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
@@ -52,18 +52,18 @@ endif()
 include(GNUInstallDirs)
 
 install(
-  TARGETS janus
-  EXPORT janusTargets
+  TARGETS metis
+  EXPORT metisTargets
   INCLUDES
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(
-  EXPORT janusTargets
-  FILE janusConfig.cmake
-  NAMESPACE janus::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/janus)
+  EXPORT metisTargets
+  FILE metisConfig.cmake
+  NAMESPACE metis::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/metis)
 
 # --- Testing ---
 option(BUILD_TESTING "Build the testing tree" ON)

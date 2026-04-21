@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the implementation strategy for adding deep computational graph visualization to Janus. The goal is to export CasADi `Function` objects as fully-expanded graphs showing all mathematical operations, rather than opaque function call nodes.
+This document outlines the implementation strategy for adding deep computational graph visualization to Metis. The goal is to export CasADi `Function` objects as fully-expanded graphs showing all mathematical operations, rather than opaque function call nodes.
 
 ## Problem Statement
 
@@ -50,7 +50,7 @@ Create dedicated SX graph export functions that understand the SX expression tre
 #### API Design
 
 ```cpp
-namespace janus {
+namespace metis {
 
 // Primary API - works with any Function
 void export_graph_deep(const Function& fn, 
@@ -68,12 +68,12 @@ void export_sx_graph_html(const casadi::SX& expr,
 
 enum class ExportFormat { DOT, HTML, PDF, JSON };
 
-} // namespace janus
+} // namespace metis
 ```
 
 #### Implementation Steps
 
-1. **Add SX Graph Traversal** (`JanusIO.hpp`)
+1. **Add SX Graph Traversal** (`MetisIO.hpp`)
 
    ```cpp
    // Traverse SX expression tree
@@ -164,7 +164,7 @@ Combine both approaches:
 
 ## File Changes
 
-### [MODIFY] `include/janus/core/JanusIO.hpp`
+### [MODIFY] `include/metis/core/MetisIO.hpp`
 
 Add the following sections:
 
@@ -223,17 +223,17 @@ Create `tests/graph/deep_graph_test.cpp`:
 ```cpp
 TEST(DeepGraphTest, ExpandedFunctionHasMoreNodes) {
     // Create a function with nested calls
-    auto x = janus::sym("x", 3);
-    auto inner = janus::sin(x(0)) + janus::cos(x(1));
+    auto x = metis::sym("x", 3);
+    auto inner = metis::sin(x(0)) + metis::cos(x(1));
     auto outer = inner * x(2);
     
-    janus::Function fn("test", {x}, {outer});
+    metis::Function fn("test", {x}, {outer});
     
     // Export shallow
-    janus::export_graph_dot(outer, "shallow_test");
+    metis::export_graph_dot(outer, "shallow_test");
     
     // Export deep  
-    janus::export_graph_deep(fn.casadi_function(), "deep_test");
+    metis::export_graph_deep(fn.casadi_function(), "deep_test");
     
     // Count nodes in each file
     int shallow_nodes = count_nodes("shallow_test.dot");

@@ -1,19 +1,19 @@
 # Optimization
 
-Janus provides a high-level C++ interface to constrained nonlinear optimization through `janus::Opti`, wrapping CasADi/IPOPT. It allows you to define optimization variables, write objectives and constraints using standard C++ syntax, and reuse your physicist-written simulation models directly in the optimization loop. This works in symbolic mode, with seamless interop with numeric constants.
+Metis provides a high-level C++ interface to constrained nonlinear optimization through `metis::Opti`, wrapping CasADi/IPOPT. It allows you to define optimization variables, write objectives and constraints using standard C++ syntax, and reuse your physicist-written simulation models directly in the optimization loop. This works in symbolic mode, with seamless interop with numeric constants.
 
 ## Quick Start
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-janus::Opti opti;
+metis::Opti opti;
 
 auto x = opti.variable(0.0);
 auto y = opti.variable(0.0);
 
 // Minimize the Rosenbrock function
-auto f = janus::pow(1 - x, 2) + 100 * janus::pow(y - janus::pow(x, 2), 2);
+auto f = metis::pow(1 - x, 2) + 100 * metis::pow(y - metis::pow(x, 2), 2);
 opti.minimize(f);
 
 auto sol = opti.solve({.max_iter = 500, .verbose = false});
@@ -22,7 +22,7 @@ std::cout << "x=" << sol.value(x) << ", y=" << sol.value(y) << std::endl;
 
 ## Core API
 
-*   **`janus::Opti`**: The optimization problem builder.
+*   **`metis::Opti`**: The optimization problem builder.
 *   **`opti.variable(initial_guess)`**: Create a scalar decision variable.
 *   **`opti.variable(n, initial_guess)`**: Create a vector decision variable of length `n`.
 *   **`opti.parameter(value)`**: Create a parameter that can be changed between solves.
@@ -41,16 +41,16 @@ The Rosenbrock function (or "banana function") is a classic test for optimizatio
 Code reference: [`examples/optimization/rosenbrock.cpp`](../../examples/optimization/rosenbrock.cpp)
 
 ```cpp
-janus::Opti opti;
+metis::Opti opti;
 
 auto x = opti.variable(0.0);
 auto y = opti.variable(0.0);
 
-auto f = janus::pow(1 - x, 2) + 100 * janus::pow(y - janus::pow(x, 2), 2);
+auto f = metis::pow(1 - x, 2) + 100 * metis::pow(y - metis::pow(x, 2), 2);
 opti.minimize(f);
 
 // Add constraints
-opti.subject_to(janus::pow(x, 2) + janus::pow(y, 2) <= 2.0);
+opti.subject_to(metis::pow(x, 2) + metis::pow(y, 2) <= 2.0);
 
 auto sol = opti.solve({.max_iter = 500, .verbose = false});
 double x_star = sol.value(x);
@@ -60,7 +60,7 @@ std::cout << "Optimal Solution: x=" << x_star << ", y=" << y_star << std::endl;
 
 ### "Write Once, Use Everywhere" (C++20 Style)
 
-The true power of Janus is reusing your existing physics code. With C++20 **Abbreviated Function Templates** (`auto` parameters), this is seamless.
+The true power of Metis is reusing your existing physics code. With C++20 **Abbreviated Function Templates** (`auto` parameters), this is seamless.
 
 Code reference: [`examples/optimization/drag_optimization.cpp`](../../examples/optimization/drag_optimization.cpp)
 
@@ -69,8 +69,8 @@ The shared physics function works for `double`, `SymbolicScalar`, or a mix of bo
 ```cpp
 auto compute_drag(auto rho, auto v, auto S,
                   auto Cd0, auto k, auto Cl, auto Cl0) {
-    auto q = 0.5 * rho * janus::pow(v, 2.0);
-    auto Cd = Cd0 + k * janus::pow(Cl - Cl0, 2.0);
+    auto q = 0.5 * rho * metis::pow(v, 2.0);
+    auto Cd = Cd0 + k * metis::pow(Cl - Cl0, 2.0);
     return q * S * Cd;
 }
 ```
@@ -78,7 +78,7 @@ auto compute_drag(auto rho, auto v, auto S,
 Using it in optimization requires no casting or explicit templates:
 
 ```cpp
-janus::Opti opti;
+metis::Opti opti;
 
 auto V = opti.variable(50.0);
 auto Cl = opti.variable(0.5);
@@ -99,7 +99,7 @@ Why this matters:
 
 ### Bounds Handling
 
-Janus provides explicit helpers for variable bounds, which is more efficient than general constraints for the solver.
+Metis provides explicit helpers for variable bounds, which is more efficient than general constraints for the solver.
 
 ```cpp
 // Scalar variable bounds
@@ -118,7 +118,7 @@ opti.subject_to_bounds(vec, -5.0, 5.0);
 Run the same optimization across a range of parameter values with automatic warm-starting:
 
 ```cpp
-janus::Opti opti;
+metis::Opti opti;
 
 auto rho = opti.parameter(1.225);
 auto V = opti.variable(50.0);
@@ -147,7 +147,7 @@ See the full example: [`examples/optimization/parametric_sweep.cpp`](../../examp
 
 ### Scaling Diagnostics and Nondimensionalization
 
-Poor scaling is a common failure mode for nonlinear programs. `janus::Opti` exposes three
+Poor scaling is a common failure mode for nonlinear programs. `metis::Opti` exposes three
 practical tools:
 
 - Variable scales can still be supplied explicitly through `variable(..., scale, ...)`.
@@ -155,12 +155,12 @@ practical tools:
 - Objectives and constraints can be scaled explicitly, and `analyze_scaling()` reports suspicious magnitudes before solve.
 
 ```cpp
-janus::Opti opti;
+metis::Opti opti;
 
 auto x = opti.variable(0.0, std::nullopt, -1e6, 1e6);
 
 opti.subject_to(x == 1e6, 1e6);
-opti.minimize(janus::pow(x - 1e6, 2), 1e12);
+opti.minimize(metis::pow(x - 1e6, 2), 1e12);
 
 auto report = opti.analyze_scaling();
 if (report.has_issues()) {
@@ -181,14 +181,14 @@ This is intended as a pre-solve diagnostic pass, not a full automatic reformulat
 
 ### Solution Persistence & Warm Starting
 
-Janus allows you to save optimization results to JSON and use them to warm-start subsequent runs. This is crucial for complex problems where a good initial guess can significantly reduce solve time.
+Metis allows you to save optimization results to JSON and use them to warm-start subsequent runs. This is crucial for complex problems where a good initial guess can significantly reduce solve time.
 
 **Saving Results:**
 
 ```cpp
 auto sol = opti.solve();
 
-std::map<std::string, janus::SymbolicScalar> vars;
+std::map<std::string, metis::SymbolicScalar> vars;
 vars["x"] = x;
 vars["y"] = y;
 sol.save("solution.json", vars);
@@ -198,7 +198,7 @@ sol.save("solution.json", vars);
 
 ```cpp
 try {
-    auto cache = janus::OptiSol::load("solution.json");
+    auto cache = metis::OptiSol::load("solution.json");
 
     double x_init = cache.count("x") ? cache["x"][0] : 0.0;
 
@@ -214,4 +214,4 @@ try {
 - [Interpolation Guide](interpolation.md) - Using interpolation as surrogate models in optimization
 - [`examples/optimization/rosenbrock.cpp`](../../examples/optimization/rosenbrock.cpp) - Rosenbrock benchmark
 - [`examples/optimization/brachistochrone_opti.cpp`](../../examples/optimization/brachistochrone_opti.cpp) - Trajectory optimization example
-- [`include/janus/optimization/Opti.hpp`](../../include/janus/optimization/Opti.hpp) - `janus::Opti` implementation
+- [`include/metis/optimization/Opti.hpp`](../../include/metis/optimization/Opti.hpp) - `metis::Opti` implementation

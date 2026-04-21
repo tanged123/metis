@@ -2,7 +2,7 @@
  * @file rosenbrock.cpp
  * @brief Optimization example: Rosenbrock benchmark
  *
- * Demonstrates janus::Opti for nonlinear optimization using the classic
+ * Demonstrates metis::Opti for nonlinear optimization using the classic
  * Rosenbrock "banana" function, a standard benchmark for optimization solvers.
  *
  * min f(x,y) = (1-x)^2 + 100*(y-x^2)^2
@@ -12,11 +12,11 @@
 
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 namespace {
 
-void print_scaling_report(const janus::ScalingReport &report) {
+void print_scaling_report(const metis::ScalingReport &report) {
     std::cout << "    variable blocks : " << report.summary.variable_blocks << "\n";
     std::cout << "    constraint rows : " << report.summary.scalar_constraints << "\n";
     std::cout << "    jacobian nnz    : " << report.summary.jacobian_nnz << "\n";
@@ -42,7 +42,7 @@ int main() {
     std::cout << "  min (1-x)^2 + 100*(y-x^2)^2\n\n";
 
     {
-        janus::Opti opti;
+        metis::Opti opti;
 
         // Decision variables with initial guess
         auto x = opti.variable(-1.0); // Start far from optimum
@@ -67,7 +67,7 @@ int main() {
     std::cout << "Problem 2: 2D Rosenbrock with constraint x + y >= 2\n";
 
     {
-        janus::Opti opti;
+        metis::Opti opti;
 
         auto x = opti.variable(0.5);
         auto y = opti.variable(0.5);
@@ -95,13 +95,13 @@ int main() {
     std::cout << "  f(x) = sum_{i=1}^{N-1} [100*(x_{i+1} - x_i^2)^2 + (1 - x_i)^2]\n\n";
 
     {
-        janus::Opti opti;
+        metis::Opti opti;
 
         // Create N variables
         auto x = opti.variable(N, 0.0); // Vector of N variables, init at 0
 
         // Build N-D Rosenbrock objective
-        janus::SymbolicScalar obj = 0;
+        metis::SymbolicScalar obj = 0;
         for (int i = 0; i < N - 1; ++i) {
             obj = obj + 100 * (x(i + 1) - x(i) * x(i)) * (x(i + 1) - x(i) * x(i));
             obj = obj + (1 - x(i)) * (1 - x(i));
@@ -120,23 +120,23 @@ int main() {
     }
 
     // =========================================================================
-    // Problem 4: Using janus::Function with optimization
+    // Problem 4: Using metis::Function with optimization
     // =========================================================================
-    std::cout << "Problem 4: Using janus::Function + janus::jacobian\n";
+    std::cout << "Problem 4: Using metis::Function + metis::jacobian\n";
 
     {
         // Define Rosenbrock symbolically
-        auto x_sym = janus::sym("x");
-        auto y_sym = janus::sym("y");
+        auto x_sym = metis::sym("x");
+        auto y_sym = metis::sym("y");
         auto rosenbrock =
             (1 - x_sym) * (1 - x_sym) + 100 * (y_sym - x_sym * x_sym) * (y_sym - x_sym * x_sym);
 
         // Compile to function
-        janus::Function f_rosenbrock("rosenbrock", {x_sym, y_sym}, {rosenbrock});
+        metis::Function f_rosenbrock("rosenbrock", {x_sym, y_sym}, {rosenbrock});
 
         // Compute gradient
-        auto grad = janus::jacobian({rosenbrock}, {x_sym, y_sym});
-        janus::Function f_gradient("gradient", {x_sym, y_sym}, {grad});
+        auto grad = metis::jacobian({rosenbrock}, {x_sym, y_sym});
+        metis::Function f_gradient("gradient", {x_sym, y_sym}, {grad});
 
         // Evaluate at optimum
         std::cout << "  At (1, 1):\n";
@@ -164,7 +164,7 @@ int main() {
     std::cout << "  This one actually changes IPOPT iteration count in this environment.\n\n";
 
     auto run_scaled_case = [](const std::string &label, bool apply_scaling) {
-        janus::Opti opti;
+        metis::Opti opti;
 
         auto x = opti.variable(-5e5);
         auto y = opti.variable(2e6);
