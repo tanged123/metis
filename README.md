@@ -1,4 +1,4 @@
-# Metis 👥
+# Metis 🎭
 
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://tanged123.github.io/metis/) [![Metis CI](https://github.com/tanged123/metis/actions/workflows/ci.yml/badge.svg)](https://github.com/tanged123/metis/actions/workflows/ci.yml) [![Clang-Format Check](https://github.com/tanged123/metis/actions/workflows/format.yml/badge.svg)](https://github.com/tanged123/metis/actions/workflows/format.yml) [![codecov](https://codecov.io/github/tanged123/metis/graph/badge.svg?token=0DSF7KK8W7)](https://codecov.io/github/tanged123/metis)
 
