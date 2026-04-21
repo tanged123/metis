@@ -358,6 +358,14 @@ auto solve_iterative_numeric(const SparseMatrix &A, const Eigen::MatrixBase<Deri
     return Result();
 }
 
+// True when A's compile-time shape does not forbid squareness (i.e. could be
+// square at runtime). False only when both dims are fixed and unequal.
+template <typename DerivedA>
+inline constexpr bool dense_solver_square_compatible =
+    DerivedA::RowsAtCompileTime == Eigen::Dynamic ||
+    DerivedA::ColsAtCompileTime == Eigen::Dynamic ||
+    DerivedA::RowsAtCompileTime == DerivedA::ColsAtCompileTime;
+
 template <typename DerivedA, typename DerivedB>
 auto solve_dense_numeric(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixBase<DerivedB> &b,
                          const LinearSolvePolicy &policy) {
@@ -366,26 +374,36 @@ auto solve_dense_numeric(const Eigen::MatrixBase<DerivedA> &A, const Eigen::Matr
         return A.colPivHouseholderQr().solve(b).eval();
     case DenseLinearSolver::PartialPivLU:
         validate_square_required(A.rows(), A.cols(), "solve", "PartialPivLU");
-        return A.partialPivLu().solve(b).eval();
+        if constexpr (dense_solver_square_compatible<DerivedA>) {
+            return A.partialPivLu().solve(b).eval();
+        }
+        break;
     case DenseLinearSolver::FullPivLU:
         validate_square_required(A.rows(), A.cols(), "solve", "FullPivLU");
-        return A.fullPivLu().solve(b).eval();
-    case DenseLinearSolver::LLT: {
+        if constexpr (dense_solver_square_compatible<DerivedA>) {
+            return A.fullPivLu().solve(b).eval();
+        }
+        break;
+    case DenseLinearSolver::LLT:
         validate_square_required(A.rows(), A.cols(), "solve", "LLT");
-        metis::LLT<typename DerivedA::PlainObject> solver(A.eval());
-        if (solver.info() != Eigen::Success) {
-            throw InvalidArgument("solve: LLT factorization failed");
+        if constexpr (dense_solver_square_compatible<DerivedA>) {
+            metis::LLT<typename DerivedA::PlainObject> solver(A.eval());
+            if (solver.info() != Eigen::Success) {
+                throw InvalidArgument("solve: LLT factorization failed");
+            }
+            return solver.solve(b).eval();
         }
-        return solver.solve(b).eval();
-    }
-    case DenseLinearSolver::LDLT: {
+        break;
+    case DenseLinearSolver::LDLT:
         validate_square_required(A.rows(), A.cols(), "solve", "LDLT");
-        metis::LDLT<typename DerivedA::PlainObject> solver(A.eval());
-        if (solver.info() != Eigen::Success) {
-            throw InvalidArgument("solve: LDLT factorization failed");
+        if constexpr (dense_solver_square_compatible<DerivedA>) {
+            metis::LDLT<typename DerivedA::PlainObject> solver(A.eval());
+            if (solver.info() != Eigen::Success) {
+                throw InvalidArgument("solve: LDLT factorization failed");
+            }
+            return solver.solve(b).eval();
         }
-        return solver.solve(b).eval();
-    }
+        break;
     }
 
     return A.colPivHouseholderQr().solve(b).eval();
@@ -420,10 +438,11 @@ auto solve(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixBase<Derived
 
     if constexpr (std::is_floating_point_v<Scalar>) {
         // Unify the return type across dense/sparse/iterative backends so `auto`
-        // deduction succeeds. Rows come from A (square systems preserve A's row
-        // dim), cols come from b. Fixed-size inputs yield fixed-size results.
+        // deduction succeeds. For Ax = b with A: M×N and b: M×K, the solution x
+        // is N×K — rows come from A's *columns*, cols come from b. Dynamic
+        // compile-time dims fall through to runtime sizes via the constructor.
         using Result =
-            Eigen::Matrix<Scalar, DerivedA::RowsAtCompileTime, DerivedB::ColsAtCompileTime>;
+            Eigen::Matrix<Scalar, DerivedA::ColsAtCompileTime, DerivedB::ColsAtCompileTime>;
         switch (policy.backend) {
         case LinearSolveBackend::Dense:
             return Result(detail::solve_dense_numeric(A, b, policy));

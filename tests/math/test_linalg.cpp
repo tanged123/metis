@@ -542,3 +542,20 @@ TEST(LinalgTests, SolveFixedSizeLDLT) {
     EXPECT_NEAR(x(1), 0.50, 1e-12);
     EXPECT_NEAR(x(2), 0.75, 1e-12);
 }
+
+// Non-square least-squares regression: for A (3x2) and b (3x1), the solution
+// should be a 2x1 vector (rows = A.cols, not A.rows). Catches the earlier
+// Result typedef that used DerivedA::RowsAtCompileTime.
+TEST(LinalgTests, SolveFixedSizeNonSquareLeastSquares) {
+    Eigen::Matrix<double, 3, 2> A;
+    A << 1.0, 0.0, 0.0, 1.0, 1.0, 1.0;
+    metis::Vec3<double> b;
+    b << 1.0, 2.0, 3.0;
+    auto x = metis::solve(
+        A, b, metis::LinearSolvePolicy::dense(metis::DenseLinearSolver::ColPivHouseholderQR));
+    static_assert(std::is_same_v<decltype(x), Eigen::Matrix<double, 2, 1>>,
+                  "Non-square QR solve result must have A.cols rows");
+    // Normal equations: x = (AᵀA)⁻¹ Aᵀ b = [[2,1],[1,2]]⁻¹ [4,5] = [1, 2]
+    EXPECT_NEAR(x(0), 1.0, 1e-12);
+    EXPECT_NEAR(x(1), 2.0, 1e-12);
+}
