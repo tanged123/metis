@@ -25,7 +25,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 int main() {
     std::cout << "╔══════════════════════════════════════════════════════════════╗\n";
@@ -45,7 +45,7 @@ int main() {
     std::cout << "  Nodes: " << N << "\n\n";
 
     // Discretization grid
-    janus::NumericVector x = janus::linspace(0.0, L, N);
+    metis::NumericVector x = metis::linspace(0.0, L, N);
     double dx = x(1) - x(0);
 
     // =========================================================================
@@ -54,14 +54,14 @@ int main() {
     std::string cache_file = "beam_solution.json";
     std::map<std::string, std::vector<double>> cache;
     try {
-        cache = janus::OptiSol::load(cache_file);
+        cache = metis::OptiSol::load(cache_file);
         std::cout << "Warm starting from " << cache_file << "\n";
     } catch (...) {
         std::cout << "Cold start (no cache found)\n";
     }
 
     auto get_init = [&](const std::string &name, int size) {
-        janus::NumericVector init = janus::NumericVector::Zero(size);
+        metis::NumericVector init = metis::NumericVector::Zero(size);
         if (cache.count(name)) {
             const auto &vec = cache[name];
             if (vec.size() == static_cast<size_t>(size)) {
@@ -75,7 +75,7 @@ int main() {
     // =========================================================================
     // Setup Optimization (solving beam equations as optimization)
     // =========================================================================
-    janus::Opti opti;
+    metis::Opti opti;
 
     // State variables (unknowns)
     auto V = opti.variable(get_init("V", N));         // Shear force [N]
@@ -142,7 +142,7 @@ int main() {
     double tip_deflection = w_sol(N - 1);
 
     // Analytical solution: w = q/(24*EI) * x² * (x² - 4*L*x + 6*L²)
-    janus::NumericVector w_analytical(N);
+    metis::NumericVector w_analytical(N);
     for (int i = 0; i < N; ++i) {
         double xi = x(i);
         w_analytical(i) = (q / (24.0 * EI)) * xi * xi * (xi * xi - 4.0 * L * xi + 6.0 * L * L);
@@ -192,7 +192,7 @@ int main() {
     std::cout << "✓ GPkit benchmark compatible\n";
 
     // Save for warm start
-    std::map<std::string, janus::SymbolicVector> vars;
+    std::map<std::string, metis::SymbolicVector> vars;
     vars["V"] = V;
     vars["M"] = M;
     vars["theta"] = theta;

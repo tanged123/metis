@@ -4,14 +4,14 @@
  */
 
 #include <gtest/gtest.h>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/math/PolynomialChaos.hpp>
-#include <janus/math/Quadrature.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/math/PolynomialChaos.hpp>
+#include <metis/math/Quadrature.hpp>
 
 #include <cmath>
 #include <vector>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 

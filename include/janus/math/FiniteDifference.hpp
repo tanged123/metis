@@ -5,14 +5,14 @@
  * @see Calculus.hpp, AutoDiff.hpp
  */
 
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <string>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 // ============================================================================
 // Integration Method Enum
@@ -128,10 +128,10 @@ template <typename Scalar> std::pair<Scalar, Scalar> trapezoidal_weights(Scalar 
  * @tparam Scalar Scalar type (NumericScalar or SymbolicScalar)
  * @param f Function values (size N)
  * @param x Grid points (size N)
- * @return JanusVector<Scalar> derivative approximation (size N-1)
+ * @return MetisVector<Scalar> derivative approximation (size N-1)
  */
 template <typename Scalar>
-JanusVector<Scalar> forward_difference(const JanusVector<Scalar> &f, const JanusVector<Scalar> &x) {
+MetisVector<Scalar> forward_difference(const MetisVector<Scalar> &f, const MetisVector<Scalar> &x) {
     Eigen::Index n = f.size();
 
     if (n != x.size()) {
@@ -141,8 +141,8 @@ JanusVector<Scalar> forward_difference(const JanusVector<Scalar> &f, const Janus
         throw InvalidArgument("forward_difference: need at least 2 points");
     }
 
-    JanusVector<Scalar> df = f.tail(n - 1) - f.head(n - 1);
-    JanusVector<Scalar> dx = x.tail(n - 1) - x.head(n - 1);
+    MetisVector<Scalar> df = f.tail(n - 1) - f.head(n - 1);
+    MetisVector<Scalar> dx = x.tail(n - 1) - x.head(n - 1);
 
     return (df.array() / dx.array()).matrix();
 }
@@ -155,11 +155,11 @@ JanusVector<Scalar> forward_difference(const JanusVector<Scalar> &f, const Janus
  * @tparam Scalar Scalar type (NumericScalar or SymbolicScalar)
  * @param f Function values (size N)
  * @param x Grid points (size N)
- * @return JanusVector<Scalar> derivative approximation (size N-1)
+ * @return MetisVector<Scalar> derivative approximation (size N-1)
  */
 template <typename Scalar>
-JanusVector<Scalar> backward_difference(const JanusVector<Scalar> &f,
-                                        const JanusVector<Scalar> &x) {
+MetisVector<Scalar> backward_difference(const MetisVector<Scalar> &f,
+                                        const MetisVector<Scalar> &x) {
     return forward_difference(f, x);
 }
 
@@ -171,10 +171,10 @@ JanusVector<Scalar> backward_difference(const JanusVector<Scalar> &f,
  * @tparam Scalar Scalar type (NumericScalar or SymbolicScalar)
  * @param f Function values (size N)
  * @param x Grid points (size N)
- * @return JanusVector<Scalar> derivative approximation (size N-2)
+ * @return MetisVector<Scalar> derivative approximation (size N-2)
  */
 template <typename Scalar>
-JanusVector<Scalar> central_difference(const JanusVector<Scalar> &f, const JanusVector<Scalar> &x) {
+MetisVector<Scalar> central_difference(const MetisVector<Scalar> &f, const MetisVector<Scalar> &x) {
     Eigen::Index n = f.size();
 
     if (n != x.size()) {
@@ -184,8 +184,8 @@ JanusVector<Scalar> central_difference(const JanusVector<Scalar> &f, const Janus
         throw InvalidArgument("central_difference: need at least 3 points");
     }
 
-    JanusVector<Scalar> df = f.tail(n - 2) - f.head(n - 2);
-    JanusVector<Scalar> dx = x.tail(n - 2) - x.head(n - 2);
+    MetisVector<Scalar> df = f.tail(n - 2) - f.head(n - 2);
+    MetisVector<Scalar> dx = x.tail(n - 2) - x.head(n - 2);
 
     return (df.array() / dx.array()).matrix();
 }
@@ -203,12 +203,12 @@ JanusVector<Scalar> central_difference(const JanusVector<Scalar> &f, const Janus
  * @param xdot Derivative values (size N)
  * @param t Time grid (size N)
  * @param method Integration method
- * @return JanusVector<Scalar> defects (size N-1), should be zero when constraint is satisfied
+ * @return MetisVector<Scalar> defects (size N-1), should be zero when constraint is satisfied
  */
 template <typename Scalar>
-JanusVector<Scalar> integration_defects(const JanusVector<Scalar> &x,
-                                        const JanusVector<Scalar> &xdot,
-                                        const JanusVector<Scalar> &t,
+MetisVector<Scalar> integration_defects(const MetisVector<Scalar> &x,
+                                        const MetisVector<Scalar> &xdot,
+                                        const MetisVector<Scalar> &t,
                                         IntegrationMethod method = IntegrationMethod::Trapezoidal) {
     Eigen::Index n = x.size();
 
@@ -219,9 +219,9 @@ JanusVector<Scalar> integration_defects(const JanusVector<Scalar> &x,
         throw InvalidArgument("integration_defects: need at least 2 points");
     }
 
-    JanusVector<Scalar> dx = x.tail(n - 1) - x.head(n - 1);
-    JanusVector<Scalar> dt = t.tail(n - 1) - t.head(n - 1);
-    JanusVector<Scalar> defects(n - 1);
+    MetisVector<Scalar> dx = x.tail(n - 1) - x.head(n - 1);
+    MetisVector<Scalar> dt = t.tail(n - 1) - t.head(n - 1);
+    MetisVector<Scalar> defects(n - 1);
 
     switch (method) {
     case IntegrationMethod::ForwardEuler:
@@ -249,13 +249,13 @@ JanusVector<Scalar> integration_defects(const JanusVector<Scalar> &x,
  * Based on Fornberg 1988: "Generation of Finite Difference Formulas on Arbitrarily Spaced Grids"
  *
  * @tparam Scalar Scalar type (NumericScalar or SymbolicScalar)
- * @param x Grid points (JanusVector<Scalar>)
+ * @param x Grid points (MetisVector<Scalar>)
  * @param x0 Evaluation point
  * @param derivative_degree Order of derivative to approximate
- * @return JanusVector<Scalar> of coefficients matching x size
+ * @return MetisVector<Scalar> of coefficients matching x size
  */
 template <typename Scalar>
-JanusVector<Scalar> finite_difference_coefficients(const JanusVector<Scalar> &x,
+MetisVector<Scalar> finite_difference_coefficients(const MetisVector<Scalar> &x,
                                                    Scalar x0 = Scalar(0.0),
                                                    int derivative_degree = 1) {
     if (derivative_degree < 0) {
@@ -306,7 +306,7 @@ JanusVector<Scalar> finite_difference_coefficients(const JanusVector<Scalar> &x,
         c1 = c2;
     }
 
-    JanusVector<Scalar> coeffs(n_points);
+    MetisVector<Scalar> coeffs(n_points);
     for (int i = 0; i < n_points; ++i) {
         coeffs(i) = delta[get_idx(M, N, i)];
     }
@@ -314,4 +314,4 @@ JanusVector<Scalar> finite_difference_coefficients(const JanusVector<Scalar> &x,
     return coeffs;
 }
 
-} // namespace janus
+} // namespace metis

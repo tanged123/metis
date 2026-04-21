@@ -5,13 +5,13 @@
  * @see PolynomialChaos.hpp, Quadrature.hpp
  */
 
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
 #include <cmath>
 #include <limits>
 #include <utility>
 
-namespace janus {
+namespace metis {
 
 std::pair<double, double> legendre_poly(int n, double x);
 
@@ -434,4 +434,4 @@ inline NumericMatrix spectral_diff_matrix(const NumericVector &nodes) {
     return D;
 }
 
-} // namespace janus
+} // namespace metis

@@ -1,6 +1,6 @@
-# Janus Phase 3: AeroSandbox Numerical Parity Implementation Plan
+# Metis Phase 3: AeroSandbox Numerical Parity Implementation Plan
 
-**Goal**: Complete 1:1 capability match with [AeroSandbox numpy module](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/__init__.py).
+**Goal**: Complete 1:1 capability match with [AeroSandbox numpy module](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/__init__.py).
 **Status**: Planning Draft
 **Created**: 2025-12-14
 
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Phase 3 completes the Janus framework by implementing all remaining functions from AeroSandbox's `numpy` module. This establishes full capability parity, enabling any AeroSandbox physics model to be ported to Janus C++ with minimal refactoring.
+Phase 3 completes the Metis framework by implementing all remaining functions from AeroSandbox's `numpy` module. This establishes full capability parity, enabling any AeroSandbox physics model to be ported to Metis C++ with minimal refactoring.
 
 > [!IMPORTANT]
 > **Architectural Constraint**: All implementations MUST be templated on `Scalar` and dispatch correctly to both:
@@ -21,27 +21,27 @@ Phase 3 completes the Janus framework by implementing all remaining functions fr
 
 ### ✅ Already Implemented (Phase 2 Complete)
 
-| Module | Janus Header | Functions |
+| Module | Metis Header | Functions |
 |--------|-------------|-----------|
-| `arithmetic_*.py` | [Arithmetic.hpp](file:///home/tanged/sources/janus/include/janus/math/Arithmetic.hpp) | `abs`, `sqrt`, `pow`, `exp`, `log`, `floor`, `ceil`, `fmod` |
-| `trig.py` | [Trig.hpp](file:///home/tanged/sources/janus/include/janus/math/Trig.hpp) | `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `hypot`, `sinh`, `cosh`, `tanh` |
-| `conditionals.py` | [Logic.hpp](file:///home/tanged/sources/janus/include/janus/math/Logic.hpp) | `where`, `min`, `max`, `clamp` |
-| `linalg*.py` (partial) | [Linalg.hpp](file:///home/tanged/sources/janus/include/janus/math/Linalg.hpp) | `solve`, `norm`, `outer`, `dot`, `cross`, `inv`, `det` |
-| `calculus.py` (partial) | [DiffOps.hpp](file:///home/tanged/sources/janus/include/janus/math/DiffOps.hpp) | `diff`, `trapz`, `gradient_1d`, `jacobian` |
-| `interpolate.py` | [Interpolate.hpp](file:///home/tanged/sources/janus/include/janus/math/Interpolate.hpp) | `JanusInterpolator` class |
-| `spacing.py` | [Spacing.hpp](file:///home/tanged/sources/janus/include/janus/math/Spacing.hpp) | `linspace`, `cosine_spacing` |
-| `rotations.py` (partial) | [Rotations.hpp](file:///home/tanged/sources/janus/include/janus/math/Rotations.hpp) | `rotation_matrix_2d`, `rotation_matrix_3d` |
+| `arithmetic_*.py` | [Arithmetic.hpp](file:///home/tanged/sources/metis/include/metis/math/Arithmetic.hpp) | `abs`, `sqrt`, `pow`, `exp`, `log`, `floor`, `ceil`, `fmod` |
+| `trig.py` | [Trig.hpp](file:///home/tanged/sources/metis/include/metis/math/Trig.hpp) | `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `hypot`, `sinh`, `cosh`, `tanh` |
+| `conditionals.py` | [Logic.hpp](file:///home/tanged/sources/metis/include/metis/math/Logic.hpp) | `where`, `min`, `max`, `clamp` |
+| `linalg*.py` (partial) | [Linalg.hpp](file:///home/tanged/sources/metis/include/metis/math/Linalg.hpp) | `solve`, `norm`, `outer`, `dot`, `cross`, `inv`, `det` |
+| `calculus.py` (partial) | [DiffOps.hpp](file:///home/tanged/sources/metis/include/metis/math/DiffOps.hpp) | `diff`, `trapz`, `gradient_1d`, `jacobian` |
+| `interpolate.py` | [Interpolate.hpp](file:///home/tanged/sources/metis/include/metis/math/Interpolate.hpp) | `MetisInterpolator` class |
+| `spacing.py` | [Spacing.hpp](file:///home/tanged/sources/metis/include/metis/math/Spacing.hpp) | `linspace`, `cosine_spacing` |
+| `rotations.py` (partial) | [Rotations.hpp](file:///home/tanged/sources/metis/include/metis/math/Rotations.hpp) | `rotation_matrix_2d`, `rotation_matrix_3d` |
 
 ---
 
 ### ❌ Not Yet Implemented (Phase 3 Scope)
 
 > [!NOTE]
-> **Design Decision (Approved)**: Array operations use **Eigen directly** via the existing `janus::JanusMatrix<Scalar>` type alias. Only targeted free functions (e.g., `janus::roll`) are added where Eigen lacks native support. No `Array.hpp` wrapper needed.
+> **Design Decision (Approved)**: Array operations use **Eigen directly** via the existing `metis::MetisMatrix<Scalar>` type alias. Only targeted free functions (e.g., `metis::roll`) are added where Eigen lacks native support. No `Array.hpp` wrapper needed.
 
-| Priority | AeroSandbox Module | New Janus Header | Functions to Implement |
+| Priority | AeroSandbox Module | New Metis Header | Functions to Implement |
 |----------|-------------------|------------------|------------------------|
-| **P0** | `array.py` | *(Eigen native)* | Most handled by Eigen; add `janus::roll` to `Logic.hpp` if needed |
+| **P0** | `array.py` | *(Eigen native)* | Most handled by Eigen; add `metis::roll` to `Logic.hpp` if needed |
 | **P0** | `logicals.py` | (extend `Logic.hpp`) | `logical_and`, `logical_or`, `logical_not`, `clip`, `all`, `any` |
 | **P1** | `calculus.py` (full) | (extend `DiffOps.hpp`) | `gradient` (edge_order, n-th derivative, period support) |
 | **P1** | `surrogate_model_tools.py` | `SurrogateModel.hpp` | `softmax`, `softmin`, `softplus`, `sigmoid`, `swish`, `blend` |
@@ -64,7 +64,7 @@ Phase 3 completes the Janus framework by implementing all remaining functions fr
 ## Proposed Implementation Structure
 
 ```
-include/janus/math/
+include/metis/math/
 ├── Arithmetic.hpp      # [EXTEND] Add mod, centered_mod
 ├── Calculus.hpp        # [NEW] Full gradient with edge_order
 ├── DiffOps.hpp         # [EXTEND] Link to Calculus, keep diff/trapz
@@ -72,7 +72,7 @@ include/janus/math/
 ├── Integrate.hpp       # [NEW] ODE integration (quad, solve_ivp)
 ├── IntegrateDiscrete.hpp # [NEW] Discrete interval integration
 ├── Interpolate.hpp     # [EXISTS]
-├── JanusMath.hpp       # [EXTEND] Include new headers
+├── MetisMath.hpp       # [EXTEND] Include new headers
 ├── Linalg.hpp          # [EXTEND] Add pinv, inner, roll (if needed)
 ├── Logic.hpp           # [EXTEND] Add logical_and/or/not, all, any
 ├── Rotations.hpp       # [EXTEND] Add euler_angles, validation
@@ -102,15 +102,15 @@ include/janus/math/
 | Length | `.size()` |
 | Max/Min | `.maxCoeff()`, `.minCoeff()`, `.colwise().maxCoeff()` |
 
-**Only add if frequently needed**: `janus::roll(matrix, shift, axis)` as a free function in `Linalg.hpp`.
+**Only add if frequently needed**: `metis::roll(matrix, shift, axis)` as a free function in `Linalg.hpp`.
 
 ---
 
 ### Component 2: Extended Logic (`Logic.hpp`) - **P0**
 
-**Source Reference**: [logicals.py](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/logicals.py)
+**Source Reference**: [logicals.py](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/logicals.py)
 
-#### [MODIFY] `include/janus/math/Logic.hpp`
+#### [MODIFY] `include/metis/math/Logic.hpp`
 
 Add the following functions:
 
@@ -127,9 +127,9 @@ Add the following functions:
 
 ### Component 3: Enhanced Calculus (`Calculus.hpp`) - **P1**
 
-**Source Reference**: [calculus.py](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/calculus.py)
+**Source Reference**: [calculus.py](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/calculus.py)
 
-#### [NEW] `include/janus/math/Calculus.hpp`
+#### [NEW] `include/metis/math/Calculus.hpp`
 
 The existing `gradient_1d` is a simplified version. The full `gradient` function needs:
 
@@ -157,9 +157,9 @@ Key implementation details:
 
 ### Component 4: Surrogate Model Tools (`SurrogateModel.hpp`) - **P1**
 
-**Source Reference**: [surrogate_model_tools.py](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/surrogate_model_tools.py)
+**Source Reference**: [surrogate_model_tools.py](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/surrogate_model_tools.py)
 
-#### [NEW] `include/janus/math/SurrogateModel.hpp`
+#### [NEW] `include/metis/math/SurrogateModel.hpp`
 
 These are essential for optimization-friendly physics models:
 
@@ -179,9 +179,9 @@ These are essential for optimization-friendly physics models:
 
 ### Component 5: Extended Linear Algebra (`Linalg.hpp`) - **P1**
 
-**Source Reference**: [linalg.py](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/linalg.py)
+**Source Reference**: [linalg.py](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/linalg.py)
 
-#### [MODIFY] `include/janus/math/Linalg.hpp`
+#### [MODIFY] `include/metis/math/Linalg.hpp`
 
 | Function | Signature | Numeric Backend | Symbolic Backend |
 |----------|-----------|-----------------|------------------|
@@ -193,9 +193,9 @@ These are essential for optimization-friendly physics models:
 
 ### Component 6: Finite Difference Operators (`FiniteDifference.hpp`) - **P2**
 
-**Source Reference**: [finite_difference_operators.py](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/finite_difference_operators.py)
+**Source Reference**: [finite_difference_operators.py](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/finite_difference_operators.py)
 
-#### [NEW] `include/janus/math/FiniteDifference.hpp`
+#### [NEW] `include/metis/math/FiniteDifference.hpp`
 
 ```cpp
 /**
@@ -220,9 +220,9 @@ Eigen::VectorXd finite_difference_coefficients(
 
 ### Component 7: Extended Rotations (`Rotations.hpp`) - **P2**
 
-**Source Reference**: [rotations.py](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/rotations.py)
+**Source Reference**: [rotations.py](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/rotations.py)
 
-#### [MODIFY] `include/janus/math/Rotations.hpp`
+#### [MODIFY] `include/metis/math/Rotations.hpp`
 
 | Function | Signature | Notes |
 |----------|-----------|-------|
@@ -233,9 +233,9 @@ Eigen::VectorXd finite_difference_coefficients(
 
 ### Component 8: Discrete Integration (`IntegrateDiscrete.hpp`) - **P2**
 
-**Source Reference**: [integrate_discrete.py](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/integrate_discrete.py)
+**Source Reference**: [integrate_discrete.py](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/integrate_discrete.py)
 
-#### [NEW] `include/janus/math/IntegrateDiscrete.hpp`
+#### [NEW] `include/metis/math/IntegrateDiscrete.hpp`
 
 ```cpp
 /**
@@ -261,12 +261,12 @@ auto integrate_discrete_intervals(
 
 ### Component 9: ODE Integration (`Integrate.hpp`) - **P3**
 
-**Source Reference**: [integrate.py](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/integrate.py)
+**Source Reference**: [integrate.py](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/integrate.py)
 
 > [!CAUTION]
 > This is the most complex component. Consider deferring to Phase 4 if timeline is tight.
 
-#### [NEW] `include/janus/math/Integrate.hpp`
+#### [NEW] `include/metis/math/Integrate.hpp`
 
 | Function | Numeric Backend | Symbolic Backend |
 |----------|-----------------|------------------|
@@ -283,7 +283,7 @@ The symbolic backend wraps CasADi's CVODES integrator to enable differentiation 
 - [x] **Task 1.1**: Extend `Logic.hpp` with `logical_and`, `logical_or`, `logical_not`
 - [x] **Task 1.2**: Add `all`, `any` to `Logic.hpp`
 - [x] **Task 1.3**: Verify `clip` is working (may already exist as `clamp`)
-- [ ] **Task 1.4**: Add `janus::roll` free function to `Linalg.hpp` (if needed)
+- [ ] **Task 1.4**: Add `metis::roll` free function to `Linalg.hpp` (if needed)
 - [x] **Task 1.5**: Write tests for extended `Logic.hpp`
 
 ### Milestone 2: Calculus & Surrogate Models (Week 2)
@@ -308,7 +308,7 @@ The symbolic backend wraps CasADi's CVODES integrator to enable differentiation 
 - [ ] **Task 4.5**: Integration tests with known ODE solutions
 
 ### Milestone 5: Polish & Documentation
-- [ ] **Task 5.1**: Update `JanusMath.hpp` to include all new headers
+- [ ] **Task 5.1**: Update `MetisMath.hpp` to include all new headers
 - [ ] **Task 5.2**: Run full test suite and fix any issues
 - [ ] **Task 5.3**: Update `docs/design_overview.md` with Phase 3 summary
 - [ ] **Task 5.4**: Create example showing AeroSandbox model port
@@ -329,7 +329,7 @@ All tests are in `tests/math/` and run via:
 cd build && ctest -R test_array --output-on-failure
 ```
 
-**Existing Test Structure** (from [tests/math/](file:///home/tanged/sources/janus/tests/math)):
+**Existing Test Structure** (from [tests/math/](file:///home/tanged/sources/metis/tests/math)):
 - `test_arithmetic.cpp` - Arithmetic operations
 - `test_diffops.cpp` - Differential operators
 - `test_geometry.cpp` - Geometry utilities
@@ -356,7 +356,7 @@ void test_function() {
         EXPECT_DOUBLE_EQ(result, expected);
     } else {
         // Symbolic: Evaluate and check
-        auto eval = janus::eval_scalar(result, {}, {});
+        auto eval = metis::eval_scalar(result, {}, {});
         EXPECT_NEAR(eval, expected, 1e-9);
     }
 }
@@ -407,9 +407,9 @@ Logs are saved to `logs/verify.log`.
 
 ## Appendix: Reference Module Mapping
 
-| AeroSandbox Python Module | Janus C++ Header | Status |
+| AeroSandbox Python Module | Metis C++ Header | Status |
 |--------------------------|------------------|--------|
-| `__init__.py` | `janus.hpp` | ✅ Complete |
+| `__init__.py` | `metis.hpp` | ✅ Complete |
 | `arithmetic_monadic.py` | `Arithmetic.hpp` | ✅ Complete |
 | `arithmetic_dyadic.py` | `Arithmetic.hpp` | ⏳ Need `mod`, `centered_mod` |
 | `array.py` | *(Eigen native)* | ✅ Use Eigen APIs directly |
@@ -426,8 +426,8 @@ Logs are saved to `logs/verify.log`.
 | `spacing.py` | `Spacing.hpp` | ✅ Complete |
 | `surrogate_model_tools.py` | `SurrogateModel.hpp` | ❌ New |
 | `trig.py` | `Trig.hpp` | ✅ Complete |
-| `determine_type.py` | `JanusConcepts.hpp` | ✅ Complete |
+| `determine_type.py` | `MetisConcepts.hpp` | ✅ Complete |
 
 ---
 
-*Generated by Janus Dev Team - Phase 3 Planning*
+*Generated by Metis Dev Team - Phase 3 Planning*

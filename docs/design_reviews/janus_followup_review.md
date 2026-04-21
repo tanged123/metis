@@ -1,4 +1,4 @@
-# Janus Repository: Follow-up Review
+# Metis Repository: Follow-up Review
 ## Changes Since Initial Assessment
 
 **Review Date**: December 13, 2025  
@@ -9,14 +9,14 @@
 
 ## Executive Summary
 
-The Janus repository has undergone **exceptional improvements** since the initial comprehensive review. Nearly all critical recommendations have been addressed with high-quality implementations. The project has evolved from a solid foundation to a **production-ready framework** with compelling examples and comprehensive API coverage.
+The Metis repository has undergone **exceptional improvements** since the initial comprehensive review. Nearly all critical recommendations have been addressed with high-quality implementations. The project has evolved from a solid foundation to a **production-ready framework** with compelling examples and comprehensive API coverage.
 
 ### Key Achievements Since Last Review
 
-✅ **Matrix type system completed** — `JanusMatrix<Scalar>`, `NumericMatrix`, `SymbolicMatrix` type aliases  
-✅ **Function wrapper implemented** — Clean, user-friendly `janus::Function` abstraction  
+✅ **Matrix type system completed** — `MetisMatrix<Scalar>`, `NumericMatrix`, `SymbolicMatrix` type aliases  
+✅ **Function wrapper implemented** — Clean, user-friendly `metis::Function` abstraction  
 ✅ **API significantly expanded** — `min`, `max`, `clamp`, hyperbolic functions, `floor`, `ceil`, `sign`, `fmod`  
-✅ **Automatic differentiation** — `janus::jacobian()` with example validation  
+✅ **Automatic differentiation** — `metis::jacobian()` with example validation  
 ✅ **Three working examples** — `drag_coefficient`, `energy_intro`, `numeric_intro`  
 ✅ **Documentation added** — User guides for numeric and symbolic computing  
 ✅ **README enhanced** — Clear usage examples and workflow scripts  
@@ -27,7 +27,7 @@ The Janus repository has undergone **exceptional improvements** since the initia
 
 ### 1. Type System Improvements ⭐⭐⭐⭐⭐ **OUTSTANDING**
 
-**File**: [`include/janus/core/JanusTypes.hpp`](file:///home/tanged/sources/janus/include/janus/core/JanusTypes.hpp)
+**File**: [`include/metis/core/MetisTypes.hpp`](file:///home/tanged/sources/metis/include/metis/core/MetisTypes.hpp)
 
 #### What Changed
 ```cpp
@@ -38,12 +38,12 @@ using SymbolicScalar = casadi::MX;
 
 // AFTER: Complete unified type system
 template <typename Scalar>
-using JanusMatrix = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>;
+using MetisMatrix = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>;
 
 using NumericScalar = double;
-using NumericMatrix = JanusMatrix<NumericScalar>;
+using NumericMatrix = MetisMatrix<NumericScalar>;
 using SymbolicScalar = casadi::MX;
-using SymbolicMatrix = JanusMatrix<SymbolicScalar>;
+using SymbolicMatrix = MetisMatrix<SymbolicScalar>;
 ```
 
 #### New: SymbolicArg Wrapper
@@ -56,7 +56,7 @@ class SymbolicArg {
 };
 ```
 
-**Impact**: Users can now mix scalars and matrices in `janus::Function` without manual conversion.
+**Impact**: Users can now mix scalars and matrices in `metis::Function` without manual conversion.
 
 **Assessment**: ✅ **Directly addresses previous recommendation** — Type system is now complete and well-documented.
 
@@ -64,7 +64,7 @@ class SymbolicArg {
 
 ### 2. Function Wrapper ⭐⭐⭐⭐⭐ **EXCEPTIONAL**
 
-**File**: [`include/janus/core/Function.hpp`](file:///home/tanged/sources/janus/include/janus/core/Function.hpp)
+**File**: [`include/metis/core/Function.hpp`](file:///home/tanged/sources/metis/include/metis/core/Function.hpp)
 
 #### What Was Added
 A complete, user-friendly wrapper around `casadi::Function` with:
@@ -72,7 +72,7 @@ A complete, user-friendly wrapper around `casadi::Function` with:
 1. **Automatic name generation** (optional):
    ```cpp
    // No need to invent names manually
-   janus::Function f({x, y}, {result});
+   metis::Function f({x, y}, {result});
    ```
 
 2. **Variadic template evaluation**:
@@ -83,7 +83,7 @@ A complete, user-friendly wrapper around `casadi::Function` with:
 
 3. **Automatic type conversion** via `SymbolicArg`:
    ```cpp
-   janus::Function f({scalar_sym, matrix_sym}, {output});
+   metis::Function f({scalar_sym, matrix_sym}, {output});
    ```
 
 4. **Thread-safe unique naming** using `std::atomic<uint64_t>`.
@@ -104,7 +104,7 @@ A complete, user-friendly wrapper around `casadi::Function` with:
 
 ### 3. Logic & Control Flow ⭐⭐⭐⭐⭐ **OUTSTANDING**
 
-**File**: [`include/janus/math/Logic.hpp`](file:///home/tanged/sources/janus/include/janus/math/Logic.hpp)
+**File**: [`include/metis/math/Logic.hpp`](file:///home/tanged/sources/metis/include/metis/math/Logic.hpp)
 
 #### What Was Added
 
@@ -119,7 +119,7 @@ New functions implemented:
 
 **Key Design Decision**: Relaxed type constraints to allow mixed-type operations:
 ```cpp
-template <JanusScalar T1, JanusScalar T2>
+template <MetisScalar T1, MetisScalar T2>
 auto min(const T1 &a, const T2 &b) {
     if constexpr (std::is_floating_point_v<T1> && std::is_floating_point_v<T2>) {
         return std::min(a, b);
@@ -135,7 +135,7 @@ auto min(const T1 &a, const T2 &b) {
 
 ### 4. Arithmetic Enhancements ⭐⭐⭐⭐⭐ **EXCELLENT**
 
-**File**: [`include/janus/math/Arithmetic.hpp`](file:///home/tanged/sources/janus/include/janus/math/Arithmetic.hpp)
+**File**: [`include/metis/math/Arithmetic.hpp`](file:///home/tanged/sources/metis/include/metis/math/Arithmetic.hpp)
 
 #### What Was Added
 
@@ -150,10 +150,10 @@ New functions:
 
 **Clever Addition**:
 ```cpp
-template <JanusScalar T>
+template <MetisScalar T>
     requires(!std::is_same_v<T, double>)
 T pow(const T &base, double exponent) {
-    // Handles common case: janus::pow(v, 2.0) where v is symbolic
+    // Handles common case: metis::pow(v, 2.0) where v is symbolic
 }
 ```
 
@@ -165,7 +165,7 @@ This prevents ambiguous overload errors while maintaining type safety.
 
 ### 5. Automatic Differentiation ⭐⭐⭐⭐⭐ **GAME-CHANGING**
 
-**File**: [`include/janus/math/DiffOps.hpp`](file:///home/tanged/sources/janus/include/janus/math/DiffOps.hpp)
+**File**: [`include/metis/math/DiffOps.hpp`](file:///home/tanged/sources/metis/include/metis/math/DiffOps.hpp)
 
 ####What Was Added
 
@@ -182,15 +182,15 @@ auto jacobian(const std::vector<SymbolicArg>& expressions,
 
 **Example Usage** (from `drag_coefficient.cpp`):
 ```cpp
-auto v_sym = janus::sym("v");
-auto Cl_sym = janus::sym("Cl");
+auto v_sym = metis::sym("v");
+auto Cl_sym = metis::sym("Cl");
 auto drag_sym = compute_drag(rho, v_sym, S, Cd0, k, Cl_sym, Cl0);
 
 // Compute Jacobian: [∂drag/∂v, ∂drag/∂Cl]
-auto J_sym = janus::jacobian({drag_sym}, {v_sym, Cl_sym});
+auto J_sym = metis::jacobian({drag_sym}, {v_sym, Cl_sym});
 
 // Create callable function
-janus::Function J_fun({v_sym, Cl_sym}, {J_sym});
+metis::Function J_fun({v_sym, Cl_sym}, {J_sym});
 auto J_res = J_fun(50.0, 0.5);
 ```
 
@@ -212,7 +212,7 @@ std::cout << "Analytic Check: [" << dDrag_dv << ", " << dDrag_dCl << "]" << std:
 
 **A. `drag_coefficient.cpp`** — Production-quality aerodynamics example
 - Demonstrates dual-mode execution
-- Shows automatic differentiation with `janus::jacobian`
+- Shows automatic differentiation with `metis::jacobian`
 - Includes **analytical validation** of derivatives
 - **78 lines of clean, documented code**
 
@@ -232,7 +232,7 @@ auto state_next = state_sym;
 step_physics(state_next, dt_sym);
 
 // Compile to function
-janus::Function step_fn({state_mx, dt_sym}, {state_next});
+metis::Function step_fn({state_mx, dt_sym}, {state_next});
 
 // Verify numeric vs symbolic match
 double err = (num_res - sym_res).norm();
@@ -264,7 +264,7 @@ This is **outstanding** — proves the dual-backend architecture works correctly
 
 | Recommendation | Status | Notes |
 |----------------|--------|-------|
-| 1. Complete Matrix Type System | ✅ **DONE** | `JanusMatrix<Scalar>`, `NumericMatrix`, `SymbolicMatrix` added |
+| 1. Complete Matrix Type System | ✅ **DONE** | `MetisMatrix<Scalar>`, `NumericMatrix`, `SymbolicMatrix` added |
 | 2. Expand Linear Algebra | ⚠️ **PARTIAL** | Still missing `dot()`, `cross()`, `inv()`, `det()` |
 | 3. Add Missing Math Functions | ✅ **DONE** | `min`, `max`, `clamp`, `sinh`, `cosh`, `tanh`, `floor`, `ceil`, `sign`, `fmod` added |
 | 4. Error Handling Strategy | ⚠️ **NOT DONE** | Still no explicit error handling policy |
@@ -286,7 +286,7 @@ This is **outstanding** — proves the dual-backend architecture works correctly
 |-------------|--------|
 | Add `static_assert` with helpful messages | ⚠️ **PARTIAL** — Some added in `DiffOps.hpp` |
 | Create `examples/drag_coefficient.cpp` | ✅ **DONE** — With AD validation! |
-| Add Doxygen comments to public headers | ⚠️ **PARTIAL** — Some added to `Function.hpp`, `JanusTypes.hpp` |
+| Add Doxygen comments to public headers | ⚠️ **PARTIAL** — Some added to `Function.hpp`, `MetisTypes.hpp` |
 | Write gradient validation test | ✅ **DONE** — In `drag_coefficient.cpp` |
 | Document loop constraints | ❌ **NOT DONE** |
 | Add `clamp()`, `min()`, `max()` | ✅ **DONE** |
@@ -381,13 +381,13 @@ This is **outstanding** — proves the dual-backend architecture works correctly
 1. **Atomic counter for unique names**:
    ```cpp
    static std::atomic<uint64_t> counter{0};
-   return "janus_fn_" + std::to_string(counter.fetch_add(1));
+   return "metis_fn_" + std::to_string(counter.fetch_add(1));
    ```
    Thread-safe without locks — elegant!
 
 2. **Mixed-type support in Logic.hpp**:
    ```cpp
-   template <JanusScalar T1, JanusScalar T2>
+   template <MetisScalar T1, MetisScalar T2>
    auto min(const T1 &a, const T2 &b) { /* ... */ }
    ```
    Allows `min(double, MX)` naturally.
@@ -412,7 +412,7 @@ This is **outstanding** — proves the dual-backend architecture works correctly
 
 2. **No const-correctness** in some places:
    ```cpp
-   void step_physics(janus::JanusMatrix<Scalar>& state, const Scalar& dt)
+   void step_physics(metis::MetisMatrix<Scalar>& state, const Scalar& dt)
    ```
    Should return new state instead of mutation for pure functional style?
 
@@ -428,8 +428,8 @@ This is **outstanding** — proves the dual-backend architecture works correctly
 1. **Restore Test Suite** ✅ Priority: CRITICAL
    - Resurrect `test_math.cpp` or create new test structure
    - Test all new functions: `min`, `max`, `clamp`, hyperbolic, `sign`, `fmod`
-   - Test `janus::jacobian()` correctness
-   - Test `janus::Function` wrapper
+   - Test `metis::jacobian()` correctness
+   - Test `metis::Function` wrapper
 
 2. **Complete Linear Algebra** ✅ Priority: HIGH
    - Add `dot(v1, v2)` — Dot product
@@ -472,7 +472,7 @@ This is **outstanding** — proves the dual-backend architecture works correctly
 
 ## Conclusion
 
-The Janus project has **matured significantly** since the initial review. The additions of the `Function` wrapper, `SymbolicArg`, automatic differentiation, and validated examples represent **months of thoughtful engineering**.
+The Metis project has **matured significantly** since the initial review. The additions of the `Function` wrapper, `SymbolicArg`, automatic differentiation, and validated examples represent **months of thoughtful engineering**.
 
 ### Key Strengths Demonstrated
 
@@ -508,7 +508,7 @@ This is **not a toy framework** — it's a legitimate tool for optimization-driv
 
 ### **Grade: A (95%)** ⭐⭐⭐⭐⭐
 
-Janus has graduated from "solid foundation" to **production-ready framework for early adopters**. The combination of clean API design, working examples with validation, and comprehensive math coverage makes this a genuine contribution to the numerical computing ecosystem.
+Metis has graduated from "solid foundation" to **production-ready framework for early adopters**. The combination of clean API design, working examples with validation, and comprehensive math coverage makes this a genuine contribution to the numerical computing ecosystem.
 
 **Would I recommend this to a colleague?** Yes, absolutely — especially for aerospace/robotics optimization problems.
 
@@ -520,4 +520,4 @@ Janus has graduated from "solid foundation" to **production-ready framework for 
 
 **Reviewed by**: AI Assistant (Antigravity)  
 **Date**: December 13, 2025  
-**Previous Review**: [`janus_comprehensive_review.md`](file:///home/tanged/sources/janus/docs/janus_comprehensive_review.md)
+**Previous Review**: [`metis_comprehensive_review.md`](file:///home/tanged/sources/metis/docs/metis_comprehensive_review.md)

@@ -5,15 +5,15 @@
  * @see FiniteDifference.hpp, IntegrateDiscrete.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/math/Arithmetic.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/math/Arithmetic.hpp"
 #include <Eigen/Dense>
 #include <optional>
 #include <type_traits>
 #include <utility>
 
-namespace janus {
+namespace metis {
 
 // --- diff(vector) ---
 /**
@@ -69,7 +69,7 @@ auto cumtrapz(const Eigen::MatrixBase<DerivedY> &y, const Eigen::MatrixBase<Deri
                                           std::declval<typename DerivedY::Scalar>()) *
                                          (std::declval<typename DerivedX::Scalar>() -
                                           std::declval<typename DerivedX::Scalar>()))>;
-    JanusVector<Scalar> result(y.size());
+    MetisVector<Scalar> result(y.size());
 
     if (y.size() != x.size()) {
         throw InvalidArgument("cumtrapz: y and x must have the same size");
@@ -100,13 +100,13 @@ auto cumtrapz(const Eigen::MatrixBase<DerivedY> &y, const Eigen::MatrixBase<Deri
  * @param dx Uniform spacing between samples
  * @return Vector of cumulative trapezoidal integrals
  */
-template <typename DerivedY, JanusScalar Spacing = double>
+template <typename DerivedY, MetisScalar Spacing = double>
 auto cumtrapz(const Eigen::MatrixBase<DerivedY> &y, const Spacing &dx = 1.0) {
     using Scalar = std::decay_t<decltype(0.5 *
                                          (std::declval<typename DerivedY::Scalar>() +
                                           std::declval<typename DerivedY::Scalar>()) *
                                          std::declval<Spacing>())>;
-    JanusVector<Scalar> result(y.size());
+    MetisVector<Scalar> result(y.size());
 
     if (y.size() == 0) {
         return result;
@@ -178,7 +178,7 @@ template <typename DerivedF, typename Spacing = double>
 auto gradient(const Eigen::MatrixBase<DerivedF> &f, const Spacing &dx = 1.0, int edge_order = 1,
               int n = 1) {
     using Scalar = typename DerivedF::Scalar;
-    using Vector = JanusVector<Scalar>;
+    using Vector = MetisVector<Scalar>;
 
     Eigen::Index N = f.size();
     Vector grad(N);
@@ -295,7 +295,7 @@ template <typename DerivedF, typename Spacing = double, typename Period>
 auto gradient_periodic(const Eigen::MatrixBase<DerivedF> &f, const Spacing &dx,
                        const Period &period, int edge_order = 1, int n = 1) {
     using Scalar = typename DerivedF::Scalar;
-    using Vector = JanusVector<Scalar>;
+    using Vector = MetisVector<Scalar>;
 
     const Eigen::Index N = f.size();
     Vector grad(N);
@@ -366,4 +366,4 @@ auto gradient_periodic(const Eigen::MatrixBase<DerivedF> &f, const Spacing &dx,
     return grad;
 }
 
-} // namespace janus
+} // namespace metis

@@ -1,6 +1,6 @@
-# Janus Phase 4: Beta 1.0 Release Implementation Plan
+# Metis Phase 4: Beta 1.0 Release Implementation Plan
 
-**Goal**: Polish Janus for beta 1.0 release with ODE integration, expanded spacing functions, quaternion math, 100% code coverage, and graph visualization.
+**Goal**: Polish Metis for beta 1.0 release with ODE integration, expanded spacing functions, quaternion math, 100% code coverage, and graph visualization.
 **Status**: Planning Draft
 **Created**: 2025-12-14
 
@@ -43,22 +43,22 @@ Phase 4 completes the remaining Milestones from Phase 3 and adds key features fo
 | **P0** | `Spacing.hpp` | `sinspace`, `logspace`, `geomspace` | User-requested, matches AeroSandbox |
 | **P1** | `Quaternion.hpp` | Quaternion algebra | User-requested, common in robotics/aerospace |
 | **P1** | Testing | Coverage gaps | Target 100% line coverage |
-| **P2** | `JanusIO.hpp` | Graph visualization | User-requested for UX polish |
+| **P2** | `MetisIO.hpp` | Graph visualization | User-requested for UX polish |
 
 ---
 
 ## Proposed Implementation Structure
 
 ```
-include/janus/math/
+include/metis/math/
 ├── Integrate.hpp       # [NEW] ODE integration (quad, solve_ivp)
 ├── Spacing.hpp         # [EXTEND] Add sinspace, logspace, geomspace
-├── JanusMath.hpp       # [EXTEND] Include new headers
+├── MetisMath.hpp       # [EXTEND] Include new headers
 └── ...
 
-include/janus/core/
+include/metis/core/
 ├── Quaternion.hpp      # [NEW] Quaternion math operations
-├── JanusIO.hpp         # [EXTEND] Add graph visualization utilities
+├── MetisIO.hpp         # [EXTEND] Add graph visualization utilities
 └── ...
 
 tests/math/
@@ -77,9 +77,9 @@ tests/core/
 
 ### Component 1: ODE Integration (`Integrate.hpp`) — **P0**
 
-**Source Reference**: [integrate.py](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/integrate.py)
+**Source Reference**: [integrate.py](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/integrate.py)
 
-#### [NEW] `include/janus/math/Integrate.hpp`
+#### [NEW] `include/metis/math/Integrate.hpp`
 
 | Function | Signature | Numeric Backend | Symbolic Backend |
 |----------|-----------|-----------------|------------------|
@@ -112,19 +112,19 @@ auto quad(Func&& func, T a, T b, ...);
  */
 template <typename Func, typename Scalar>
 OdeResult<Scalar> solve_ivp(Func&& fun, std::pair<Scalar, Scalar> t_span, 
-                             const janus::JanusMatrix<Scalar>& y0, ...);
+                             const metis::MetisMatrix<Scalar>& y0, ...);
 ```
 
 > [!CAUTION]
-> The symbolic backend requires careful handling of CasADi's `integrator` interface. Time normalization and parameter extraction must match [integrate.py](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/integrate.py) exactly.
+> The symbolic backend requires careful handling of CasADi's `integrator` interface. Time normalization and parameter extraction must match [integrate.py](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/integrate.py) exactly.
 
 ---
 
 ### Component 2: Extended Spacing (`Spacing.hpp`) — **P0**
 
-**Source Reference**: [spacing.py](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/spacing.py)
+**Source Reference**: [spacing.py](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/spacing.py)
 
-#### [MODIFY] `include/janus/math/Spacing.hpp`
+#### [MODIFY] `include/metis/math/Spacing.hpp`
 
 Add the following functions:
 
@@ -175,7 +175,7 @@ Eigen::Matrix<T, Eigen::Dynamic, 1> geomspace(const T& start, const T& stop, int
 
 ### Component 3: Quaternion Math (`Quaternion.hpp`) — **P1**
 
-#### [NEW] `include/janus/core/Quaternion.hpp`
+#### [NEW] `include/metis/core/Quaternion.hpp`
 
 Quaternions are essential for efficient rotation representation in robotics and aerospace. We implement a minimal but complete quaternion algebra.
 
@@ -261,16 +261,16 @@ Review coverage report for:
 
 ---
 
-### Component 5: Graph Visualization (`JanusIO.hpp`) — **P2**
+### Component 5: Graph Visualization (`MetisIO.hpp`) — **P2**
 
 **Goal**: Allow users to visualize the CasADi computational graph for debugging and understanding.
 
-#### [EXTEND] `include/janus/core/JanusIO.hpp`
+#### [EXTEND] `include/metis/core/MetisIO.hpp`
 
 CasADi provides built-in graph export via DOT format. We wrap this in a user-friendly API.
 
 ```cpp
-namespace janus {
+namespace metis {
 
 /**
  * @brief Exports a symbolic expression graph to DOT format
@@ -283,7 +283,7 @@ void export_graph_dot(const SymbolicScalar& expr, const std::string& filename,
                       const std::string& name = "graph");
 
 /**
- * @brief Exports a janus::Function's graph to DOT format
+ * @brief Exports a metis::Function's graph to DOT format
  * 
  * @param func The function to visualize
  * @param filename Output filename
@@ -304,7 +304,7 @@ void render_graph(const std::string& dot_file, const std::string& output_file);
 void visualize_graph(const SymbolicScalar& expr, const std::string& output_base);
 void visualize_graph(const Function& func, const std::string& output_base);
 
-} // namespace janus
+} // namespace metis
 ```
 
 **Implementation Notes**:
@@ -349,7 +349,7 @@ void visualize_graph(const Function& func, const std::string& output_base);
 - [x] **Task 4.6**: Verify 100% line coverage (or document intentional gaps)
 
 ### Milestone 5: Graph Visualization (Week 3) ✅ COMPLETE
-- [x] **Task 5.1**: Extend `JanusIO.hpp` with `export_graph_dot`
+- [x] **Task 5.1**: Extend `MetisIO.hpp` with `export_graph_dot`
 - [x] **Task 5.2**: Implement `render_graph` (Graphviz wrapper)
 - [x] **Task 5.3**: Add `visualize_graph` convenience function
 - [x] **Task 5.4**: Create example demonstrating graph visualization
@@ -357,7 +357,7 @@ void visualize_graph(const Function& func, const std::string& output_base);
 
 
 ### Milestone 6: Beta 1.0 Polish (Week 3)
-- [ ] **Task 6.1**: Update `JanusMath.hpp` to include all new headers
+- [ ] **Task 6.1**: Update `MetisMath.hpp` to include all new headers
 - [ ] **Task 6.2**: Run full test suite and fix any issues
 - [ ] **Task 6.3**: Update `docs/design_overview.md` with Phase 4 summary
 - [ ] **Task 6.4**: Update README with beta 1.0 feature summary
@@ -403,7 +403,7 @@ void test_function() {
         EXPECT_NEAR(result, expected, 1e-10);
     } else {
         // Symbolic: Evaluate and check
-        auto eval = janus::eval_scalar(result, {symbolic_var}, {numeric_value});
+        auto eval = metis::eval_scalar(result, {symbolic_var}, {numeric_value});
         EXPECT_NEAR(eval, expected, 1e-9);
     }
 }
@@ -485,4 +485,4 @@ open build/coverage/html/index.html
 
 ---
 
-*Generated by Janus Dev Team - Phase 4 Planning*
+*Generated by Metis Dev Team - Phase 4 Planning*

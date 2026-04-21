@@ -1,5 +1,5 @@
 {
-  description = "Janus: Traceable C++ Framework";
+  description = "Metis: Traceable C++ Framework";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
@@ -30,7 +30,7 @@
       in
       {
         packages.default = stdenv.mkDerivation {
-          pname = "janus";
+          pname = "metis";
           version = "2.0.0";
           src = ./.;
 

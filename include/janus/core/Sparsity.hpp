@@ -3,9 +3,9 @@
 #pragma once
 
 #include "Function.hpp"
-#include "JanusError.hpp"
-#include "JanusIO.hpp"
-#include "JanusTypes.hpp"
+#include "MetisError.hpp"
+#include "MetisIO.hpp"
+#include "MetisTypes.hpp"
 #include <casadi/casadi.hpp>
 #include <cmath>
 #include <limits>
@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Wrapper around CasADi Sparsity for pattern analysis
@@ -25,11 +25,11 @@ namespace janus {
  *
  * @example
  * ```cpp
- * auto x = janus::sym("x", 3);
- * auto y = janus::sym("y", 3);
+ * auto x = metis::sym("x", 3);
+ * auto y = metis::sym("y", 3);
  * auto f = casadi::MX::dot(x, y);  // x'*y
  *
- * auto sp = janus::jacobian_sparsity(f, casadi::MX::vertcat({x, y}));
+ * auto sp = metis::jacobian_sparsity(f, casadi::MX::vertcat({x, y}));
  * std::cout << "Jacobian size: " << sp.n_rows() << "x" << sp.n_cols() << "\n";
  * std::cout << "Non-zeros: " << sp.nnz() << "\n";
  * std::cout << sp.to_string() << "\n";  // ASCII spy plot
@@ -268,7 +268,7 @@ class SparsityPattern {
     bool visualize_spy(const std::string &output_base) const {
         try {
             export_spy_dot(output_base, output_base);
-            // render_graph is defined in JanusIO.hpp
+            // render_graph is defined in MetisIO.hpp
             return render_graph(output_base + ".dot", output_base + ".pdf");
         } catch (...) {
             return false;
@@ -772,7 +772,7 @@ class SparseJacobianEvaluator {
                             const std::vector<SymbolicArg> &variables, const std::string &name = "")
         : artifacts_(detail::make_sparse_jacobian_artifacts(expressions, variables, name)) {}
 
-    /// @brief Construct from a janus::Function
+    /// @brief Construct from a metis::Function
     /// @param fn Function to differentiate
     /// @param output_idx Output index
     /// @param input_idx Input index
@@ -861,7 +861,7 @@ class SparseHessianEvaluator {
                            const std::string &name = "")
         : artifacts_(detail::make_sparse_hessian_artifacts(expression, variables, name)) {}
 
-    /// @brief Construct from a janus::Function
+    /// @brief Construct from a metis::Function
     /// @param fn Function with scalar output
     /// @param output_idx Scalar output index
     /// @param input_idx Input index
@@ -941,7 +941,7 @@ inline SparsityPattern sparsity_of_hessian(const SymbolicScalar &expr, const Sym
 }
 
 /**
- * @brief Get sparsity of a janus::Function Jacobian
+ * @brief Get sparsity of a metis::Function Jacobian
  *
  * @param fn The function
  * @param output_idx Output index (default 0)
@@ -954,7 +954,7 @@ inline SparsityPattern get_jacobian_sparsity(const Function &fn, int output_idx 
 }
 
 /**
- * @brief Get Hessian sparsity of a scalar janus::Function output.
+ * @brief Get Hessian sparsity of a scalar metis::Function output.
  *
  * @param fn The function
  * @param output_idx Scalar output index (default 0)
@@ -974,7 +974,7 @@ inline SparsityPattern get_hessian_sparsity(const Function &fn, int output_idx =
 }
 
 /**
- * @brief Get input sparsity of a janus::Function
+ * @brief Get input sparsity of a metis::Function
  * @param fn The function
  * @param input_idx Input index (default 0)
  * @return SparsityPattern of the input slot
@@ -985,7 +985,7 @@ inline SparsityPattern get_sparsity_in(const Function &fn, int input_idx = 0) {
 }
 
 /**
- * @brief Get output sparsity of a janus::Function
+ * @brief Get output sparsity of a metis::Function
  * @param fn The function
  * @param output_idx Output index (default 0)
  * @return SparsityPattern of the output slot
@@ -1022,7 +1022,7 @@ inline SparseJacobianEvaluator sparse_jacobian(const std::vector<SymbolicArg> &e
 }
 
 /**
- * @brief Compile a sparse Jacobian evaluator from a janus::Function
+ * @brief Compile a sparse Jacobian evaluator from a metis::Function
  * @param fn Function to differentiate
  * @param output_idx Output index
  * @param input_idx Input index
@@ -1061,7 +1061,7 @@ inline SparseHessianEvaluator sparse_hessian(const SymbolicArg &expression,
 }
 
 /**
- * @brief Compile a sparse Hessian evaluator from a janus::Function
+ * @brief Compile a sparse Hessian evaluator from a metis::Function
  * @param fn Function with scalar output
  * @param output_idx Scalar output index
  * @param input_idx Input index
@@ -1101,7 +1101,7 @@ struct NaNSparsityOptions {
  *
  * @code
  * // Detect sparsity of element-wise function
- * auto sp = janus::nan_propagation_sparsity(
+ * auto sp = metis::nan_propagation_sparsity(
  *     [](const NumericVector& x) {
  *         NumericVector y(x.size());
  *         for (int i = 0; i < x.size(); ++i) y(i) = x(i) * x(i);
@@ -1166,7 +1166,7 @@ SparsityPattern nan_propagation_sparsity(Func &&fn, int n_inputs, int n_outputs,
 }
 
 /**
- * @brief Detect Jacobian sparsity of a janus::Function using NaN propagation
+ * @brief Detect Jacobian sparsity of a metis::Function using NaN propagation
  *
  * Convenience overload that uses the Function's internal structure.
  *
@@ -1206,4 +1206,4 @@ inline SparsityPattern nan_propagation_sparsity(const Function &fn,
     return nan_propagation_sparsity(eval_fn, n_inputs, n_outputs, opts);
 }
 
-} // namespace janus
+} // namespace metis

@@ -1,20 +1,20 @@
-# SciML-to-Janus Comparison (6DOF + Real-Time Gradients)
+# SciML-to-Metis Comparison (6DOF + Real-Time Gradients)
 
 **Date**: 2026-03-03  
-**Purpose**: Keep a compact reference for future brainstorming sessions on Janus architecture direction.
+**Purpose**: Keep a compact reference for future brainstorming sessions on Metis architecture direction.
 
 ## Scope
 
 Target downstream use case:
-- Engineering utility libraries consume Janus.
-- 6DOF flight simulation uses Janus symbolic/numeric dual mode.
+- Engineering utility libraries consume Metis.
+- 6DOF flight simulation uses Metis symbolic/numeric dual mode.
 - Real-time gradient-based optimization (AeroSandbox-like workflows).
 
 ## Architecture Boundary (Current Decision)
 
-Janus should stay dual-headed math infrastructure, not a domain hierarchy host.
+Metis should stay dual-headed math infrastructure, not a domain hierarchy host.
 
-Janus owns:
+Metis owns:
 - Symbolic/numeric core and transforms.
 - Derivatives, sparsity, and linear algebra backends.
 - Solver-facing callable contracts and generated-code/cache plumbing.
@@ -42,7 +42,7 @@ Cloned under `reference/Julia/SciML`:
 
 ## Math Ideas To Borrow From SciML
 
-Focus here is math and numerics inside Janus, not simulator/runtime orchestration.
+Focus here is math and numerics inside Metis, not simulator/runtime orchestration.
 
 | Idea (Julia source) | What to take | Why it matters for 6DOF gradients |
 |---|---|---|
@@ -75,7 +75,7 @@ Focus here is math and numerics inside Janus, not simulator/runtime orchestratio
 - Automatic scaling/nondimensionalization helpers from symbolic magnitudes and sparsity statistics.
 - Structural identifiability/observability checks as symbolic preflight diagnostics.
 
-## Out Of Scope For Janus (Icarus-Owned)
+## Out Of Scope For Metis (Icarus-Owned)
 
 - Problem hierarchy classes and mission/system orchestration.
 - Runtime event scheduling and simulator loop semantics.
@@ -83,7 +83,7 @@ Focus here is math and numerics inside Janus, not simulator/runtime orchestratio
 
 ## Immediate Design Questions To Revisit In Future Sessions
 
-1. What transform ordering gives the best tradeoff for Janus: alias -> BLT -> tearing -> CSE/codegen?
+1. What transform ordering gives the best tradeoff for Metis: alias -> BLT -> tearing -> CSE/codegen?
 2. What parameter-count and stiffness thresholds should switch sensitivity modes?
 3. Which nonlinear fallback sequence is most robust for flight trim and aggressive transients?
 4. Which invariants should be explicitly preserved in 6DOF integration (energy, momentum, constraints)?
@@ -91,7 +91,7 @@ Focus here is math and numerics inside Janus, not simulator/runtime orchestratio
 
 ## Suggested Session Starters
 
-- "Design Janus structural transform passes (alias, BLT, tearing) and define pass ordering."
+- "Design Metis structural transform passes (alias, BLT, tearing) and define pass ordering."
 - "Prototype sparse Jacobian/Hessian value kernels with fixed sparsity structure reuse."
 - "Draft sensitivity mode switching heuristics for 6DOF OCP/NMPC workloads."
-- "Evaluate trust-region + line-search globalization defaults for Janus nonlinear solves."
+- "Evaluate trust-region + line-search globalization defaults for Metis nonlinear solves."

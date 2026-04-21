@@ -1,8 +1,8 @@
-# Janus 👥
+# Metis 👥
 
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://tanged123.github.io/janus/) [![Janus CI](https://github.com/tanged123/janus/actions/workflows/ci.yml/badge.svg)](https://github.com/tanged123/janus/actions/workflows/ci.yml) [![Clang-Format Check](https://github.com/tanged123/janus/actions/workflows/format.yml/badge.svg)](https://github.com/tanged123/janus/actions/workflows/format.yml) [![codecov](https://codecov.io/github/tanged123/janus/graph/badge.svg?token=0DSF7KK8W7)](https://codecov.io/github/tanged123/janus)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://tanged123.github.io/metis/) [![Metis CI](https://github.com/tanged123/metis/actions/workflows/ci.yml/badge.svg)](https://github.com/tanged123/metis/actions/workflows/ci.yml) [![Clang-Format Check](https://github.com/tanged123/metis/actions/workflows/format.yml/badge.svg)](https://github.com/tanged123/metis/actions/workflows/format.yml) [![codecov](https://codecov.io/github/tanged123/metis/graph/badge.svg?token=0DSF7KK8W7)](https://codecov.io/github/tanged123/metis)
 
-Janus is a C++20 header-only numerical framework that implements a dual-mode code-transformations paradigm inspired by [AeroSandbox](https://github.com/peterdsharpe/AeroSandbox). You write physics models once using generic templates; the same code compiles to optimized native arithmetic (Eigen) for simulation **and** builds a symbolic computational graph (CasADi) for automatic differentiation and gradient-based optimization. No code duplication, no runtime dispatch overhead.
+Metis is a C++20 header-only numerical framework that implements a dual-mode code-transformations paradigm inspired by [AeroSandbox](https://github.com/peterdsharpe/AeroSandbox). You write physics models once using generic templates; the same code compiles to optimized native arithmetic (Eigen) for simulation **and** builds a symbolic computational graph (CasADi) for automatic differentiation and gradient-based optimization. No code duplication, no runtime dispatch overhead.
 
 ## Building & Development
 
@@ -43,7 +43,7 @@ nix fmt                         # Format everything
 ## Project Structure
 
 ```plaintext
-janus/
+metis/
 ├── docs/                        # Documentation
 │   ├── user_guides/             # 18 topic guides (see Documentation below)
 │   ├── patterns/                # Reusable patterns (branching, loops, hybrid optimization)
@@ -55,14 +55,14 @@ janus/
 │   ├── simulation/              # ODE integration, drag, brachistochrone, hybrid, attitudes
 │   └── optimization/            # Rosenbrock, drag, beam, brachistochrone, sweeps, transcription comparison
 ├── include/
-│   └── janus/
+│   └── metis/
 │       ├── core/                # Type system, concepts, diagnostics, sparsity, structural analysis, IO
 │       ├── math/                # Trig, calculus, autodiff, interpolation, integration, root finding,
 │       │                        #   quadrature, PCE, linalg, quaternions, rotations, surrogates
 │       ├── optimization/        # Opti interface, scaling, collocation, multiple shooting,
 │       │                        #   pseudospectral, Birkhoff pseudospectral
 │       ├── utils/               # Utility helpers (JSON)
-│       ├── janus.hpp            # Main umbrella include
+│       ├── metis.hpp            # Main umbrella include
 │       └── using.hpp            # Convenience aliases/imports
 ├── scripts/                     # Build, test, CI, coverage, formatting, doc generation
 ├── tests/                       # GoogleTest suites (core/, math/, optimization/)
@@ -72,9 +72,9 @@ janus/
 
 ## Architecture Overview
 
-Janus is built on a **template-first traceability** paradigm. User models are templated on a generic scalar type; the framework provides two backends that satisfy the same concept constraints. The **numeric backend** maps to `double` and `Eigen::MatrixXd` -- the compiler generates assembly identical to hand-written C++. The **symbolic backend** maps to `casadi::MX` and `Eigen::Matrix<casadi::MX>` -- the same code constructs a static computational graph suitable for automatic differentiation, sparsity detection, and NLP solvers.
+Metis is built on a **template-first traceability** paradigm. User models are templated on a generic scalar type; the framework provides two backends that satisfy the same concept constraints. The **numeric backend** maps to `double` and `Eigen::MatrixXd` -- the compiler generates assembly identical to hand-written C++. The **symbolic backend** maps to `casadi::MX` and `Eigen::Matrix<casadi::MX>` -- the same code constructs a static computational graph suitable for automatic differentiation, sparsity detection, and NLP solvers.
 
-A **dispatch layer** in the `janus::` namespace shadows `std::` math functions and uses C++20 concepts to route calls (`janus::sin`, `janus::pow`, etc.) to the correct backend at compile time. The framework draws a strict line between **structural logic** (integers, booleans, loop bounds -- these shape the graph) and **value logic** (floating-point quantities that flow through the graph). Standard `if/else` cannot branch on symbolic values; `janus::where(condition, true_val, false_val)` compiles to a ternary in numeric mode and a `casadi::if_else` switch node in symbolic mode.
+A **dispatch layer** in the `metis::` namespace shadows `std::` math functions and uses C++20 concepts to route calls (`metis::sin`, `metis::pow`, etc.) to the correct backend at compile time. The framework draws a strict line between **structural logic** (integers, booleans, loop bounds -- these shape the graph) and **value logic** (floating-point quantities that flow through the graph). Standard `if/else` cannot branch on symbolic values; `metis::where(condition, true_val, false_val)` compiles to a ternary in numeric mode and a `casadi::if_else` switch node in symbolic mode.
 
 For the full design rationale, see [docs/design_overview.md](docs/design_overview.md).
 
@@ -93,7 +93,7 @@ For the full design rationale, see [docs/design_overview.md](docs/design_overvie
 ./scripts/generate_docs.sh      # Or: doxygen Doxyfile
 ```
 
-Hosted on [GitHub Pages](https://tanged123.github.io/janus/).
+Hosted on [GitHub Pages](https://tanged123.github.io/metis/).
 
 ### User guides
 
@@ -101,11 +101,11 @@ Hosted on [GitHub Pages](https://tanged123.github.io/janus/).
 |---|---|
 | [numeric_computing](docs/user_guides/numeric_computing.md) | Numeric backend basics -- templates, Eigen, optimized machine code |
 | [symbolic_computing](docs/user_guides/symbolic_computing.md) | Symbolic backend -- CasADi graph construction, derivatives, code generation |
-| [math_functions](docs/user_guides/math_functions.md) | Dispatch layer and ADL for dual-mode math (`janus::sin`, `janus::pow`, etc.) |
+| [math_functions](docs/user_guides/math_functions.md) | Dispatch layer and ADL for dual-mode math (`metis::sin`, `metis::pow`, etc.) |
 | [interpolation](docs/user_guides/interpolation.md) | N-dimensional gridded interpolation in numeric and symbolic modes |
 | [integration](docs/user_guides/integration.md) | ODE solvers -- RK4, RK45, Stormer-Verlet, mass-matrix, second-order systems |
 | [root_finding](docs/user_guides/root_finding.md) | Newton-Raphson and bracketing solvers with globalization |
-| [optimization](docs/user_guides/optimization.md) | `janus::Opti` interface for constrained NLP (IPOPT/SNOPT/QPOASES) |
+| [optimization](docs/user_guides/optimization.md) | `metis::Opti` interface for constrained NLP (IPOPT/SNOPT/QPOASES) |
 | [collocation](docs/user_guides/collocation.md) | Direct collocation transcription for optimal control |
 | [multiple_shooting](docs/user_guides/multiple_shooting.md) | Multiple shooting transcription via CasADi integrators (CVODES/IDAS) |
 | [pseudospectral](docs/user_guides/pseudospectral.md) | Global polynomial pseudospectral transcription |
@@ -121,7 +121,7 @@ Hosted on [GitHub Pages](https://tanged123.github.io/janus/).
 ## Features
 
 - 🎭 **Dual-Mode Physics**: Write once, run as Numeric (Fast C++) or Symbolic (CasADi Graph).
-- 🔢 **Unified Math**: Std/CasADi agnostic math functions (`janus::sin`, `janus::pow`, `janus::where`).
+- 🔢 **Unified Math**: Std/CasADi agnostic math functions (`metis::sin`, `metis::pow`, `metis::where`).
 - ⚡ **Linear Algebra**: Eigen-based matrix operations compatible with symbolic types, policy-driven linear solvers.
 - 📉 **Optimization**: High-level `Opti` interface for NLP solvers (IPOPT/SNOPT/QPOASES) with Direct Collocation, Multiple Shooting, Pseudospectral, and Birkhoff Pseudospectral transcriptions. Variable/constraint scaling diagnostics, parametric sweeps.
 - 🔁 **Differentiation**: Automatic differentiation (Forward/Reverse) via CasADi, sparse Jacobian/Hessian pipelines, sensitivity regime selection, matrix-free HVPs.
@@ -156,11 +156,11 @@ Build and run all examples:
 Write a model once, evaluate it numerically and symbolically:
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 // Generic model -- works with double or CasADi symbolic types
 auto drag(auto rho, auto v, auto S, auto Cd) {
-    return 0.5 * rho * janus::pow(v, 2) * S * Cd;
+    return 0.5 * rho * metis::pow(v, 2) * S * Cd;
 }
 
 int main() {
@@ -168,7 +168,7 @@ int main() {
     double D = drag(1.225, 50.0, 10.0, 0.02);
 
     // Symbolic mode -- same function builds a CasADi graph
-    janus::Opti opti;
+    metis::Opti opti;
     auto v = opti.variable(50.0);
     auto D_sym = drag(1.225, v, 10.0, 0.02);
 
@@ -182,7 +182,7 @@ int main() {
 
 **Language and style:** C++20, header-only, heavily templated. Formatting is enforced by `nix fmt` (clang-format). Run `./scripts/install-hooks.sh` to auto-format on commit.
 
-**Adding tests:** Test files live in `tests/` and mirror the `include/janus/` directory layout (`tests/core/`, `tests/math/`, `tests/optimization/`). Use GoogleTest. Run `./scripts/test.sh` to verify.
+**Adding tests:** Test files live in `tests/` and mirror the `include/metis/` directory layout (`tests/core/`, `tests/math/`, `tests/optimization/`). Use GoogleTest. Run `./scripts/test.sh` to verify.
 
 **Adding examples:** Drop a `.cpp` file in the appropriate `examples/` subdirectory and add it to `examples/CMakeLists.txt`. Run `./scripts/run_examples.sh` to verify.
 
@@ -190,12 +190,12 @@ int main() {
 
 ## Inspiration & Credits
 
-Janus is heavily inspired by **AeroSandbox**, Peter Sharpe's Python-based design optimization framework. Janus serves as a C++ implementation and extension of the "Code Transformations" paradigm pioneered by Sharpe.
+Metis is heavily inspired by **AeroSandbox**, Peter Sharpe's Python-based design optimization framework. Metis serves as a C++ implementation and extension of the "Code Transformations" paradigm pioneered by Sharpe.
 
 - **Primary Inspiration**: [AeroSandbox](https://github.com/peterdsharpe/AeroSandbox) by Peter Sharpe.
 - **Theoretical Foundation**: Sharpe, Peter D. *AeroSandbox: A Differentiable Framework for Aircraft Design Optimization*. PhD Thesis, MIT, 2024. [Read Thesis](https://github.com/peterdsharpe/AeroSandbox/blob/master/tutorial/sharpe-pds-phd-AeroAstro-2024-thesis.pdf)
 
-Janus is built upon the shoulders of giants:
+Metis is built upon the shoulders of giants:
 
 - **[Eigen](https://eigen.tuxfamily.org/)**: For high-performance linear algebra and numeric storage.
 - **[CasADi](https://web.casadi.org/)**: For symbolic graph generation, automatic differentiation, and optimization interfaces.

@@ -4,7 +4,7 @@ Add support for interpolating over unstructured/scattered point cloud data.
 
 ## Background
 
-The existing `janus::Interpolator` requires data on regular N-D grids. Many engineering applications have **scattered** data:
+The existing `metis::Interpolator` requires data on regular N-D grids. Many engineering applications have **scattered** data:
 
 - Wind tunnel test points at arbitrary Mach/alpha combinations
 - CFD results at non-uniform mesh points
@@ -21,7 +21,7 @@ The existing `janus::Interpolator` requires data on regular N-D grids. Many engi
 
 ## Proposed Approach: RBF Resampling
 
-Following the [AeroSandbox pattern](file:///home/tanged/sources/janus/reference/AeroSandbox/aerosandbox/modeling/interpolation_unstructured.py):
+Following the [AeroSandbox pattern](file:///home/tanged/sources/metis/reference/AeroSandbox/aerosandbox/modeling/interpolation_unstructured.py):
 
 1. **Construction time**: Fit RBF to scattered data, evaluate onto regular grid
 2. **Query time**: Use fast gridded `Interpolator` for lookups
@@ -32,7 +32,7 @@ This maintains **symbolic compatibility** - the CasADi graph only sees the gridd
 graph LR
     A[Scattered Points] --> B[RBF Fit]
     B --> C[Regular Grid Samples]
-    C --> D[janus::Interpolator]
+    C --> D[metis::Interpolator]
     D --> E[Fast Numeric/Symbolic Query]
 ```
 
@@ -42,10 +42,10 @@ graph LR
 
 ### Core
 
-#### [NEW] [ScatteredInterpolator.hpp](file:///home/tanged/sources/janus/include/janus/math/ScatteredInterpolator.hpp)
+#### [NEW] [ScatteredInterpolator.hpp](file:///home/tanged/sources/metis/include/metis/math/ScatteredInterpolator.hpp)
 
 ```cpp
-namespace janus {
+namespace metis {
 
 /// @brief Radial basis function kernel types
 enum class RBFKernel {
@@ -108,11 +108,11 @@ public:
     );
     
     /// Evaluate at N-D point (numeric or symbolic)
-    template <JanusScalar Scalar>
-    Scalar operator()(const JanusVector<Scalar>& query) const;
+    template <MetisScalar Scalar>
+    Scalar operator()(const MetisVector<Scalar>& query) const;
     
     /// Evaluate at scalar (1D only)
-    template <JanusScalar Scalar>
+    template <MetisScalar Scalar>
     Scalar operator()(const Scalar& query) const;
     
     /// Get underlying gridded interpolator (for inspection)
@@ -138,7 +138,7 @@ private:
     );
 };
 
-} // namespace janus
+} // namespace metis
 ```
 
 **Key Design Decisions**:
@@ -146,22 +146,22 @@ private:
 1. **RBF at construction, gridded at query**: Symbolic graph only sees gridded interpolant
 2. **Reconstruction error metric**: Helps user validate fit quality
 3. **Thin plate spline default**: No shape parameter tuning needed
-4. **Eigen-based RBF solve**: Uses existing `janus::solve()` for linear system
+4. **Eigen-based RBF solve**: Uses existing `metis::solve()` for linear system
 
 ---
 
-#### [MODIFY] [JanusMath.hpp](file:///home/tanged/sources/janus/include/janus/math/JanusMath.hpp)
+#### [MODIFY] [MetisMath.hpp](file:///home/tanged/sources/metis/include/metis/math/MetisMath.hpp)
 
 ```diff
- #include "janus/math/Interpolate.hpp"
-+#include "janus/math/ScatteredInterpolator.hpp"
+ #include "metis/math/Interpolate.hpp"
++#include "metis/math/ScatteredInterpolator.hpp"
 ```
 
 ---
 
 ### Tests
 
-#### [NEW] [test_scattered_interpolator.cpp](file:///home/tanged/sources/janus/tests/math/test_scattered_interpolator.cpp)
+#### [NEW] [test_scattered_interpolator.cpp](file:///home/tanged/sources/metis/tests/math/test_scattered_interpolator.cpp)
 
 | Test Case | Description |
 |-----------|-------------|
@@ -178,7 +178,7 @@ private:
 
 ---
 
-#### [MODIFY] [CMakeLists.txt](file:///home/tanged/sources/janus/tests/CMakeLists.txt)
+#### [MODIFY] [CMakeLists.txt](file:///home/tanged/sources/metis/tests/CMakeLists.txt)
 
 ```diff
  add_executable(test_math 
@@ -220,7 +220,7 @@ Given N scattered points, solve for weights `w`:
 where Φ[i,j] = φ(||p_i - p_j||)
 ```
 
-Use `janus::solve(Phi, f)` to get weights.
+Use `metis::solve(Phi, f)` to get weights.
 
 ---
 
@@ -244,10 +244,10 @@ SymbolicVector query(2);
 query << sym_x(0), sym_x(1);
 
 SymbolicScalar result = scattered_interp(query);
-auto f = janus::Function("test", {sym_x}, {result});
+auto f = metis::Function("test", {sym_x}, {result});
 
 // Verify gradient via CasADi jacobian
-auto df = janus::jacobian(f);
+auto df = metis::jacobian(f);
 ```
 
 ### Manual Verification

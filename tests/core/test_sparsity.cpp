@@ -4,12 +4,12 @@
  */
 
 #include <gtest/gtest.h>
-#include <janus/core/Function.hpp>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/core/Sparsity.hpp>
+#include <metis/core/Function.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/core/Sparsity.hpp>
 #include <stdexcept>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 
@@ -270,7 +270,7 @@ TEST(SparsityTests, Equality) {
 }
 
 // ============================================================================
-// Integration with janus::Function
+// Integration with metis::Function
 // ============================================================================
 
 TEST(SparsityTests, FunctionJacobianSparsity) {
@@ -460,7 +460,7 @@ TEST(SparsityTests, NaNSparsity_MatchesSymbolic) {
     // Get symbolic sparsity
     auto symbolic_sp = sparsity_of_jacobian(f, x);
 
-    // Create janus::Function and get NaN-propagation sparsity
+    // Create metis::Function and get NaN-propagation sparsity
     Function fn("square", {x}, {f});
     auto nan_sp = nan_propagation_sparsity(fn);
 

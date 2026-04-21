@@ -6,14 +6,14 @@
 #pragma once
 
 #include "Opti.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
 #include <functional>
 #include <string>
 #include <tuple>
 #include <utility>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Shared CRTP base for transcription methods
@@ -209,4 +209,4 @@ template <typename Derived> class TranscriptionBase {
     }
 };
 
-} // namespace janus
+} // namespace metis

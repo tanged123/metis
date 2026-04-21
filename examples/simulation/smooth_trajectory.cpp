@@ -2,7 +2,7 @@
  * @file smooth_trajectory.cpp
  * @brief Graduation Example: Smooth Trajectory Optimization
  *
- * Demonstrates Phase 3 Janus features:
+ * Demonstrates Phase 3 Metis features:
  * - Discrete integration (trapezoidal, Simpson)
  * - Squared curvature regularization
  * - Rotation matrices (Euler angles)
@@ -16,16 +16,16 @@
  */
 
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <numbers>
 
-using namespace janus;
+using namespace metis;
 using Scalar = double;
-using Vec = JanusVector<Scalar>;
+using Vec = MetisVector<Scalar>;
 
 int main() {
     std::cout << "=== Smooth Trajectory Optimization ===" << std::endl;
-    std::cout << "Demonstrating Phase 3 Janus features\n" << std::endl;
+    std::cout << "Demonstrating Phase 3 Metis features\n" << std::endl;
 
     // --- 1. Define waypoints for the trajectory ---
     // A curved path that avoids an obstacle at (1.5, 0.5)

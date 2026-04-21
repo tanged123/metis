@@ -4,12 +4,12 @@
  */
 
 #include <gtest/gtest.h>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/optimization/Collocation.hpp>
-#include <janus/optimization/Opti.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/optimization/Collocation.hpp>
+#include <metis/optimization/Opti.hpp>
 #include <string>
 
-using namespace janus;
+using namespace metis;
 
 // ============================================================================
 // Double Integrator Tests (x'' = u)
@@ -215,7 +215,7 @@ TEST(CollocationTests, SetDynamicsAfterConstraintsThrows) {
     try {
         dc.set_dynamics(double_integrator_ode);
         FAIL() << "Expected set_dynamics() to throw after add_dynamics_constraints()";
-    } catch (const janus::RuntimeError &e) {
+    } catch (const metis::RuntimeError &e) {
         const std::string msg = e.what();
         EXPECT_NE(msg.find("set_dynamics"), std::string::npos);
         EXPECT_NE(msg.find("add_dynamics_constraints"), std::string::npos);

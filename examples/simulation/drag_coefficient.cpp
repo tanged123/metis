@@ -1,5 +1,5 @@
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <vector>
 
 // Physics model: Drag Coefficient
@@ -9,8 +9,8 @@
 // C++20 "Abbreviated Function Template" (auto params)
 // Allows implicit mixing of double constants and Symbolic variables!
 auto compute_drag(auto rho, auto v, auto S, auto Cd0, auto k, auto Cl, auto Cl0) {
-    auto q = 0.5 * rho * janus::pow(v, 2.0);
-    auto Cd = Cd0 + k * janus::pow(Cl - Cl0, 2.0);
+    auto q = 0.5 * rho * metis::pow(v, 2.0);
+    auto Cd = Cd0 + k * metis::pow(Cl - Cl0, 2.0);
     return q * S * Cd;
 }
 
@@ -28,15 +28,15 @@ int main() {
     std::cout << "Numeric Drag: " << drag_numeric << " N" << std::endl;
 
     // Symbolic Mode
-    auto v_sym = janus::sym("v");
-    auto Cl_sym = janus::sym("Cl");
+    auto v_sym = metis::sym("v");
+    auto Cl_sym = metis::sym("Cl");
 
     // Call with mixed types (double constants + Symbolic variables)
     // No explicit casts needed thanks to 'auto' params!
     auto drag_sym = compute_drag(rho, v_sym, S, Cd0, k, Cl_sym, Cl0);
 
     // Create function: f(v, Cl) -> drag
-    janus::Function drag_fun({v_sym, Cl_sym}, {drag_sym});
+    metis::Function drag_fun({v_sym, Cl_sym}, {drag_sym});
 
     // Evaluate symbolic function at numeric point
     double drag_eval = drag_fun.eval(v, Cl)(0, 0);
@@ -47,10 +47,10 @@ int main() {
 
     // Concatenate inputs into a single vector for Jacobian computation
     // J = d(drag)/d[v, Cl]
-    janus::SymbolicScalar J_sym = janus::jacobian({drag_sym}, {v_sym, Cl_sym});
+    metis::SymbolicScalar J_sym = metis::jacobian({drag_sym}, {v_sym, Cl_sym});
 
     // Create Jacobian function: f(v, Cl) -> [dDrag/dv, dDrag/dCl]
-    janus::Function J_fun({v_sym, Cl_sym}, {J_sym});
+    metis::Function J_fun({v_sym, Cl_sym}, {J_sym});
 
     // Evaluate Jacobian at operating point
     auto J = J_fun.eval(v, Cl);

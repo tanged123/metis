@@ -5,14 +5,14 @@
  * @see Calculus.hpp, FiniteDifference.hpp
  */
 
-#include "janus/core/Function.hpp"
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/core/Sparsity.hpp"
+#include "metis/core/Function.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/core/Sparsity.hpp"
 #include <string>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Sensitivity regime selected for a Jacobian-like derivative workload.
@@ -45,7 +45,7 @@ struct SensitivitySwitchOptions {
 };
 
 /**
- * @brief Result of Janus sensitivity regime selection.
+ * @brief Result of Metis sensitivity regime selection.
  */
 struct SensitivityRecommendation {
     SensitivityRegime regime = SensitivityRegime::Forward;
@@ -351,7 +351,7 @@ select_sensitivity_regime(int parameter_count, int output_count, int horizon_len
 }
 
 /**
- * @brief Recommend a sensitivity regime for a selected `janus::Function` block.
+ * @brief Recommend a sensitivity regime for a selected `metis::Function` block.
  */
 inline SensitivityRecommendation
 select_sensitivity_regime(const Function &fn, int output_idx = 0, int input_idx = 0,
@@ -418,7 +418,7 @@ inline SymbolicVector sym_gradient(const SymbolicArg &expr, const SymbolicArg &v
     // Nx1) We force it to be a column vector
     SymbolicScalar g = SymbolicScalar::gradient(expr.get(), vars.get());
 
-    // Convert to SymbolicVector (Janus type)
+    // Convert to SymbolicVector (Metis type)
     if (g.size2() > 1 && g.size1() == 1) {
         return to_eigen(g.T());
     }
@@ -459,7 +459,7 @@ inline SymbolicMatrix hessian(const SymbolicArg &expr, const SymbolicArg &vars) 
 inline SymbolicMatrix hessian_lagrangian(const SymbolicArg &objective,
                                          const SymbolicArg &constraints, const SymbolicArg &vars,
                                          const SymbolicArg &multipliers) {
-    return janus::hessian(
+    return metis::hessian(
         detail::lagrangian_scalar(objective, constraints, multipliers, "hessian_lagrangian"), vars);
 }
 
@@ -528,7 +528,7 @@ inline Function hessian_vector_product(const Function &fn, int output_idx = 0, i
         casadi::MX::sym("hvp_direction", cas_fn.size1_in(input_idx), cas_fn.size2_in(input_idx));
 
     casadi::MX hvp_expr = as_mx(
-        janus::hessian_vector_product(outputs.at(output_idx), inputs.at(input_idx), direction));
+        metis::hessian_vector_product(outputs.at(output_idx), inputs.at(input_idx), direction));
 
     std::vector<SymbolicArg> args = detail::to_symbolic_args(inputs);
     args.emplace_back(direction);
@@ -561,7 +561,7 @@ inline Function lagrangian_hessian_vector_product(const Function &fn, int object
     casadi::MX direction = casadi::MX::sym("lagrangian_hvp_direction", cas_fn.size1_in(input_idx),
                                            cas_fn.size2_in(input_idx));
 
-    casadi::MX hvp_expr = as_mx(janus::lagrangian_hessian_vector_product(
+    casadi::MX hvp_expr = as_mx(metis::lagrangian_hessian_vector_product(
         outputs.at(objective_output_idx), outputs.at(constraint_output_idx), inputs.at(input_idx),
         multipliers, direction));
 
@@ -589,7 +589,7 @@ inline SymbolicVector sym_gradient(const SymbolicArg &expr, const std::vector<Sy
  */
 inline SymbolicMatrix hessian(const SymbolicArg &expr, const std::vector<SymbolicArg> &vars) {
     SymbolicScalar v_cat = SymbolicScalar::vertcat(detail::to_mx_vector(vars));
-    return janus::hessian(expr, v_cat);
+    return metis::hessian(expr, v_cat);
 }
 
 /**
@@ -625,4 +625,4 @@ inline SymbolicMatrix lagrangian_hessian_vector_product(const SymbolicArg &objec
     return lagrangian_hessian_vector_product(objective, constraints, v_cat, multipliers, direction);
 }
 
-} // namespace janus
+} // namespace metis

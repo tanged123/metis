@@ -1,7 +1,7 @@
 # Implementation Plan - Code Coverage Improvements
 
 ## Goal
-Improve code coverage for `include/janus/math/IntegrateDiscrete.hpp` and `include/janus/math/Calculus.hpp` by identifying missing test cases and implementing them.
+Improve code coverage for `include/metis/math/IntegrateDiscrete.hpp` and `include/metis/math/Calculus.hpp` by identifying missing test cases and implementing them.
 
 ## User Review Required
 - None currently.

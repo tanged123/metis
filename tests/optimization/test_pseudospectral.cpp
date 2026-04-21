@@ -4,17 +4,17 @@
  */
 
 #include <gtest/gtest.h>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/math/Trig.hpp>
-#include <janus/optimization/Collocation.hpp>
-#include <janus/optimization/Opti.hpp>
-#include <janus/optimization/Pseudospectral.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/math/Trig.hpp>
+#include <metis/optimization/Collocation.hpp>
+#include <metis/optimization/Opti.hpp>
+#include <metis/optimization/Pseudospectral.hpp>
 
 #include <array>
 #include <cmath>
 #include <vector>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 
@@ -33,9 +33,9 @@ SymbolicVector brachistochrone_ode(const SymbolicVector &state, const SymbolicVe
     SymbolicScalar theta = control(0);
 
     SymbolicVector dxdt(3);
-    dxdt(0) = v * janus::sin(theta);
-    dxdt(1) = -v * janus::cos(theta);
-    dxdt(2) = g * janus::cos(theta);
+    dxdt(0) = v * metis::sin(theta);
+    dxdt(1) = -v * metis::cos(theta);
+    dxdt(2) = g * metis::cos(theta);
     return dxdt;
 }
 

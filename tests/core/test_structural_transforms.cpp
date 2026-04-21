@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
-#include <janus/core/Function.hpp>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/core/StructuralTransforms.hpp>
-#include <janus/math/Trig.hpp>
+#include <metis/core/Function.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/core/StructuralTransforms.hpp>
+#include <metis/math/Trig.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <vector>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 
@@ -34,7 +34,7 @@ TEST(StructuralTransformsTests, AliasEliminationBuildsReducedResidualAndReconstr
     auto residual = SymbolicScalar::vertcat({
         x0 - x1,
         x2 - p,
-        janus::sin(x0) + x2 - 2.0,
+        metis::sin(x0) + x2 - 2.0,
     });
 
     Function fn("alias_system", {x, p}, {residual});
@@ -128,7 +128,7 @@ TEST(StructuralTransformsTests, StructuralAnalyzeRunsAliasEliminationBeforeBLT) 
     auto residual = SymbolicScalar::vertcat({
         x0 - x1,
         x2 - p,
-        janus::sin(x0) + x2 - 2.0,
+        metis::sin(x0) + x2 - 2.0,
     });
 
     Function fn("structural_pipeline", {x, p}, {residual});

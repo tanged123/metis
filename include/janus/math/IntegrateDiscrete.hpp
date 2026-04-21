@@ -5,17 +5,17 @@
  * @see Calculus.hpp, Integrate.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/math/Arithmetic.hpp"
-#include "janus/math/Calculus.hpp"
-#include "janus/math/Logic.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/math/Arithmetic.hpp"
+#include "metis/math/Calculus.hpp"
+#include "metis/math/Logic.hpp"
 #include <Eigen/Dense>
 #include <algorithm>
 #include <string>
 
-namespace janus {
+namespace metis {
 
 namespace detail {
 
@@ -52,7 +52,7 @@ template <typename DerivedA, typename DerivedB>
 auto concatenate(const Eigen::MatrixBase<DerivedA> &a, const Eigen::MatrixBase<DerivedB> &b) {
     using Scalar = typename DerivedA::Scalar;
     // Assume vectors
-    JanusVector<Scalar> res(a.size() + b.size());
+    MetisVector<Scalar> res(a.size() + b.size());
     res.head(a.size()) = a;
     res.tail(b.size()) = b;
     return res;
@@ -180,7 +180,7 @@ auto integrate_cubic(const Eigen::MatrixBase<DerivedF> &f, const Eigen::MatrixBa
  * @return Vector of interval integrals or averages
  */
 template <typename DerivedF, typename DerivedX>
-JanusVector<typename DerivedF::Scalar>
+MetisVector<typename DerivedF::Scalar>
 integrate_discrete_intervals(const Eigen::MatrixBase<DerivedF> &f,
                              const Eigen::MatrixBase<DerivedX> &x, bool multiply_by_dx = true,
                              const std::string &method = "trapezoidal",
@@ -190,11 +190,11 @@ integrate_discrete_intervals(const Eigen::MatrixBase<DerivedF> &f,
     Eigen::Index n_points = f.size();
     if (n_points < 2) {
         // Return empty vector
-        return JanusVector<Scalar>(0);
+        return MetisVector<Scalar>(0);
     }
 
     auto dx = detail::compute_dx(x);
-    JanusVector<Scalar> avg_f;
+    MetisVector<Scalar> avg_f;
 
     // Normalize method string
     std::string m = method;
@@ -238,7 +238,7 @@ integrate_discrete_intervals(const Eigen::MatrixBase<DerivedF> &f,
 
         // RMS fusion for middle intervals
         auto mid_sq = (a.array().square() + b.array().square()) * 0.5 + detail::rms_fusion_epsilon;
-        JanusVector<Scalar> mid = janus::sqrt(mid_sq.matrix());
+        MetisVector<Scalar> mid = metis::sqrt(mid_sq.matrix());
 
         auto tmp = detail::concatenate(first, mid);
         avg_f = detail::concatenate(tmp, last);
@@ -355,7 +355,7 @@ integrate_discrete_intervals(const Eigen::MatrixBase<DerivedF> &f,
  * @return Vector of squared-curvature integrals per interval
  */
 template <typename DerivedF, typename DerivedX>
-JanusVector<typename DerivedF::Scalar>
+MetisVector<typename DerivedF::Scalar>
 integrate_discrete_squared_curvature(const Eigen::MatrixBase<DerivedF> &f,
                                      const Eigen::MatrixBase<DerivedX> &x,
                                      const std::string &method = "simpson") {
@@ -363,7 +363,7 @@ integrate_discrete_squared_curvature(const Eigen::MatrixBase<DerivedF> &f,
 
     Eigen::Index n_points = f.size();
     if (n_points < 3) {
-        return JanusVector<Scalar>(0);
+        return MetisVector<Scalar>(0);
     }
 
     std::string m = method;
@@ -420,13 +420,13 @@ integrate_discrete_squared_curvature(const Eigen::MatrixBase<DerivedF> &f,
 
         // RMS fusion: sqrt((a^2 + b^2)/2 + eps)
         auto mid_sq = (a.array().square() + b.array().square()) * 0.5 + detail::rms_fusion_epsilon;
-        JanusVector<Scalar> mid = janus::sqrt(mid_sq.matrix());
+        MetisVector<Scalar> mid = metis::sqrt(mid_sq.matrix());
 
         auto tmp = detail::concatenate(first_interval, mid);
         return detail::concatenate(tmp, last_interval);
     } else if (m == "hybrid_simpson_cubic") {
         // Use gradient to estimate f' at each point
-        auto dfdx = janus::gradient(f, x, 2); // edge_order=2
+        auto dfdx = metis::gradient(f, x, 2); // edge_order=2
 
         auto h = detail::compute_dx(x);
         auto df = (detail::slice(f, 1, f.size()) - detail::slice(f, 0, -1)).eval();
@@ -448,4 +448,4 @@ integrate_discrete_squared_curvature(const Eigen::MatrixBase<DerivedF> &f,
     }
 }
 
-} // namespace janus
+} // namespace metis

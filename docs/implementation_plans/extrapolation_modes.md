@@ -6,7 +6,7 @@ Add opt-in linear extrapolation with configurable safety bounds to the `Interpol
 
 ### Core Types
 
-#### [MODIFY] [Interpolate.hpp](file:///home/tanged/sources/janus/include/janus/math/Interpolate.hpp)
+#### [MODIFY] [Interpolate.hpp](file:///home/tanged/sources/metis/include/metis/math/Interpolate.hpp)
 
 **1. Add ExtrapolationMode enum (after InterpolationMethod):**
 ```cpp
@@ -113,22 +113,22 @@ For **N-D**, extrapolation is applied **per-dimension** before interpolation:
 
 ```cpp
 // Default (backwards compatible): clamp
-janus::Interpolator interp1(x, y);
+metis::Interpolator interp1(x, y);
 
 // Explicit clamp:
-janus::Interpolator interp2(x, y, 
-    janus::InterpolationMethod::Linear,
-    janus::ExtrapolationConfig::clamp());
+metis::Interpolator interp2(x, y, 
+    metis::InterpolationMethod::Linear,
+    metis::ExtrapolationConfig::clamp());
 
 // Linear extrapolation with safety bounds:
-janus::Interpolator interp3(x, y,
-    janus::InterpolationMethod::BSpline,
-    janus::ExtrapolationConfig::linear(-100.0, 1000.0));  // bounds
+metis::Interpolator interp3(x, y,
+    metis::InterpolationMethod::BSpline,
+    metis::ExtrapolationConfig::linear(-100.0, 1000.0));  // bounds
 
 // Linear extrapolation, unbounded (use with caution):
-janus::Interpolator interp4(x, y,
-    janus::InterpolationMethod::Linear,
-    janus::ExtrapolationConfig::linear());
+metis::Interpolator interp4(x, y,
+    metis::InterpolationMethod::Linear,
+    metis::ExtrapolationConfig::linear());
 ```
 
 ---
@@ -137,7 +137,7 @@ janus::Interpolator interp4(x, y,
 
 ### Automated Tests
 
-Add tests to [test_interpolate.cpp](file:///home/tanged/sources/janus/tests/math/test_interpolate.cpp):
+Add tests to [test_interpolate.cpp](file:///home/tanged/sources/metis/tests/math/test_interpolate.cpp):
 
 | Test Name | Description |
 |-----------|-------------|
@@ -157,7 +157,7 @@ Add tests to [test_interpolate.cpp](file:///home/tanged/sources/janus/tests/math
 
 ### Manual Verification
 
-Update [table_from_file_demo.cpp](file:///home/tanged/sources/janus/examples/interpolation/table_from_file_demo.cpp) to demonstrate:
+Update [table_from_file_demo.cpp](file:///home/tanged/sources/metis/examples/interpolation/table_from_file_demo.cpp) to demonstrate:
 1. Creating interpolator with linear extrapolation
 2. Querying outside bounds  
 3. Showing bounded vs unbounded behavior

@@ -1,34 +1,34 @@
 # Multiple Shooting
 
-`janus::MultipleShooting` provides a transcription method for optimal control problems that enforces continuity via high-accuracy numerical integration (using CasADi's integrator interface, e.g., CVODES or IDAS). It divides the time horizon into intervals with piecewise-constant controls and connects them with continuity constraints. This works in **symbolic mode** via the `janus::Opti` interface. The class lives in `<janus/optimization/MultiShooting.hpp>`.
+`metis::MultipleShooting` provides a transcription method for optimal control problems that enforces continuity via high-accuracy numerical integration (using CasADi's integrator interface, e.g., CVODES or IDAS). It divides the time horizon into intervals with piecewise-constant controls and connects them with continuity constraints. This works in **symbolic mode** via the `metis::Opti` interface. The class lives in `<metis/optimization/MultiShooting.hpp>`.
 
 ## Quick Start
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-janus::Opti opti;
-janus::MultipleShooting ms(opti);
+metis::Opti opti;
+metis::MultipleShooting ms(opti);
 
-janus::MultiShootingOptions opts;
+metis::MultiShootingOptions opts;
 opts.n_intervals = 20;
 opts.integrator = "cvodes";
 opts.tol = 1e-6;
 
 auto [x, u, tau] = ms.setup(3, 1, 0.0, 2.0, opts);
 
-ms.set_dynamics([](const janus::SymbolicVector& x,
-                    const janus::SymbolicVector& u,
-                    const janus::SymbolicScalar& t) {
-    janus::SymbolicVector dxdt(3);
-    dxdt(0) = x(2) * janus::sin(u(0));
-    dxdt(1) = -x(2) * janus::cos(u(0));
-    dxdt(2) = 9.81 * janus::cos(u(0));
+ms.set_dynamics([](const metis::SymbolicVector& x,
+                    const metis::SymbolicVector& u,
+                    const metis::SymbolicScalar& t) {
+    metis::SymbolicVector dxdt(3);
+    dxdt(0) = x(2) * metis::sin(u(0));
+    dxdt(1) = -x(2) * metis::cos(u(0));
+    dxdt(2) = 9.81 * metis::cos(u(0));
     return dxdt;
 });
 
 ms.add_continuity_constraints();
-ms.set_initial_state(janus::NumericVector{{0.0, 10.0, 0.001}});
+ms.set_initial_state(metis::NumericVector{{0.0, 10.0, 0.001}});
 ms.set_final_state(0, 10.0);
 ms.set_final_state(1, 5.0);
 
@@ -40,7 +40,7 @@ auto sol = opti.solve();
 
 | Method | Description |
 |--------|-------------|
-| `MultipleShooting(opti)` | Construct with a `janus::Opti` instance |
+| `MultipleShooting(opti)` | Construct with a `metis::Opti` instance |
 | `setup(n_states, n_controls, t0, tf, opts)` | Create decision variables and time grid |
 | `set_dynamics(ode)` | Set the ODE function: `(x, u, t) -> dxdt` |
 | `add_continuity_constraints()` | Apply integrator-based continuity constraints |
@@ -69,10 +69,10 @@ auto sol = opti.solve();
 ### Basic Workflow
 
 ```cpp
-janus::Opti opti;
-janus::MultipleShooting ms(opti);
+metis::Opti opti;
+metis::MultipleShooting ms(opti);
 
-janus::MultiShootingOptions opts;
+metis::MultiShootingOptions opts;
 opts.n_intervals = 20;
 opts.integrator = "cvodes";
 opts.tol = 1e-6;
@@ -80,9 +80,9 @@ opts.tol = 1e-6;
 auto T = opti.variable(2.0); // Variable final time
 auto [x, u, tau] = ms.setup(n_states, n_controls, 0.0, T, opts);
 
-ms.set_dynamics([](const janus::SymbolicVector& x,
-                    const janus::SymbolicVector& u,
-                    const janus::SymbolicScalar& t) {
+ms.set_dynamics([](const metis::SymbolicVector& x,
+                    const metis::SymbolicVector& u,
+                    const metis::SymbolicScalar& t) {
     return /* dxdt */;
 });
 
@@ -114,4 +114,4 @@ The file `examples/optimization/transcription_comparison_demo.cpp` runs and comp
 - [Pseudospectral Guide](pseudospectral.md) -- Global polynomial transcription
 - [Birkhoff Pseudospectral Guide](birkhoff_pseudospectral.md) -- Birkhoff-form transcription
 - [transcription_comparison_demo.cpp](../../examples/optimization/transcription_comparison_demo.cpp) -- Unified comparison example
-- [MultiShooting.hpp](../../include/janus/optimization/MultiShooting.hpp) -- API reference
+- [MultiShooting.hpp](../../include/metis/optimization/MultiShooting.hpp) -- API reference

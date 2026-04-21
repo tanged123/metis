@@ -1,6 +1,6 @@
 /**
  * @file sparsity_intro.cpp
- * @brief Demonstration of Janus Sparsity Introspection
+ * @brief Demonstration of Metis Sparsity Introspection
  *
  * Shows how to analyze sparsity patterns of Jacobians and Hessians,
  * which is critical for understanding the structure of optimization problems.
@@ -8,9 +8,9 @@
 
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-using namespace janus;
+using namespace metis;
 
 void print_section(const std::string &title) {
     std::cout << "\n=== " << title << " ===\n" << std::endl;
@@ -105,7 +105,7 @@ int main() {
 
         // Use sym_vec_pair to get both the vector for indexing and the raw MX for function
         // definition
-        auto [x_vec, x_mx] = janus::sym_vec_pair("x", n_vars);
+        auto [x_vec, x_mx] = metis::sym_vec_pair("x", n_vars);
         std::vector<SymbolicScalar> eqs(n_vars);
 
         for (int i = 0; i < N; ++i) {
@@ -126,8 +126,8 @@ int main() {
         }
 
         // Pass the raw MX symbol (x_mx) as the input
-        janus::Function f_pde({x_mx}, {SymbolicScalar::vertcat(eqs)});
-        auto sp = janus::get_jacobian_sparsity(f_pde, 0, 0);
+        metis::Function f_pde({x_mx}, {SymbolicScalar::vertcat(eqs)});
+        auto sp = metis::get_jacobian_sparsity(f_pde, 0, 0);
 
         std::cout << "Sparsity: " << sp.n_rows() << "x" << sp.n_cols() << ", nnz=" << sp.nnz()
                   << " (density=" << sp.density() << "%)" << std::endl;

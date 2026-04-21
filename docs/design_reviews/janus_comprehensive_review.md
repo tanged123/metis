@@ -1,8 +1,8 @@
-# Janus Repository: Comprehensive Technical Review
+# Metis Repository: Comprehensive Technical Review
 
 ## Executive Summary
 
-**Janus** is a well-architected C++ numerical framework implementing the **Code Transformations** paradigm, enabling dual-backend execution: fast numeric computation (using `double`/Eigen) and symbolic graph generation (using CasADi). The project demonstrates **excellent foundational architecture**, **comprehensive test coverage**, and **strong adherence to design principles**. The implementation is production-ready for the core math operations and shows significant promise for advanced physics modeling applications.
+**Metis** is a well-architected C++ numerical framework implementing the **Code Transformations** paradigm, enabling dual-backend execution: fast numeric computation (using `double`/Eigen) and symbolic graph generation (using CasADi). The project demonstrates **excellent foundational architecture**, **comprehensive test coverage**, and **strong adherence to design principles**. The implementation is production-ready for the core math operations and shows significant promise for advanced physics modeling applications.
 
 **Overall Assessment**: ⭐⭐⭐⭐ (4/5) — Solid foundation with clear path forward
 
@@ -11,14 +11,14 @@
 ## 1. Project Goals & Mission
 
 ### Stated Objectives
-Janus aims to be a **drop-in replacement for standard math libraries** that allows engineers to:
+Metis aims to be a **drop-in replacement for standard math libraries** that allows engineers to:
 1. Write physics models **once** using templated code
 2. Execute in **Numeric Mode** for simulation, debugging, and real-time control
 3. Execute in **Symbolic Mode** for gradient-based optimization and automatic differentiation
 4. Achieve **zero-cost abstraction** in numeric mode (identical assembly to raw C++/Eigen)
 
 ### Evaluation
-✅ **Goals are clearly defined** and well-documented in [`design_overview.md`](file:///home/tanged/sources/janus/docs/design_overview.md)
+✅ **Goals are clearly defined** and well-documented in [`design_overview.md`](file:///home/tanged/sources/metis/docs/design_overview.md)
 ✅ **Scope is appropriate** for a foundational numerical framework
 ✅ **Use case is compelling** for optimization-driven engineering workflows
 
@@ -37,9 +37,9 @@ Janus aims to be a **drop-in replacement for standard math libraries** that allo
 
 **Implementation:**
 ```cpp
-// from JanusConcepts.hpp
+// from MetisConcepts.hpp
 template <typename T>
-concept JanusScalar = std::floating_point<T> || std::same_as<T, casadi::MX>;
+concept MetisScalar = std::floating_point<T> || std::same_as<T, casadi::MX>;
 ```
 
 **Strengths:**
@@ -57,7 +57,7 @@ concept JanusScalar = std::floating_point<T> || std::same_as<T, casadi::MX>;
 
 **Design:**
 ```cpp
-// from JanusTypes.hpp
+// from MetisTypes.hpp
 using NumericScalar = double;
 using SymbolicScalar = casadi::MX;
 ```
@@ -74,10 +74,10 @@ using SymbolicScalar = casadi::MX;
 **Recommendation:**
 ```cpp
 template <typename Scalar>
-using JanusMatrix = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>;
+using MetisMatrix = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>;
 
-using NumericMatrix = JanusMatrix<NumericScalar>;
-using SymbolicMatrix = JanusMatrix<SymbolicScalar>;
+using NumericMatrix = MetisMatrix<NumericScalar>;
+using SymbolicMatrix = MetisMatrix<SymbolicScalar>;
 ```
 
 ---
@@ -85,15 +85,15 @@ using SymbolicMatrix = JanusMatrix<SymbolicScalar>;
 #### C. Math Dispatch Layer ✅ **EXCELLENT**
 
 **Design:**
-- Custom `janus::` namespace shadows `std::`
+- Custom `metis::` namespace shadows `std::`
 - `if constexpr` for compile-time dispatch
 - Element-wise overloads for `Eigen::MatrixBase`
 
 **Implementation Quality:** ⭐⭐⭐⭐⭐
 
-Example from [`Arithmetic.hpp`](file:///home/tanged/sources/janus/include/janus/math/Arithmetic.hpp):
+Example from [`Arithmetic.hpp`](file:///home/tanged/sources/metis/include/metis/math/Arithmetic.hpp):
 ```cpp
-template <JanusScalar T> T pow(const T &base, const T &exponent) {
+template <MetisScalar T> T pow(const T &base, const T &exponent) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::pow(base, exponent);
     } else {
@@ -121,12 +121,12 @@ return casadi::sqrt(x);
 
 ### 2.2 Control Flow Handling
 
-#### A. Branching Logic (`janus::where`) ✅ **EXCELLENT**
+#### A. Branching Logic (`metis::where`) ✅ **EXCELLENT**
 
 **Design:**
 ```cpp
 // from Logic.hpp
-template <JanusScalar T>
+template <MetisScalar T>
 T where(const BooleanType_t<T>& cond, const T& if_true, const T& if_false) {
     if constexpr (std::is_floating_point_v<T>) {
         return cond ? if_true : if_false;
@@ -140,7 +140,7 @@ T where(const BooleanType_t<T>& cond, const T& if_true, const T& if_false) {
 - ✅ Solves the "Red Line" problem elegantly
 - ✅ `BooleanType_t` trait is clever (allows `bool` for numeric, `MX` for symbolic)
 - ✅ Matrix overload using `.select()`
-- ✅ Comprehensive tests in [`test_math.cpp`](file:///home/tanged/sources/janus/tests/test_math.cpp#L96-L127)
+- ✅ Comprehensive tests in [`test_math.cpp`](file:///home/tanged/sources/metis/tests/test_math.cpp#L96-L127)
 
 **Weaknesses:**
 - ⚠️ Documentation doesn't explain `BooleanType_t` trait
@@ -167,7 +167,7 @@ T where(const BooleanType_t<T>& cond, const T& if_true, const T& if_false) {
 
 ### 2.3 Advanced Features
 
-#### A. Linear Algebra ([`Linalg.hpp`](file:///home/tanged/sources/janus/include/janus/math/Linalg.hpp)) ✅ **GOOD**
+#### A. Linear Algebra ([`Linalg.hpp`](file:///home/tanged/sources/metis/include/metis/math/Linalg.hpp)) ✅ **GOOD**
 
 **Implemented:**
 - ✅ `solve(A, b)` — Linear system solver
@@ -191,10 +191,10 @@ T where(const BooleanType_t<T>& cond, const T& if_true, const T& if_false) {
 
 ---
 
-#### B. Interpolation ([`Interpolate.hpp`](file:///home/tanged/sources/janus/include/janus/math/Interpolate.hpp)) ✅ **EXCELLENT**
+#### B. Interpolation ([`Interpolate.hpp`](file:///home/tanged/sources/metis/include/metis/math/Interpolate.hpp)) ✅ **EXCELLENT**
 
 **Design:**
-- Stateful `JanusInterpolator` class
+- Stateful `MetisInterpolator` class
 - Stores data as `std::vector<double>`
 - Pre-builds CasADi `interpolant` function
 
@@ -218,7 +218,7 @@ T where(const BooleanType_t<T>& cond, const T& if_true, const T& if_false) {
 
 ---
 
-#### C. Differential Operators ([`DiffOps.hpp`](file:///home/tanged/sources/janus/include/janus/math/DiffOps.hpp)) ✅ **GOOD**
+#### C. Differential Operators ([`DiffOps.hpp`](file:///home/tanged/sources/metis/include/metis/math/DiffOps.hpp)) ✅ **GOOD**
 
 **Implemented:**
 - ✅ `diff(v)` — Adjacent differences
@@ -239,14 +239,14 @@ T where(const BooleanType_t<T>& cond, const T& if_true, const T& if_false) {
 
 #### D. Spacing and Rotations ✅ **GOOD**
 
-**[`Spacing.hpp`](file:///home/tanged/sources/janus/include/janus/math/Spacing.hpp):**
+**[`Spacing.hpp`](file:///home/tanged/sources/metis/include/metis/math/Spacing.hpp):**
 - ✅ `linspace()` and `cosine_spacing()` are useful for discretization
-- ⚠️ Slightly inconsistent: `cosine_spacing` uses `std::cos()` instead of `janus::cos()`
-  - This is fine for numeric angles, but breaks the "use janus:: everywhere" principle
+- ⚠️ Slightly inconsistent: `cosine_spacing` uses `std::cos()` instead of `metis::cos()`
+  - This is fine for numeric angles, but breaks the "use metis:: everywhere" principle
 
-**[`Rotations.hpp`](file:///home/tanged/sources/janus/include/janus/math/Rotations.hpp):**
+**[`Rotations.hpp`](file:///home/tanged/sources/metis/include/metis/math/Rotations.hpp):**
 - ✅ 2D and 3D rotation matrices
-- ✅ Correctly uses `janus::sin()` / `janus::cos()`
+- ✅ Correctly uses `metis::sin()` / `metis::cos()`
 - ⚠️ Only principal axis rotations (no arbitrary axis, no quaternions)
 - ⚠️ No Euler angles or rotation composition utilities
 
@@ -256,7 +256,7 @@ T where(const BooleanType_t<T>& cond, const T& if_true, const T& if_false) {
 
 ### 3.1 Test Architecture ⭐⭐⭐⭐⭐ **OUTSTANDING**
 
-**File:** [`tests/test_math.cpp`](file:///home/tanged/sources/janus/tests/test_math.cpp)
+**File:** [`tests/test_math.cpp`](file:///home/tanged/sources/metis/tests/test_math.cpp)
 
 **Strengths:**
 - ✅ **Comprehensive dual-backend testing**: Every function tested in both `double` and `casadi::MX` modes
@@ -270,7 +270,7 @@ T where(const BooleanType_t<T>& cond, const T& if_true, const T& if_false) {
 template <typename Scalar>
 void test_arithmetic() {
     Scalar val = -4.0;
-    auto res_abs = janus::abs(val);
+    auto res_abs = metis::abs(val);
     
     if constexpr (std::is_same_v<Scalar, double>) {
         EXPECT_DOUBLE_EQ(res_abs, 4.0);
@@ -359,9 +359,9 @@ TEST(IntegrationTests, DragModel) {
 ### 5.1 Directory Organization ✅ **EXCELLENT**
 
 ```
-janus/
+metis/
 ├── docs/                    # Design docs and plans
-├── include/janus/
+├── include/metis/
 │   ├── core/               # Concepts, type traits
 │   ├── math/               # Math operations (well-organized)
 │   └── linalg/             # Placeholder for future extensions
@@ -384,12 +384,12 @@ janus/
 
 ### 5.2 Build System & Dev Environment ✅ **EXCELLENT**
 
-**CMake ([`CMakeLists.txt`](file:///home/tanged/sources/janus/CMakeLists.txt)):**
+**CMake ([`CMakeLists.txt`](file:///home/tanged/sources/metis/CMakeLists.txt)):**
 - ✅ Clean, minimal configuration
 - ✅ Correct dependencies (Eigen, CasADi, GTest)
 - ✅ Interface library (header-only)
 
-**Nix ([`flake.nix`](file:///home/tanged/sources/janus/flake.nix)):**
+**Nix ([`flake.nix`](file:///home/tanged/sources/metis/flake.nix)):**
 - ✅ Reproducible environment
 - ✅ Treefmt for code formatting
 - ✅ LLVM toolchain for modern C++
@@ -425,7 +425,7 @@ janus/
 
 1. **Complete Matrix Type System** ✅ Priority: HIGH
    - Add `SymbolicMatrix`, `NumericMatrix` type aliases
-   - Create unified `JanusMatrix<Scalar>` template
+   - Create unified `MetisMatrix<Scalar>` template
    - Document matrix usage patterns
 
 2. **Expand Linear Algebra** ✅ Priority: HIGH
@@ -472,7 +472,7 @@ janus/
 
 10. **Multi-Backend Support** ✅ Priority: LOW
     - Support for JAX, Enzyme, autodiff libraries
-    - Generalize `JanusScalar` concept
+    - Generalize `MetisScalar` concept
 
 ---
 
@@ -483,16 +483,16 @@ janus/
 
 - [ ] Add `static_assert` with helpful messages to concept checks
 - [ ] Create `examples/drag_coefficient.cpp` demonstrating dual-mode execution
-- [ ] Add Doxygen comments to at least public headers ([`janus.hpp`](file:///home/tanged/sources/janus/include/janus/janus.hpp))
+- [ ] Add Doxygen comments to at least public headers ([`metis.hpp`](file:///home/tanged/sources/metis/include/metis/metis.hpp))
 - [ ] Write gradient validation test using CasADi's `gradient()` function
-- [ ] Document loop constraints in [`design_overview.md`](file:///home/tanged/sources/janus/docs/design_overview.md)
-- [ ] Add `clamp()`, `min()`, `max()` to [`Logic.hpp`](file:///home/tanged/sources/janus/include/janus/math/Logic.hpp)
+- [ ] Document loop constraints in [`design_overview.md`](file:///home/tanged/sources/metis/docs/design_overview.md)
+- [ ] Add `clamp()`, `min()`, `max()` to [`Logic.hpp`](file:///home/tanged/sources/metis/include/metis/math/Logic.hpp)
 
 ---
 
 ## 8. Comparison to Reference Implementation
 
-The `reference/aerosandbox_numpy_reference/` directory contains Python code that appears to be the inspiration for Janus. This is **excellent practice** — having a reference implementation accelerates development and validates correctness.
+The `reference/aerosandbox_numpy_reference/` directory contains Python code that appears to be the inspiration for Metis. This is **excellent practice** — having a reference implementation accelerates development and validates correctness.
 
 **Observations:**
 - ✅ Python reference uses similar abstractions (numpy for numeric, JAX for symbolic)
@@ -510,7 +510,7 @@ The `reference/aerosandbox_numpy_reference/` directory contains Python code that
 ### 9.1 Technical Risks
 
 1. **CasADi API Stability** ⚠️
-   - Janus tightly couples to CasADi's API
+   - Metis tightly couples to CasADi's API
    - CasADi updates could break compatibility
    - **Mitigation**: Pin CasADi version, add compatibility layer
 
@@ -581,8 +581,8 @@ The `reference/aerosandbox_numpy_reference/` directory contains Python code that
 
 ## Conclusion
 
-Janus is a **highly promising framework** with a solid foundation. The core architecture demonstrates deep understanding of both numerical computing and compiler optimization. The dual-backend testing strategy is particularly impressive and should be highlighted as a best practice.
+Metis is a **highly promising framework** with a solid foundation. The core architecture demonstrates deep understanding of both numerical computing and compiler optimization. The dual-backend testing strategy is particularly impressive and should be highlighted as a best practice.
 
-The project is **ready for early adopters** to build physics models, but needs additional "quality of life" features before broader release. With focused effort on the recommended next steps, Janus could become a compelling alternative to hand-written symbolic math in C++.
+The project is **ready for early adopters** to build physics models, but needs additional "quality of life" features before broader release. With focused effort on the recommended next steps, Metis could become a compelling alternative to hand-written symbolic math in C++.
 
 **Recommended Action:** Proceed with Phase 2 development focusing on API completeness and real-world examples.

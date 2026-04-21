@@ -3,8 +3,8 @@
 #pragma once
 
 #include "Function.hpp"
-#include "JanusError.hpp"
-#include "JanusTypes.hpp"
+#include "MetisError.hpp"
+#include "MetisTypes.hpp"
 #include "Sparsity.hpp"
 
 #include <algorithm>
@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Options for structural simplification and analysis passes.
@@ -412,7 +412,7 @@ inline AliasEliminationResult alias_eliminate(const Function &fn,
     const casadi::MX selected_output = outputs.at(static_cast<std::size_t>(opts.output_idx));
 
     const casadi::MX state_symbol =
-        janus::sym(cfn.name_in(opts.input_idx) + "_struct", selected_input.nnz(), 1);
+        metis::sym(cfn.name_in(opts.input_idx) + "_struct", selected_input.nnz(), 1);
     std::vector<casadi::MX> state_exprs = detail::mx_elements(state_symbol);
     std::vector<casadi::MX> residuals =
         detail::mx_elements(casadi::MX::substitute(std::vector<casadi::MX>{selected_output},
@@ -477,11 +477,11 @@ inline AliasEliminationResult alias_eliminate(const Function &fn,
     for (int i = 0; i < cfn.n_in(); ++i) {
         if (i == opts.input_idx) {
             reduced_input =
-                janus::sym(cfn.name_in(i), static_cast<int>(active_var_indices.size()), 1);
+                metis::sym(cfn.name_in(i), static_cast<int>(active_var_indices.size()), 1);
             wrapper_inputs_mx.push_back(reduced_input);
             wrapper_inputs.emplace_back(reduced_input);
         } else {
-            casadi::MX arg = janus::sym(cfn.name_in(i), cfn.size1_in(i), cfn.size2_in(i));
+            casadi::MX arg = metis::sym(cfn.name_in(i), cfn.size1_in(i), cfn.size2_in(i));
             wrapper_inputs_mx.push_back(arg);
             wrapper_inputs.emplace_back(arg);
         }
@@ -604,4 +604,4 @@ inline StructuralAnalysis structural_analyze(const Function &fn,
     return StructuralAnalysis{std::move(alias), std::move(blt)};
 }
 
-} // namespace janus
+} // namespace metis

@@ -1,32 +1,32 @@
 # Graph Visualization
 
-Janus uses **computational graphs** (directed acyclic graphs built by CasADi) to represent symbolic expressions. This guide explains how to export and visualize those graphs for debugging, optimization analysis, teaching, and documentation. Graph visualization works in **symbolic mode** only, since numeric-mode expressions do not build a traceable graph.
+Metis uses **computational graphs** (directed acyclic graphs built by CasADi) to represent symbolic expressions. This guide explains how to export and visualize those graphs for debugging, optimization analysis, teaching, and documentation. Graph visualization works in **symbolic mode** only, since numeric-mode expressions do not build a traceable graph.
 
 ## Quick Start
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-auto x = janus::sym("x");
-auto expr = janus::sin(x) * x;
+auto x = metis::sym("x");
+auto expr = metis::sin(x) * x;
 
 // One-step: export DOT and render PDF (requires Graphviz)
-janus::visualize_graph(expr, "my_graph");
+metis::visualize_graph(expr, "my_graph");
 
 // Or interactive HTML (no dependencies, recommended for exploration)
-janus::export_graph_html(expr, "my_graph", "SinExpression");
+metis::export_graph_html(expr, "my_graph", "SinExpression");
 ```
 
 ## Core API
 
-All functions live in `<janus/core/JanusIO.hpp>`.
+All functions live in `<metis/core/MetisIO.hpp>`.
 
 | Function | Description |
 |----------|-------------|
-| `janus::export_graph_dot(expr, filename, title)` | Export a symbolic expression to DOT format |
-| `janus::render_graph(dot_file, output_file)` | Render a DOT file to PDF, PNG, or SVG |
-| `janus::visualize_graph(expr, base)` | Convenience wrapper: export DOT then render to PDF |
-| `janus::export_graph_html(expr, filename, title)` | Export an interactive HTML graph with pan/zoom and node details |
+| `metis::export_graph_dot(expr, filename, title)` | Export a symbolic expression to DOT format |
+| `metis::render_graph(dot_file, output_file)` | Render a DOT file to PDF, PNG, or SVG |
+| `metis::visualize_graph(expr, base)` | Convenience wrapper: export DOT then render to PDF |
+| `metis::export_graph_html(expr, filename, title)` | Export an interactive HTML graph with pan/zoom and node details |
 
 > [!NOTE]
 > `render_graph` and `visualize_graph` require **Graphviz** installed. In NixOS, it is included in the dev shell. The HTML export has no external dependencies.
@@ -41,7 +41,7 @@ A **computational graph** is a DAG where each node is either:
 - **Operation nodes** (internal): Mathematical operations (+, *, sin, etc.)
 - **Output node** (root): The final result
 
-When you write symbolic expressions in Janus, CasADi builds this graph internally. It enables:
+When you write symbolic expressions in Metis, CasADi builds this graph internally. It enables:
 
 1. **Automatic differentiation** -- Traverse the graph to compute gradients
 2. **Code generation** -- Compile the graph to efficient C code
@@ -50,7 +50,7 @@ When you write symbolic expressions in Janus, CasADi builds this graph internall
 ### Simple Expression Graph
 
 ```cpp
-auto x = janus::sym("x");
+auto x = metis::sym("x");
 auto y = x * x + 2.0 * x + 1.0;  // Builds a graph with 5+ nodes
 ```
 
@@ -69,8 +69,8 @@ This creates a tree structure:
 ### Two-Step Export (DOT then Render)
 
 ```cpp
-janus::export_graph_dot(expr, "my_graph", "SinExpression");
-janus::render_graph("my_graph.dot", "my_graph.pdf");
+metis::export_graph_dot(expr, "my_graph", "SinExpression");
+metis::render_graph("my_graph.dot", "my_graph.pdf");
 ```
 
 ### Interactive HTML Export
@@ -81,7 +81,7 @@ The **HTML output** is recommended for exploring complex graphs:
 - **Connection highlighting** when a node is selected
 
 ```cpp
-janus::export_graph_html(expr, "my_graph", "SinExpression");
+metis::export_graph_html(expr, "my_graph", "SinExpression");
 ```
 
 ### Understanding Graph Layout
@@ -116,11 +116,11 @@ The `graph_visualization.cpp` example models a **Permanent Magnet Synchronous Mo
 
 ```cpp
 // Create symbolic motor parameters
-auto Rs = janus::sym("Rs");
-auto Ld = janus::sym("Ld");
+auto Rs = metis::sym("Rs");
+auto Ld = metis::sym("Ld");
 // ... more parameters
 
-MotorModel<janus::SymbolicScalar> motor{Rs, Ld, Lq, lambda, p, J, B};
+MotorModel<metis::SymbolicScalar> motor{Rs, Ld, Lq, lambda, p, J, B};
 
 // Compute voltage equations
 auto Vd = motor.voltage_d(id, iq, did_dt, omega_e);
@@ -130,8 +130,8 @@ auto Vq = motor.voltage_q(id, iq, diq_dt, omega_e);
 auto P_elec = motor.electrical_power(Vd, Vq, id, iq);
 
 // Visualize the computational graph
-janus::visualize_graph(P_elec, "graph_power");      // PDF
-janus::export_graph_html(P_elec, "graph_power");   // Interactive HTML
+metis::visualize_graph(P_elec, "graph_power");      // PDF
+metis::export_graph_html(P_elec, "graph_power");   // Interactive HTML
 ```
 
 The power expression `P = 1.5 * (Vd*id + Vq*iq)` expands to include all the intermediate terms from the voltage equations, creating a deep graph.
@@ -146,10 +146,10 @@ You can visualize the graph of **derivatives**:
 auto T_e = motor.electromagnetic_torque(id, iq);
 
 // Compute Jacobian: dT/d[id, iq]
-auto dT_dq = janus::jacobian({T_e}, {id, iq});
+auto dT_dq = metis::jacobian({T_e}, {id, iq});
 
 // Visualize the derivative graph
-janus::visualize_graph(dT_dq, "jacobian_graph");
+metis::visualize_graph(dT_dq, "jacobian_graph");
 ```
 
 The Jacobian graph shows how CasADi computes gradients by applying the chain rule symbolically.
@@ -164,7 +164,7 @@ The Jacobian graph shows how CasADi computes gradients by applying the chain rul
 ### Running the Example
 
 ```bash
-cd /path/to/janus
+cd /path/to/metis
 ./scripts/build.sh
 ./build/examples/graph_visualization
 
@@ -182,4 +182,4 @@ xdg-open graph_dynamics.html
 - [Symbolic Computing Guide](symbolic_computing.md) -- Symbolic mode fundamentals
 - [Sparsity Guide](sparsity.md) -- Visualize sparsity patterns of Jacobians and Hessians
 - [graph_visualization.cpp](../../examples/math/graph_visualization.cpp) -- Full example source
-- [JanusIO.hpp](../../include/janus/core/JanusIO.hpp) -- API reference
+- [MetisIO.hpp](../../include/metis/core/MetisIO.hpp) -- API reference

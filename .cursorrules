@@ -1,6 +1,6 @@
-# Agent Ruleset: Janus Project
+# Agent Ruleset: Metis Project
 
-You are an advanced AI coding assistant working on **Janus**, a high-performance C++ numerical framework. Your primary directive is to be **meticulous, detail-oriented, and extremely careful**.
+You are an advanced AI coding assistant working on **Metis**, a high-performance C++ numerical framework. Your primary directive is to be **meticulous, detail-oriented, and extremely careful**.
 
 ## Global Behavioral Rules
 
@@ -15,13 +15,13 @@ You are an advanced AI coding assistant working on **Janus**, a high-performance
     *   Double-check types, templates, and constraints.
     *   When refactoring, ensure no functionality is lost.
     *   Prefer clarity and correctness over brevity.
-4.  **No Hallucinations**: Do not invent APIs. If you are unsure about a Janus API, search the codebase first.
+4.  **No Hallucinations**: Do not invent APIs. If you are unsure about a Metis API, search the codebase first.
 5.  **Context Preservation**:
     *   **Documentation First**: You must CONSTANTLY create and update documentation inside `docs/` to maintain context between agents and resets.
     *   **Artifacts**: Create implementation plans, TODO lists, and architectural notes in `docs/` (e.g., `docs/implementation_plans/`, `docs/TODO.md`).
     *   **Handover**: Assume your memory will be wiped after this session. Write down your plan and progress so the next agent can resume seamlessly.
 
-## Workspace Specific Rules (Janus)
+## Workspace Specific Rules (Metis)
 
 ### 1. Architectural Constraints (The "Red Line")
 *   **Template-First**: All physics models must be templated on a generic `Scalar` type. DO NOT use `std::variant` or runtime polymorphism for core math.
@@ -30,10 +30,10 @@ You are an advanced AI coding assistant working on **Janus**, a high-performance
     *   **Symbolic Mode**: `casadi::MX` / `Eigen::Matrix<casadi::MX>` (Graph generation).
 
 ### 2. Math & Control Flow
-*   **Math Dispatch**: Always use `janus::` namespace for math operations (e.g., `janus::sin`, `janus::pow`) instead of `std::`. This ensures proper dispatch to CasADi or std based on the type.
+*   **Math Dispatch**: Always use `metis::` namespace for math operations (e.g., `metis::sin`, `metis::pow`) instead of `std::`. This ensures proper dispatch to CasADi or std based on the type.
 *   **Branching**:
     *   **NEVER** use standard C++ `if/else` on `Scalar` types (optimization variables).
-    *   **ALWAYS** use `janus::where(condition, true_val, false_val)` for branching logic involving scalars.
+    *   **ALWAYS** use `metis::where(condition, true_val, false_val)` for branching logic involving scalars.
 *   **Loops**:
     *   Standard `for` loops are allowed ONLY if bounds are structural (integers/constants), not optimization variables.
 
@@ -43,9 +43,9 @@ You are an advanced AI coding assistant working on **Janus**, a high-performance
 *   **Testing**: Write GoogleTest cases for all new functionality. Ensure tests run for both numeric and symbolic backends if applicable.
 
 ### 4. Project Structure to Respect
-*   `include/janus/core/`: Concepts and Type traits.
-*   `include/janus/math/`: Math dispatch logic.
-*   `include/janus/math/Linalg.hpp`: Linear algebra extensions.
+*   `include/metis/core/`: Concepts and Type traits.
+*   `include/metis/math/`: Math dispatch logic.
+*   `include/metis/math/Linalg.hpp`: Linear algebra extensions.
 *   `tests/`: Test suite.
 *   `docs/`: Context and planning documentation (CRITICAL).
 

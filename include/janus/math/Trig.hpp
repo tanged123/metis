@@ -5,11 +5,11 @@
  * @see Arithmetic.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
+#include "metis/core/MetisConcepts.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 
-namespace janus {
+namespace metis {
 
 // --- Sin ---
 /**
@@ -18,7 +18,7 @@ namespace janus {
  * @param x Input value (radians)
  * @return Sine of x
  */
-template <JanusScalar T> T sin(const T &x) {
+template <MetisScalar T> T sin(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::sin(x);
     } else {
@@ -43,7 +43,7 @@ template <typename Derived> auto sin(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value (radians)
  * @return Cosine of x
  */
-template <JanusScalar T> T cos(const T &x) {
+template <MetisScalar T> T cos(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::cos(x);
     } else {
@@ -68,7 +68,7 @@ template <typename Derived> auto cos(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value (radians)
  * @return Tangent of x
  */
-template <JanusScalar T> T tan(const T &x) {
+template <MetisScalar T> T tan(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::tan(x);
     } else {
@@ -93,7 +93,7 @@ template <typename Derived> auto tan(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Arc sine of x (radians)
  */
-template <JanusScalar T> T asin(const T &x) {
+template <MetisScalar T> T asin(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::asin(x);
     } else {
@@ -118,7 +118,7 @@ template <typename Derived> auto asin(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Arc cosine of x (radians)
  */
-template <JanusScalar T> T acos(const T &x) {
+template <MetisScalar T> T acos(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::acos(x);
     } else {
@@ -143,7 +143,7 @@ template <typename Derived> auto acos(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Arc tangent of x (radians)
  */
-template <JanusScalar T> T atan(const T &x) {
+template <MetisScalar T> T atan(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::atan(x);
     } else {
@@ -169,7 +169,7 @@ template <typename Derived> auto atan(const Eigen::MatrixBase<Derived> &x) {
  * @param x Denominator
  * @return Arc tangent of y/x (radians, included in [-pi, pi])
  */
-template <JanusScalar T> T atan2(const T &y, const T &x) {
+template <MetisScalar T> T atan2(const T &y, const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::atan2(y, x);
     } else {
@@ -184,7 +184,7 @@ template <JanusScalar T> T atan2(const T &y, const T &x) {
  * @param x Input value
  * @return Inverse hyperbolic sine of x
  */
-template <JanusScalar T> T asinh(const T &x) {
+template <MetisScalar T> T asinh(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::asinh(x);
     } else {
@@ -214,7 +214,7 @@ template <typename Derived> auto asinh(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value (must be >= 1)
  * @return Inverse hyperbolic cosine of x
  */
-template <JanusScalar T> T acosh(const T &x) {
+template <MetisScalar T> T acosh(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::acosh(x);
     } else {
@@ -244,7 +244,7 @@ template <typename Derived> auto acosh(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value (must be in (-1, 1))
  * @return Inverse hyperbolic tangent of x
  */
-template <JanusScalar T> T atanh(const T &x) {
+template <MetisScalar T> T atanh(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::atanh(x);
     } else {
@@ -267,4 +267,4 @@ template <typename Derived> auto atanh(const Eigen::MatrixBase<Derived> &x) {
     }
 }
 
-} // namespace janus
+} // namespace metis

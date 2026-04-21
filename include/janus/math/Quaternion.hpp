@@ -5,14 +5,14 @@
  * @see Rotations.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/math/Arithmetic.hpp"
-#include "janus/math/Linalg.hpp"
-#include "janus/math/Logic.hpp"
-#include "janus/math/Trig.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/math/Arithmetic.hpp"
+#include "metis/math/Linalg.hpp"
+#include "metis/math/Logic.hpp"
+#include "metis/math/Trig.hpp"
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Quaternion class for rotation representation
@@ -77,7 +77,7 @@ template <typename Scalar> class Quaternion {
 
     /// @brief Quaternion norm
     /// @return Euclidean norm
-    Scalar norm() const { return janus::sqrt(squared_norm()); }
+    Scalar norm() const { return metis::sqrt(squared_norm()); }
 
     /// @brief Return unit quaternion
     /// @return Normalized copy
@@ -105,8 +105,8 @@ template <typename Scalar> class Quaternion {
         Vec3<Scalar> q_vec;
         q_vec << q1, q2, q3;
 
-        Vec3<Scalar> t = static_cast<Scalar>(2.0) * janus::cross(q_vec, v);
-        return v + (q0 * t) + janus::cross(q_vec, t);
+        Vec3<Scalar> t = static_cast<Scalar>(2.0) * metis::cross(q_vec, v);
+        return v + (q0 * t) + metis::cross(q_vec, t);
     }
 
     // --- Conversions ---
@@ -163,12 +163,12 @@ template <typename Scalar> class Quaternion {
      */
     static Quaternion from_euler(Scalar roll, Scalar pitch, Scalar yaw) {
         Scalar half = static_cast<Scalar>(0.5);
-        Scalar cr = janus::cos(roll * half);
-        Scalar sr = janus::sin(roll * half);
-        Scalar cp = janus::cos(pitch * half);
-        Scalar sp = janus::sin(pitch * half);
-        Scalar cy = janus::cos(yaw * half);
-        Scalar sy = janus::sin(yaw * half);
+        Scalar cr = metis::cos(roll * half);
+        Scalar sr = metis::sin(roll * half);
+        Scalar cp = metis::cos(pitch * half);
+        Scalar sp = metis::sin(pitch * half);
+        Scalar cy = metis::cos(yaw * half);
+        Scalar sy = metis::sin(yaw * half);
 
         return Quaternion(cr * cp * cy + sr * sp * sy, // w
                           sr * cp * cy - cr * sp * sy, // x
@@ -185,15 +185,15 @@ template <typename Scalar> class Quaternion {
      */
     static Quaternion from_axis_angle(const Vec3<Scalar> &axis, Scalar angle) {
         Scalar half = static_cast<Scalar>(0.5);
-        Scalar s = janus::sin(angle * half);
-        Scalar c = janus::cos(angle * half);
+        Scalar s = metis::sin(angle * half);
+        Scalar c = metis::cos(angle * half);
 
         // Assume axis is normalized? Usually safer to normalize.
         // If symbolic, normalization adds complexity, but for correctness it's good.
         // Let's assume user passes normalized axis or we normalize it.
         // Standard library implementations usually assume normalized or normalize.
         // We will normalize to be safe.
-        auto n_axis = axis / janus::norm(axis);
+        auto n_axis = axis / metis::norm(axis);
 
         return Quaternion(c, n_axis(0) * s, n_axis(1) * s, n_axis(2) * s);
     }
@@ -206,15 +206,15 @@ template <typename Scalar> class Quaternion {
     static Quaternion from_rotation_vector(const Vec3<Scalar> &rot_vec) {
         Scalar half = static_cast<Scalar>(0.5);
         Scalar eps = static_cast<Scalar>(1e-12);
-        Scalar angle = janus::norm(rot_vec);
+        Scalar angle = metis::norm(rot_vec);
         Scalar half_angle = angle * half;
         Scalar safe_angle = angle + eps;
 
         // sin(angle/2)/angle with small-angle fallback (limit = 0.5)
-        Scalar scale_raw = janus::sin(half_angle) / safe_angle;
-        Scalar scale = janus::where(angle > eps, scale_raw, half);
+        Scalar scale_raw = metis::sin(half_angle) / safe_angle;
+        Scalar scale = metis::where(angle > eps, scale_raw, half);
 
-        return Quaternion(janus::cos(half_angle), rot_vec(0) * scale, rot_vec(1) * scale,
+        return Quaternion(metis::cos(half_angle), rot_vec(0) * scale, rot_vec(1) * scale,
                           rot_vec(2) * scale);
     }
 
@@ -243,26 +243,26 @@ template <typename Scalar> class Quaternion {
         if constexpr (std::is_floating_point_v<Scalar>) {
             // Numeric implementation (efficient branching)
             if (trace > 0) {
-                Scalar s = static_cast<Scalar>(0.5) / janus::sqrt(trace + 1.0);
+                Scalar s = static_cast<Scalar>(0.5) / metis::sqrt(trace + 1.0);
                 q_w = 0.25 / s;
                 q_x = (mat(2, 1) - mat(1, 2)) * s;
                 q_y = (mat(0, 2) - mat(2, 0)) * s;
                 q_z = (mat(1, 0) - mat(0, 1)) * s;
             } else {
                 if (mat(0, 0) > mat(1, 1) && mat(0, 0) > mat(2, 2)) {
-                    Scalar s = 2.0 * janus::sqrt(1.0 + mat(0, 0) - mat(1, 1) - mat(2, 2));
+                    Scalar s = 2.0 * metis::sqrt(1.0 + mat(0, 0) - mat(1, 1) - mat(2, 2));
                     q_w = (mat(2, 1) - mat(1, 2)) / s;
                     q_x = 0.25 * s;
                     q_y = (mat(0, 1) + mat(1, 0)) / s;
                     q_z = (mat(0, 2) + mat(2, 0)) / s;
                 } else if (mat(1, 1) > mat(2, 2)) {
-                    Scalar s = 2.0 * janus::sqrt(1.0 + mat(1, 1) - mat(0, 0) - mat(2, 2));
+                    Scalar s = 2.0 * metis::sqrt(1.0 + mat(1, 1) - mat(0, 0) - mat(2, 2));
                     q_w = (mat(0, 2) - mat(2, 0)) / s;
                     q_x = (mat(0, 1) + mat(1, 0)) / s;
                     q_y = 0.25 * s;
                     q_z = (mat(1, 2) + mat(2, 1)) / s;
                 } else {
-                    Scalar s = 2.0 * janus::sqrt(1.0 + mat(2, 2) - mat(0, 0) - mat(1, 1));
+                    Scalar s = 2.0 * metis::sqrt(1.0 + mat(2, 2) - mat(0, 0) - mat(1, 1));
                     q_w = (mat(1, 0) - mat(0, 1)) / s;
                     q_x = (mat(0, 2) + mat(2, 0)) / s;
                     q_y = (mat(1, 2) + mat(2, 1)) / s;
@@ -270,15 +270,15 @@ template <typename Scalar> class Quaternion {
                 }
             }
         } else {
-            // Symbolic: Full 4-branch using nested janus::where (Shepperd's method)
+            // Symbolic: Full 4-branch using nested metis::where (Shepperd's method)
 
             // Guard radicands: in symbolic mode all branches are eagerly evaluated,
             // so untaken branches can have negative radicands. Clamp to eps.
             Scalar eps = static_cast<Scalar>(1e-12);
 
             // Branch 0: trace > 0
-            Scalar r0 = janus::where(trace + one > eps, trace + one, eps);
-            Scalar s0 = half / janus::sqrt(r0);
+            Scalar r0 = metis::where(trace + one > eps, trace + one, eps);
+            Scalar s0 = half / metis::sqrt(r0);
             Scalar w0 = static_cast<Scalar>(0.25) / s0;
             Scalar x0 = (mat(2, 1) - mat(1, 2)) * s0;
             Scalar y0 = (mat(0, 2) - mat(2, 0)) * s0;
@@ -286,8 +286,8 @@ template <typename Scalar> class Quaternion {
 
             // Branch 1: mat(0,0) is largest diagonal
             Scalar r1 = one + mat(0, 0) - mat(1, 1) - mat(2, 2);
-            Scalar safe_r1 = janus::where(r1 > eps, r1, eps);
-            Scalar s1 = two * janus::sqrt(safe_r1);
+            Scalar safe_r1 = metis::where(r1 > eps, r1, eps);
+            Scalar s1 = two * metis::sqrt(safe_r1);
             Scalar w1 = (mat(2, 1) - mat(1, 2)) / s1;
             Scalar x1 = static_cast<Scalar>(0.25) * s1;
             Scalar y1 = (mat(0, 1) + mat(1, 0)) / s1;
@@ -295,8 +295,8 @@ template <typename Scalar> class Quaternion {
 
             // Branch 2: mat(1,1) is largest diagonal
             Scalar r2 = one + mat(1, 1) - mat(0, 0) - mat(2, 2);
-            Scalar safe_r2 = janus::where(r2 > eps, r2, eps);
-            Scalar s2 = two * janus::sqrt(safe_r2);
+            Scalar safe_r2 = metis::where(r2 > eps, r2, eps);
+            Scalar s2 = two * metis::sqrt(safe_r2);
             Scalar w2 = (mat(0, 2) - mat(2, 0)) / s2;
             Scalar x2 = (mat(0, 1) + mat(1, 0)) / s2;
             Scalar y2 = static_cast<Scalar>(0.25) * s2;
@@ -304,8 +304,8 @@ template <typename Scalar> class Quaternion {
 
             // Branch 3: mat(2,2) is largest diagonal
             Scalar r3 = one + mat(2, 2) - mat(0, 0) - mat(1, 1);
-            Scalar safe_r3 = janus::where(r3 > eps, r3, eps);
-            Scalar s3 = two * janus::sqrt(safe_r3);
+            Scalar safe_r3 = metis::where(r3 > eps, r3, eps);
+            Scalar s3 = two * metis::sqrt(safe_r3);
             Scalar w3 = (mat(1, 0) - mat(0, 1)) / s3;
             Scalar x3 = (mat(0, 2) + mat(2, 0)) / s3;
             Scalar y3 = (mat(1, 2) + mat(2, 1)) / s3;
@@ -313,26 +313,26 @@ template <typename Scalar> class Quaternion {
 
             // Select via nested where
             auto cond_trace = trace > static_cast<Scalar>(0.0);
-            auto cond_r00 = janus::logical_and(mat(0, 0) > mat(1, 1), mat(0, 0) > mat(2, 2));
+            auto cond_r00 = metis::logical_and(mat(0, 0) > mat(1, 1), mat(0, 0) > mat(2, 2));
             auto cond_r11 = mat(1, 1) > mat(2, 2);
 
             // Inner: branch2 vs branch3
-            Scalar wi = janus::where(cond_r11, w2, w3);
-            Scalar xi = janus::where(cond_r11, x2, x3);
-            Scalar yi = janus::where(cond_r11, y2, y3);
-            Scalar zi = janus::where(cond_r11, z2, z3);
+            Scalar wi = metis::where(cond_r11, w2, w3);
+            Scalar xi = metis::where(cond_r11, x2, x3);
+            Scalar yi = metis::where(cond_r11, y2, y3);
+            Scalar zi = metis::where(cond_r11, z2, z3);
 
             // Middle: branch1 vs inner
-            Scalar wm = janus::where(cond_r00, w1, wi);
-            Scalar xm = janus::where(cond_r00, x1, xi);
-            Scalar ym = janus::where(cond_r00, y1, yi);
-            Scalar zm = janus::where(cond_r00, z1, zi);
+            Scalar wm = metis::where(cond_r00, w1, wi);
+            Scalar xm = metis::where(cond_r00, x1, xi);
+            Scalar ym = metis::where(cond_r00, y1, yi);
+            Scalar zm = metis::where(cond_r00, z1, zi);
 
             // Outer: branch0 vs middle
-            q_w = janus::where(cond_trace, w0, wm);
-            q_x = janus::where(cond_trace, x0, xm);
-            q_y = janus::where(cond_trace, y0, ym);
-            q_z = janus::where(cond_trace, z0, zm);
+            q_w = metis::where(cond_trace, w0, wm);
+            q_x = metis::where(cond_trace, x0, xm);
+            q_y = metis::where(cond_trace, y0, ym);
+            q_z = metis::where(cond_trace, z0, zm);
         }
         return Quaternion(q_w, q_x, q_y, q_z);
     }
@@ -343,7 +343,7 @@ template <typename Scalar> class Quaternion {
         // Roll (x-axis rotation)
         Scalar sinr_cosp = static_cast<Scalar>(2.0) * (w * x + y * z);
         Scalar cosr_cosp = static_cast<Scalar>(1.0) - static_cast<Scalar>(2.0) * (x * x + y * y);
-        Scalar roll = janus::atan2(sinr_cosp, cosr_cosp);
+        Scalar roll = metis::atan2(sinr_cosp, cosr_cosp);
 
         // Pitch (y-axis rotation)
         Scalar sinp = static_cast<Scalar>(2.0) * (w * y - z * x);
@@ -358,13 +358,13 @@ template <typename Scalar> class Quaternion {
                 pitch = std::asin(sinp);
         } else {
             // Symbolic: assume no gimbal lock or underlying library handles asin domain
-            pitch = janus::asin(sinp);
+            pitch = metis::asin(sinp);
         }
 
         // Yaw (z-axis rotation)
         Scalar siny_cosp = static_cast<Scalar>(2.0) * (w * z + x * y);
         Scalar cosy_cosp = static_cast<Scalar>(1.0) - static_cast<Scalar>(2.0) * (y * y + z * z);
-        Scalar yaw = janus::atan2(siny_cosp, cosy_cosp);
+        Scalar yaw = metis::atan2(siny_cosp, cosy_cosp);
 
         return Vec3<Scalar>(roll, pitch, yaw);
     }
@@ -395,7 +395,7 @@ Quaternion<Scalar> slerp(const Quaternion<Scalar> &q0, const Quaternion<Scalar> 
     // --- Shortest path fix ---
     // If dot < 0, negate q1 to take shorter arc.
     // We compute a sign factor: sign = where(dot < 0, -1, 1)
-    Scalar sign = janus::where(dot < zero, -one, one);
+    Scalar sign = metis::where(dot < zero, -one, one);
 
     // Effective q1 and dot (flipped if needed)
     Quaternion<Scalar> q1_eff(q1.w * sign, q1.x * sign, q1.y * sign, q1.z * sign);
@@ -405,22 +405,22 @@ Quaternion<Scalar> slerp(const Quaternion<Scalar> &q0, const Quaternion<Scalar> 
     // If dot_eff is very close to 1, theta ≈ 0 and sin(theta) ≈ 0 (division issues).
     // Fall back to normalized linear interpolation (nlerp).
 
-    Scalar theta = janus::acos(dot_eff);
-    Scalar sin_theta = janus::sin(theta);
+    Scalar theta = metis::acos(dot_eff);
+    Scalar sin_theta = metis::sin(theta);
 
     // Compute slerp weights
-    Scalar wa_slerp = janus::sin((one - t) * theta) / sin_theta;
-    Scalar wb_slerp = janus::sin(t * theta) / sin_theta;
+    Scalar wa_slerp = metis::sin((one - t) * theta) / sin_theta;
+    Scalar wb_slerp = metis::sin(t * theta) / sin_theta;
 
     // Compute nlerp weights (simple linear blend, then normalize result)
     Scalar wa_nlerp = one - t;
     Scalar wb_nlerp = t;
 
-    // Use janus::where to select between slerp and nlerp based on dot_eff
+    // Use metis::where to select between slerp and nlerp based on dot_eff
     Scalar use_slerp = dot_eff < dot_threshold; // True if slerp is safe
 
-    Scalar wa = janus::where(use_slerp, wa_slerp, wa_nlerp);
-    Scalar wb = janus::where(use_slerp, wb_slerp, wb_nlerp);
+    Scalar wa = metis::where(use_slerp, wa_slerp, wa_nlerp);
+    Scalar wb = metis::where(use_slerp, wb_slerp, wb_nlerp);
 
     // Compute result
     Quaternion<Scalar> result = q0 * wa + q1_eff * wb;
@@ -429,4 +429,4 @@ Quaternion<Scalar> slerp(const Quaternion<Scalar> &q0, const Quaternion<Scalar> 
     return result.normalized();
 }
 
-} // namespace janus
+} // namespace metis

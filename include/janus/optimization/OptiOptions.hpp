@@ -8,7 +8,7 @@
 #include <casadi/casadi.hpp>
 #include <string>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Available NLP solvers
@@ -119,7 +119,7 @@ struct SNOPTOptions {
  *   opti.solve(OptiOptions{}.set_verbose(false).set_max_iter(500));
  *
  * Usage (alternative solver):
- *   opti.solve({.solver = janus::Solver::Snopt});
+ *   opti.solve({.solver = metis::Solver::Snopt});
  *
  * @see Opti::solve for usage
  */
@@ -202,4 +202,4 @@ struct OptiOptions {
     }
 };
 
-} // namespace janus
+} // namespace metis

@@ -5,9 +5,9 @@
  * @see AutoDiff.hpp
  */
 
-#include "janus/core/Function.hpp"
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
+#include "metis/core/Function.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
 #include <casadi/casadi.hpp>
 
 #include <algorithm>
@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Numeric nonlinear solver strategy selection.
@@ -46,7 +46,7 @@ enum class RootSolveMethod {
 /**
  * @brief Options for root finding algorithms.
  *
- * Numeric `rootfinder<double>()` uses Janus' own globalization stack. Symbolic
+ * Numeric `rootfinder<double>()` uses Metis' own globalization stack. Symbolic
  * `rootfinder<SymbolicScalar>()` and `create_implicit_function()` still rely on
  * CasADi's differentiable `newton` rootfinder, so only the CasADi-compatible
  * subset of options affects those paths.
@@ -308,7 +308,7 @@ inline Eigen::VectorXd evaluate_residual_only(const casadi::Function &residual_f
     const std::vector<casadi::DM> residual_dm =
         residual_fn(std::vector<casadi::DM>{vector_to_dm(x)});
     if (residual_dm.size() != 1u) {
-        throw JanusError("rootfinder: residual function must return exactly one output");
+        throw MetisError("rootfinder: residual function must return exactly one output");
     }
     return dm_to_vector(residual_dm.front());
 }
@@ -323,7 +323,7 @@ inline NumericState evaluate_state(const casadi::Function &residual_fn,
     const std::vector<casadi::DM> jacobian_dm =
         jacobian_fn(std::vector<casadi::DM>{vector_to_dm(x)});
     if (jacobian_dm.size() != 1u) {
-        throw JanusError(context + ": Jacobian function must return exactly one output");
+        throw MetisError(context + ": Jacobian function must return exactly one output");
     }
     state.jacobian = dm_to_matrix(jacobian_dm.front());
     state.residual_norm = state.residual.lpNorm<Eigen::Infinity>();
@@ -331,7 +331,7 @@ inline NumericState evaluate_state(const casadi::Function &residual_fn,
 
     if (!all_finite(state.residual) || !all_finite(state.jacobian) ||
         !std::isfinite(state.residual_norm) || !std::isfinite(state.merit)) {
-        throw JanusError(context + ": residual/Jacobian evaluation produced non-finite values");
+        throw MetisError(context + ": residual/Jacobian evaluation produced non-finite values");
     }
     return state;
 }
@@ -682,7 +682,7 @@ class NewtonSolver {
      * @param F Function F(x) = 0 to solve
      * @param opts Solver options
      */
-    NewtonSolver(const janus::Function &F, const RootFinderOptions &opts = {}) : opts_(opts) {
+    NewtonSolver(const metis::Function &F, const RootFinderOptions &opts = {}) : opts_(opts) {
         detail::validate_root_options(opts_, "NewtonSolver");
 
         casadi::Function f_casadi = F.casadi_function();
@@ -691,7 +691,7 @@ class NewtonSolver {
         residual_fn_ = f_casadi;
         n_x_ = f_casadi.nnz_in(0);
 
-        casadi::MX x = janus::sym(f_casadi.name_in(0), f_casadi.size1_in(0), f_casadi.size2_in(0));
+        casadi::MX x = metis::sym(f_casadi.name_in(0), f_casadi.size1_in(0), f_casadi.size2_in(0));
         casadi::MX residual = f_casadi(std::vector<casadi::MX>{x}).at(0);
         jacobian_fn_ = casadi::Function(detail::unique_name(f_casadi.name() + "_jacobian"),
                                         std::vector<casadi::MX>{x},
@@ -701,7 +701,7 @@ class NewtonSolver {
             symbolic_solver_ = casadi::rootfinder(detail::unique_name("rf_solver"), "newton",
                                                   f_casadi, detail::opts_to_dict(opts_));
         } catch (const std::exception &e) {
-            throw JanusError(std::string("NewtonSolver creation failed: ") + e.what());
+            throw MetisError(std::string("NewtonSolver creation failed: ") + e.what());
         }
     }
 
@@ -809,7 +809,7 @@ class NewtonSolver {
             result.residual_norm = best.residual_norm;
             result.message = "Failed to converge: " + last_message;
         } else {
-            SymbolicScalar x0_mx = janus::to_mx(x0);
+            SymbolicScalar x0_mx = metis::to_mx(x0);
 
             std::vector<SymbolicScalar> args;
             args.push_back(x0_mx);
@@ -818,7 +818,7 @@ class NewtonSolver {
             }
             std::vector<SymbolicScalar> res = symbolic_solver_(args);
 
-            result.x = janus::to_eigen(res[0]);
+            result.x = metis::to_eigen(res[0]);
             result.converged = true;
             result.message = "Symbolic graph generated with CasADi newton rootfinder";
         }
@@ -836,7 +836,7 @@ class NewtonSolver {
 /**
  * @brief Solve F(x) = 0 for x given an initial guess.
  *
- * Numeric mode uses Janus' globalization stack. Symbolic mode embeds CasADi's
+ * Numeric mode uses Metis' globalization stack. Symbolic mode embeds CasADi's
  * differentiable rootfinder.
  *
  * @tparam Scalar double (numeric) or SymbolicScalar (symbolic)
@@ -846,7 +846,7 @@ class NewtonSolver {
  * @return RootResult containing solution and diagnostics
  */
 template <typename Scalar>
-RootResult<Scalar> rootfinder(const janus::Function &F,
+RootResult<Scalar> rootfinder(const metis::Function &F,
                               const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &x0,
                               const RootFinderOptions &opts = {}) {
     NewtonSolver solver(F, opts);
@@ -865,9 +865,9 @@ RootResult<Scalar> rootfinder(const janus::Function &F,
  * @param x_guess Fixed initial guess for the implicit solve
  * @param opts Solver options
  * @param implicit_opts Selects which input/output pair defines the rootfinding problem
- * @return janus::Function mapping the remaining inputs to x(...)
+ * @return metis::Function mapping the remaining inputs to x(...)
  */
-inline janus::Function create_implicit_function(const janus::Function &G,
+inline metis::Function create_implicit_function(const metis::Function &G,
                                                 const Eigen::VectorXd &x_guess,
                                                 const RootFinderOptions &opts = {},
                                                 const ImplicitFunctionOptions &implicit_opts = {}) {
@@ -897,7 +897,7 @@ inline janus::Function create_implicit_function(const janus::Function &G,
         }
 
         casadi::MX arg =
-            janus::sym(g_casadi.name_in(i), g_casadi.size1_in(i), g_casadi.size2_in(i));
+            metis::sym(g_casadi.name_in(i), g_casadi.size1_in(i), g_casadi.size2_in(i));
         wrapper_inputs.push_back(SymbolicArg(arg));
         solver_args.push_back(arg);
     }
@@ -905,8 +905,8 @@ inline janus::Function create_implicit_function(const janus::Function &G,
     const auto solver_outputs = solver(solver_args);
     const casadi::MX x_sol = solver_outputs.at(implicit_opts.implicit_output_index);
 
-    return janus::Function(detail::implicit_function_name(g_casadi), wrapper_inputs,
+    return metis::Function(detail::implicit_function_name(g_casadi), wrapper_inputs,
                            std::vector<SymbolicArg>{SymbolicArg(x_sol)});
 }
 
-} // namespace janus
+} // namespace metis

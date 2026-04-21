@@ -1,8 +1,8 @@
-# Janus v2.0.0 Design Overview
+# Metis v2.0.0 Design Overview
 
 ## 1. Project Mission
 
-Janus is a high-performance C++ numerical framework implementing the **Code Transformations** paradigm. It serves as a drop-in replacement for standard math libraries, enabling engineers to write physics models once and execute them in two distinct modes:
+Metis is a high-performance C++ numerical framework implementing the **Code Transformations** paradigm. It serves as a drop-in replacement for standard math libraries, enabling engineers to write physics models once and execute them in two distinct modes:
 
 * **Fast Numeric Mode**: For simulation, debugging, and real-time control (using standard `double` and Eigen).
 * **Symbolic Trace Mode**: For generating static computational graphs to enable automatic differentiation and gradient-based optimization (using CasADi).
@@ -31,7 +31,7 @@ The framework defines a unified type alias system that routes to specific backen
 
 To maintain traceability, the framework intercepts all mathematical operators.
 
-* **Mechanism**: A custom namespace (`janus::`) shadows `std::`.
+* **Mechanism**: A custom namespace (`metis::`) shadows `std::`.
 * **Implementation**: Use C++20 Concepts to dispatch logic (e.g., `std::sin` vs `casadi::sin`) at compile time.
 
 ## 3. Type Handling & Control Flow Policies
@@ -43,11 +43,11 @@ To preserve the static computational graph structure, strict policies are enforc
 * **Structural Logic (Allowed)**: Integers, Booleans, and logic determined at compile/trace time (e.g., `num_segments`, `use_viscous_model`). These define the shape of the graph.
 * **Value Logic (Modified)**: Floating-point values dependent on optimization variables. These define the data flow through the graph.
 
-### B. Branching Logic (`janus::where`)
+### B. Branching Logic (`metis::where`)
 
 Standard C++ `if/else` cannot branch on symbolic types because symbols do not evaluate to true/false during graph construction.
 
-* **Solution**: `janus::where(condition, true_val, false_val)` and `janus::select()` for multi-way branching.
+* **Solution**: `metis::where(condition, true_val, false_val)` and `metis::select()` for multi-way branching.
   * **Numeric Mode**: Compiles to `cond ? a : b`.
   * **Symbolic Mode**: Compiles to a switch node `casadi::if_else(cond, a, b)`.
 
@@ -92,7 +92,7 @@ The following capabilities are implemented in v2.0.0.
 
 - Opti interface (IPOPT/SNOPT, variable freezing, categories, explicit scaling)
 - **Scaling diagnostics** (`opti.analyze_scaling()`) for preflight detection of poorly scaled problems
-- **Error handling** via typed exception hierarchy (`JanusError`, `InvalidArgument`, `RuntimeError`, `IntegrationError`, `InterpolationError`)
+- **Error handling** via typed exception hierarchy (`MetisError`, `InvalidArgument`, `RuntimeError`, `IntegrationError`, `InterpolationError`)
 - Trajectory optimization: direct collocation, multiple shooting, pseudospectral (LG/LGR), Birkhoff pseudospectral (LGL/CGL) -- see `docs/user_guides/transcription_methods.md`
 - Parametric sweeps, JIT compilation, solution save/load
 
@@ -110,12 +110,12 @@ Scalar compute_drag(const Scalar& velocity, const Scalar& rho) {
     // 1. Procedural declarations allowed
     Scalar drag = 0.0;
 
-    // 2. Logic using janus::where (not if/else)
+    // 2. Logic using metis::where (not if/else)
     auto is_supersonic = (velocity > 343.0);
-    Scalar cd = janus::where(is_supersonic, 0.5, 0.02);
+    Scalar cd = metis::where(is_supersonic, 0.5, 0.02);
 
-    // 3. Janus Math Dispatch (not std::pow)
-    drag = 0.5 * rho * janus::pow(velocity, 2) * cd;
+    // 3. Metis Math Dispatch (not std::pow)
+    drag = 0.5 * rho * metis::pow(velocity, 2) * cd;
 
     return drag;
 }

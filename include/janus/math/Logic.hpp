@@ -5,16 +5,16 @@
  * @see Arithmetic.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/math/Arithmetic.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/math/Arithmetic.hpp"
 #include <Eigen/Dense>
 #include <algorithm>
 #include <type_traits>
 #include <utility>
 
-namespace janus {
+namespace metis {
 
 // --- Trait to deduce the boolean type for a scalar ---
 template <typename T> struct BooleanType {
@@ -39,7 +39,7 @@ template <typename T> using BooleanType_t = typename BooleanType<T>::type;
  * @return Selected value
  */
 // Relaxed to allow mixed types (e.g. MX and double)
-template <typename Cond, JanusScalar T1, JanusScalar T2>
+template <typename Cond, MetisScalar T1, MetisScalar T2>
 auto where(const Cond &cond, const T1 &if_true, const T2 &if_false) {
     if constexpr (std::is_floating_point_v<T1> && std::is_floating_point_v<T2>) {
         return cond ? if_true : if_false;
@@ -58,7 +58,7 @@ auto select(const Cond &cond, const Eigen::MatrixBase<DerivedTrue> &if_true,
         throw InvalidArgument("select: matrix inputs must have the same shape");
     }
 
-    using ResultScalar = std::decay_t<decltype(janus::where(
+    using ResultScalar = std::decay_t<decltype(metis::where(
         std::declval<Cond>(), std::declval<typename DerivedTrue::Scalar>(),
         std::declval<typename DerivedFalse::Scalar>()))>;
     using ResultMatrix =
@@ -69,7 +69,7 @@ auto select(const Cond &cond, const Eigen::MatrixBase<DerivedTrue> &if_true,
     ResultMatrix res(if_true.rows(), if_true.cols());
     for (Eigen::Index i = 0; i < if_true.rows(); ++i) {
         for (Eigen::Index j = 0; j < if_true.cols(); ++j) {
-            res(i, j) = janus::where(cond, if_true(i, j), if_false(i, j));
+            res(i, j) = metis::where(cond, if_true(i, j), if_false(i, j));
         }
     }
     return res;
@@ -131,7 +131,7 @@ auto where(const Eigen::ArrayBase<DerivedCond> &cond, const Eigen::MatrixBase<De
         for (Eigen::Index i = 0; i < if_true.rows(); ++i) {
             for (Eigen::Index j = 0; j < if_true.cols(); ++j) {
                 // cond(i,j) might be an expression, evaluate it.
-                res(i, j) = janus::where(cond.derived().coeff(i, j), if_true(i, j), if_false(i, j));
+                res(i, j) = metis::where(cond.derived().coeff(i, j), if_true(i, j), if_false(i, j));
             }
         }
         return res;
@@ -148,7 +148,7 @@ auto where(const Eigen::ArrayBase<DerivedCond> &cond, const Eigen::MatrixBase<De
  * @return Minimum value
  */
 // Relaxed for mixed types
-template <JanusScalar T1, JanusScalar T2> auto min(const T1 &a, const T2 &b) {
+template <MetisScalar T1, MetisScalar T2> auto min(const T1 &a, const T2 &b) {
     if constexpr (std::is_floating_point_v<T1> && std::is_floating_point_v<T2>) {
         return std::min(a, b);
     } else {
@@ -174,7 +174,7 @@ auto min(const Eigen::MatrixBase<Derived> &a, const Eigen::MatrixBase<Derived> &
                                                                                           a.cols());
         for (Eigen::Index i = 0; i < a.rows(); ++i) {
             for (Eigen::Index j = 0; j < a.cols(); ++j) {
-                res(i, j) = janus::min(a(i, j), b(i, j));
+                res(i, j) = metis::min(a(i, j), b(i, j));
             }
         }
         return res;
@@ -191,7 +191,7 @@ auto min(const Eigen::MatrixBase<Derived> &a, const Eigen::MatrixBase<Derived> &
  * @return Maximum value
  */
 // Relaxed for mixed types
-template <JanusScalar T1, JanusScalar T2> auto max(const T1 &a, const T2 &b) {
+template <MetisScalar T1, MetisScalar T2> auto max(const T1 &a, const T2 &b) {
     if constexpr (std::is_floating_point_v<T1> && std::is_floating_point_v<T2>) {
         return std::max(a, b);
     } else {
@@ -214,7 +214,7 @@ auto max(const Eigen::MatrixBase<Derived> &a, const Eigen::MatrixBase<Derived> &
                                                                                           a.cols());
         for (Eigen::Index i = 0; i < a.rows(); ++i) {
             for (Eigen::Index j = 0; j < a.cols(); ++j) {
-                res(i, j) = janus::max(a(i, j), b(i, j));
+                res(i, j) = metis::max(a(i, j), b(i, j));
             }
         }
         return res;
@@ -232,9 +232,9 @@ auto max(const Eigen::MatrixBase<Derived> &a, const Eigen::MatrixBase<Derived> &
  * @return Clamped value
  */
 // Relaxed for mixed types
-template <JanusScalar T, JanusScalar TLow, JanusScalar THigh>
+template <MetisScalar T, MetisScalar TLow, MetisScalar THigh>
 auto clamp(const T &val, const TLow &low, const THigh &high) {
-    return janus::min(janus::max(val, low), high);
+    return metis::min(metis::max(val, low), high);
 }
 
 /**
@@ -250,7 +250,7 @@ template <typename Derived, typename Scalar>
 auto clamp(const Eigen::MatrixBase<Derived> &val, const Scalar &low, const Scalar &high) {
     using MatrixScalar = typename Derived::Scalar;
     if constexpr (std::is_same_v<MatrixScalar, SymbolicScalar>) {
-        return val.unaryExpr([=](const auto &x) { return janus::clamp(x, low, high); });
+        return val.unaryExpr([=](const auto &x) { return metis::clamp(x, low, high); });
     } else {
         return val.cwiseMax(low).cwiseMin(high);
     }
@@ -383,11 +383,11 @@ auto neq(const Eigen::MatrixBase<DerivedA> &a, const Eigen::MatrixBase<DerivedB>
  * @return Blended value
  */
 // Relaxed for mixed types
-template <JanusScalar T, JanusScalar TLow, JanusScalar THigh, JanusScalar Sharpness = double>
+template <MetisScalar T, MetisScalar TLow, MetisScalar THigh, MetisScalar Sharpness = double>
 auto sigmoid_blend(const T &x, const TLow &val_low, const THigh &val_high,
                    const Sharpness &sharpness = 1.0) {
-    // using janus::exp from Arithmetic.hpp
-    auto alpha = 1.0 / (1.0 + janus::exp(-sharpness * x));
+    // using metis::exp from Arithmetic.hpp
+    auto alpha = 1.0 / (1.0 + metis::exp(-sharpness * x));
     return val_low + alpha * (val_high - val_low);
 }
 
@@ -419,7 +419,7 @@ auto sigmoid_blend(const Eigen::MatrixBase<Derived> &x, const Scalar &val_low,
  * @param x2 Second operand
  * @return Boolean result (numeric) or symbolic expression
  */
-template <JanusScalar T1, JanusScalar T2> auto logical_and(const T1 &x1, const T2 &x2) {
+template <MetisScalar T1, MetisScalar T2> auto logical_and(const T1 &x1, const T2 &x2) {
     // Both define operator &&
     return x1 && x2;
 }
@@ -450,7 +450,7 @@ auto logical_and(const Eigen::MatrixBase<DerivedA> &a, const Eigen::MatrixBase<D
  * @param x2 Second operand
  * @return Boolean result (numeric) or symbolic expression
  */
-template <JanusScalar T1, JanusScalar T2> auto logical_or(const T1 &x1, const T2 &x2) {
+template <MetisScalar T1, MetisScalar T2> auto logical_or(const T1 &x1, const T2 &x2) {
     return x1 || x2;
 }
 
@@ -478,7 +478,7 @@ auto logical_or(const Eigen::MatrixBase<DerivedA> &a, const Eigen::MatrixBase<De
  * @param x Operand
  * @return Boolean result (numeric) or symbolic expression
  */
-template <JanusScalar T> auto logical_not(const T &x) { return !x; }
+template <MetisScalar T> auto logical_not(const T &x) { return !x; }
 
 /**
  * @brief Element-wise logical NOT for a matrix
@@ -568,4 +568,4 @@ Scalar select(std::initializer_list<CondType> conditions, std::initializer_list<
     return select(std::vector<CondType>(conditions), std::vector<Scalar>(values), default_value);
 }
 
-} // namespace janus
+} // namespace metis

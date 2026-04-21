@@ -4,13 +4,13 @@
  */
 
 #include <gtest/gtest.h>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/math/OrthogonalPolynomials.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/math/OrthogonalPolynomials.hpp>
 
 #include <cmath>
 #include <vector>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 

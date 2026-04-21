@@ -5,11 +5,11 @@
  * @see Trig.hpp, Logic.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
+#include "metis/core/MetisConcepts.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 
-namespace janus {
+namespace metis {
 
 // --- Absolute Value ---
 /**
@@ -18,7 +18,7 @@ namespace janus {
  * @param x Input value
  * @return Absolute value of x
  */
-template <JanusScalar T> T abs(const T &x) {
+template <MetisScalar T> T abs(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::abs(x);
     } else {
@@ -43,7 +43,7 @@ template <typename Derived> auto abs(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Square root of x
  */
-template <JanusScalar T> T sqrt(const T &x) {
+template <MetisScalar T> T sqrt(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::sqrt(x);
     } else {
@@ -69,7 +69,7 @@ template <typename Derived> auto sqrt(const Eigen::MatrixBase<Derived> &x) {
  * @param exponent Exponent value
  * @return base raised to the power of exponent
  */
-template <JanusScalar T> T pow(const T &base, const T &exponent) {
+template <MetisScalar T> T pow(const T &base, const T &exponent) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::pow(base, exponent);
     } else {
@@ -79,33 +79,33 @@ template <JanusScalar T> T pow(const T &base, const T &exponent) {
 
 /**
  * @brief Computes power function base^exponent for scalars (mixed types)
- * @tparam T Non-double Janus scalar (e.g., SymbolicScalar)
+ * @tparam T Non-double Metis scalar (e.g., SymbolicScalar)
  * @param base Base value
  * @param exponent Exponent value
  * @return base raised to exponent
  */
-template <JanusScalar T>
+template <MetisScalar T>
     requires(!std::is_same_v<T, double>)
 T pow(const T &base, double exponent) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::pow(base, static_cast<T>(exponent));
     } else {
-        return janus::pow(base, static_cast<T>(exponent));
+        return metis::pow(base, static_cast<T>(exponent));
     }
 }
 
 /**
  * @brief Computes power function base^exponent for scalars (mixed types: double base)
- * @tparam T Non-double Janus scalar (e.g., SymbolicScalar)
+ * @tparam T Non-double Metis scalar (e.g., SymbolicScalar)
  * @param base Base value
  * @param exponent Exponent value
  * @return base raised to exponent
  */
-template <JanusScalar T>
+template <MetisScalar T>
     requires(!std::is_same_v<T, double>)
 T pow(double base, const T &exponent) {
     // Cast base to T to match homogeneous overload
-    return janus::pow(static_cast<T>(base), exponent);
+    return metis::pow(static_cast<T>(base), exponent);
 }
 
 /**
@@ -128,7 +128,7 @@ auto pow(const Eigen::MatrixBase<Derived> &base, const Scalar &exponent) {
  * @param x Input value
  * @return e raised to the power of x
  */
-template <JanusScalar T> T exp(const T &x) {
+template <MetisScalar T> T exp(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::exp(x);
     } else {
@@ -153,7 +153,7 @@ template <typename Derived> auto exp(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Natural logarithm of x
  */
-template <JanusScalar T> T log(const T &x) {
+template <MetisScalar T> T log(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::log(x);
     } else {
@@ -177,7 +177,7 @@ template <typename Derived> auto log(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Base-10 logarithm of x
  */
-template <JanusScalar T> T log10(const T &x) {
+template <MetisScalar T> T log10(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::log10(x);
     } else {
@@ -202,7 +202,7 @@ template <typename Derived> auto log10(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Hyperbolic sine of x
  */
-template <JanusScalar T> T sinh(const T &x) {
+template <MetisScalar T> T sinh(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::sinh(x);
     } else {
@@ -226,7 +226,7 @@ template <typename Derived> auto sinh(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Hyperbolic cosine of x
  */
-template <JanusScalar T> T cosh(const T &x) {
+template <MetisScalar T> T cosh(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::cosh(x);
     } else {
@@ -250,7 +250,7 @@ template <typename Derived> auto cosh(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Hyperbolic tangent of x
  */
-template <JanusScalar T> T tanh(const T &x) {
+template <MetisScalar T> T tanh(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::tanh(x);
     } else {
@@ -275,7 +275,7 @@ template <typename Derived> auto tanh(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Floor of x
  */
-template <JanusScalar T> T floor(const T &x) {
+template <MetisScalar T> T floor(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::floor(x);
     } else {
@@ -299,7 +299,7 @@ template <typename Derived> auto floor(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Ceiling of x
  */
-template <JanusScalar T> T ceil(const T &x) {
+template <MetisScalar T> T ceil(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::ceil(x);
     } else {
@@ -323,7 +323,7 @@ template <typename Derived> auto ceil(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return 1.0 if x > 0, -1.0 if x < 0, 0.0 otherwise
  */
-template <JanusScalar T> T sign(const T &x) {
+template <MetisScalar T> T sign(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         // Return 1.0, -1.0, or 0.0
         return (x > 0) ? T(1.0) : ((x < 0) ? T(-1.0) : T(0.0));
@@ -350,7 +350,7 @@ template <typename Derived> auto sign(const Eigen::MatrixBase<Derived> &x) {
  * @param y Denominator
  * @return Remainder of x/y
  */
-template <JanusScalar T> T fmod(const T &x, const T &y) {
+template <MetisScalar T> T fmod(const T &x, const T &y) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::fmod(x, y);
     } else {
@@ -379,7 +379,7 @@ auto fmod(const Eigen::MatrixBase<Derived> &x, const Scalar &y) {
         const ResultScalar y_mx = static_cast<ResultScalar>(y);
         for (Eigen::Index i = 0; i < x.rows(); ++i) {
             for (Eigen::Index j = 0; j < x.cols(); ++j) {
-                result(i, j) = janus::fmod(static_cast<ResultScalar>(x(i, j)), y_mx);
+                result(i, j) = metis::fmod(static_cast<ResultScalar>(x(i, j)), y_mx);
             }
         }
         return result;
@@ -396,7 +396,7 @@ auto fmod(const Eigen::MatrixBase<Derived> &x, const Scalar &y) {
  * @param x Input value
  * @return Base-2 logarithm of x
  */
-template <JanusScalar T> T log2(const T &x) {
+template <MetisScalar T> T log2(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::log2(x);
     } else {
@@ -414,7 +414,7 @@ template <JanusScalar T> T log2(const T &x) {
 template <typename Derived> auto log2(const Eigen::MatrixBase<Derived> &x) {
     using Scalar = typename Derived::Scalar;
     if constexpr (std::is_same_v<Scalar, casadi::MX>) {
-        return x.unaryExpr([](const Scalar &v) { return janus::log2(v); });
+        return x.unaryExpr([](const Scalar &v) { return metis::log2(v); });
     } else {
         return (x.array().log() / std::log(2.0)).matrix();
     }
@@ -427,7 +427,7 @@ template <typename Derived> auto log2(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return 2 raised to the power x
  */
-template <JanusScalar T> T exp2(const T &x) {
+template <MetisScalar T> T exp2(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::exp2(x);
     } else {
@@ -445,7 +445,7 @@ template <JanusScalar T> T exp2(const T &x) {
 template <typename Derived> auto exp2(const Eigen::MatrixBase<Derived> &x) {
     using Scalar = typename Derived::Scalar;
     if constexpr (std::is_same_v<Scalar, casadi::MX>) {
-        return x.unaryExpr([](const Scalar &v) { return janus::exp2(v); });
+        return x.unaryExpr([](const Scalar &v) { return metis::exp2(v); });
     } else {
         return (x.array() * std::log(2.0)).exp().matrix();
     }
@@ -458,7 +458,7 @@ template <typename Derived> auto exp2(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Cube root of x
  */
-template <JanusScalar T> T cbrt(const T &x) {
+template <MetisScalar T> T cbrt(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::cbrt(x);
     } else {
@@ -477,7 +477,7 @@ template <JanusScalar T> T cbrt(const T &x) {
 template <typename Derived> auto cbrt(const Eigen::MatrixBase<Derived> &x) {
     using Scalar = typename Derived::Scalar;
     if constexpr (std::is_same_v<Scalar, casadi::MX>) {
-        return x.unaryExpr([](const Scalar &v) { return janus::cbrt(v); });
+        return x.unaryExpr([](const Scalar &v) { return metis::cbrt(v); });
     } else {
         return x.unaryExpr([](double v) { return std::cbrt(v); });
     }
@@ -490,7 +490,7 @@ template <typename Derived> auto cbrt(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return Nearest integer to x
  */
-template <JanusScalar T> T round(const T &x) {
+template <MetisScalar T> T round(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::round(x);
     } else {
@@ -509,7 +509,7 @@ template <JanusScalar T> T round(const T &x) {
 template <typename Derived> auto round(const Eigen::MatrixBase<Derived> &x) {
     using Scalar = typename Derived::Scalar;
     if constexpr (std::is_same_v<Scalar, casadi::MX>) {
-        return x.unaryExpr([](const Scalar &v) { return janus::round(v); });
+        return x.unaryExpr([](const Scalar &v) { return metis::round(v); });
     } else {
         return x.array().round().matrix();
     }
@@ -522,7 +522,7 @@ template <typename Derived> auto round(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return x truncated toward zero
  */
-template <JanusScalar T> T trunc(const T &x) {
+template <MetisScalar T> T trunc(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::trunc(x);
     } else {
@@ -540,7 +540,7 @@ template <JanusScalar T> T trunc(const T &x) {
 template <typename Derived> auto trunc(const Eigen::MatrixBase<Derived> &x) {
     using Scalar = typename Derived::Scalar;
     if constexpr (std::is_same_v<Scalar, casadi::MX>) {
-        return x.unaryExpr([](const Scalar &v) { return janus::trunc(v); });
+        return x.unaryExpr([](const Scalar &v) { return metis::trunc(v); });
     } else {
         return x.unaryExpr([](double v) { return std::trunc(v); });
     }
@@ -554,7 +554,7 @@ template <typename Derived> auto trunc(const Eigen::MatrixBase<Derived> &x) {
  * @param y Second value
  * @return Hypotenuse length
  */
-template <JanusScalar T> T hypot(const T &x, const T &y) {
+template <MetisScalar T> T hypot(const T &x, const T &y) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::hypot(x, y);
     } else {
@@ -570,10 +570,10 @@ template <JanusScalar T> T hypot(const T &x, const T &y) {
  * @param y Second value (double)
  * @return Hypotenuse length
  */
-template <JanusScalar T>
+template <MetisScalar T>
     requires(!std::is_same_v<T, double>)
 T hypot(const T &x, double y) {
-    return janus::hypot(x, T(y));
+    return metis::hypot(x, T(y));
 }
 
 /**
@@ -583,10 +583,10 @@ T hypot(const T &x, double y) {
  * @param y Second value
  * @return Hypotenuse length
  */
-template <JanusScalar T>
+template <MetisScalar T>
     requires(!std::is_same_v<T, double>)
 T hypot(double x, const T &y) {
-    return janus::hypot(T(x), y);
+    return metis::hypot(T(x), y);
 }
 
 /**
@@ -613,7 +613,7 @@ auto hypot(const Eigen::MatrixBase<Derived> &x, const Eigen::MatrixBase<Derived>
  * @param x Input value
  * @return exp(x) - 1
  */
-template <JanusScalar T> T expm1(const T &x) {
+template <MetisScalar T> T expm1(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::expm1(x);
     } else {
@@ -631,7 +631,7 @@ template <JanusScalar T> T expm1(const T &x) {
 template <typename Derived> auto expm1(const Eigen::MatrixBase<Derived> &x) {
     using Scalar = typename Derived::Scalar;
     if constexpr (std::is_same_v<Scalar, casadi::MX>) {
-        return x.unaryExpr([](const Scalar &v) { return janus::expm1(v); });
+        return x.unaryExpr([](const Scalar &v) { return metis::expm1(v); });
     } else {
         return x.unaryExpr([](double v) { return std::expm1(v); });
     }
@@ -644,7 +644,7 @@ template <typename Derived> auto expm1(const Eigen::MatrixBase<Derived> &x) {
  * @param x Input value
  * @return log(1 + x)
  */
-template <JanusScalar T> T log1p(const T &x) {
+template <MetisScalar T> T log1p(const T &x) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::log1p(x);
     } else {
@@ -662,7 +662,7 @@ template <JanusScalar T> T log1p(const T &x) {
 template <typename Derived> auto log1p(const Eigen::MatrixBase<Derived> &x) {
     using Scalar = typename Derived::Scalar;
     if constexpr (std::is_same_v<Scalar, casadi::MX>) {
-        return x.unaryExpr([](const Scalar &v) { return janus::log1p(v); });
+        return x.unaryExpr([](const Scalar &v) { return metis::log1p(v); });
     } else {
         return x.unaryExpr([](double v) { return std::log1p(v); });
     }
@@ -676,7 +676,7 @@ template <typename Derived> auto log1p(const Eigen::MatrixBase<Derived> &x) {
  * @param y Sign source
  * @return |x| with sign of y
  */
-template <JanusScalar T> T copysign(const T &x, const T &y) {
+template <MetisScalar T> T copysign(const T &x, const T &y) {
     if constexpr (std::is_floating_point_v<T>) {
         return std::copysign(x, y);
     } else {
@@ -692,10 +692,10 @@ template <JanusScalar T> T copysign(const T &x, const T &y) {
  * @param y Sign source (double)
  * @return |x| with sign of y
  */
-template <JanusScalar T>
+template <MetisScalar T>
     requires(!std::is_same_v<T, double>)
 T copysign(const T &x, double y) {
-    return janus::copysign(x, T(y));
+    return metis::copysign(x, T(y));
 }
 
 /**
@@ -705,10 +705,10 @@ T copysign(const T &x, double y) {
  * @param y Sign source
  * @return |x| with sign of y
  */
-template <JanusScalar T>
+template <MetisScalar T>
     requires(!std::is_same_v<T, double>)
 T copysign(double x, const T &y) {
-    return janus::copysign(T(x), y);
+    return metis::copysign(T(x), y);
 }
 
 /**
@@ -723,7 +723,7 @@ auto copysign(const Eigen::MatrixBase<Derived> &x, const Eigen::MatrixBase<Deriv
     using Scalar = typename Derived::Scalar;
     if constexpr (std::is_same_v<Scalar, casadi::MX>) {
         return x.binaryExpr(y,
-                            [](const Scalar &a, const Scalar &b) { return janus::copysign(a, b); });
+                            [](const Scalar &a, const Scalar &b) { return metis::copysign(a, b); });
     } else {
         return x.binaryExpr(y, [](double a, double b) { return std::copysign(a, b); });
     }
@@ -736,7 +736,7 @@ auto copysign(const Eigen::MatrixBase<Derived> &x, const Eigen::MatrixBase<Deriv
  * @param x Input value
  * @return x squared
  */
-template <JanusScalar T> T square(const T &x) { return x * x; }
+template <MetisScalar T> T square(const T &x) { return x * x; }
 
 /**
  * @brief Computes square element-wise for a matrix
@@ -748,4 +748,4 @@ template <typename Derived> auto square(const Eigen::MatrixBase<Derived> &x) {
     return x.array().square().matrix();
 }
 
-} // namespace janus
+} // namespace metis

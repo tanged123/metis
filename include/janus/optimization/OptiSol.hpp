@@ -5,15 +5,15 @@
 
 #pragma once
 
-#include "janus/core/JanusTypes.hpp"
-#include "janus/utils/JsonUtils.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/utils/JsonUtils.hpp"
 #include <casadi/casadi.hpp>
 #include <map>
 #include <optional>
 #include <string>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Solution wrapper for optimization results
@@ -54,7 +54,7 @@ class OptiSol {
      */
     NumericVector value(const SymbolicVector &var) const {
         // Convert SymbolicVector (Eigen<MX>) to MX for CasADi
-        casadi::MX mx_var = janus::to_mx(var);
+        casadi::MX mx_var = metis::to_mx(var);
         casadi::DM result = cas_sol_.value(mx_var);
 
         // Convert DM to NumericVector
@@ -72,7 +72,7 @@ class OptiSol {
      * @return Optimized numeric matrix
      */
     NumericMatrix value(const SymbolicMatrix &var) const {
-        casadi::MX mx_var = janus::to_mx(var);
+        casadi::MX mx_var = metis::to_mx(var);
         casadi::DM result = cas_sol_.value(mx_var);
 
         std::vector<double> elements = static_cast<std::vector<double>>(result);
@@ -139,7 +139,7 @@ class OptiSol {
             data[name] = {val};
         }
 
-        janus::utils::write_json(filename, data);
+        metis::utils::write_json(filename, data);
     }
 
     /**
@@ -160,7 +160,7 @@ class OptiSol {
             data[name] = elements;
         }
 
-        janus::utils::write_json(filename, data);
+        metis::utils::write_json(filename, data);
     }
 
     /**
@@ -171,11 +171,11 @@ class OptiSol {
      * @throws RuntimeError if file cannot be read or parsed
      */
     static std::map<std::string, std::vector<double>> load(const std::string &filename) {
-        return janus::utils::read_json(filename);
+        return metis::utils::read_json(filename);
     }
 
   private:
     casadi::OptiSol cas_sol_;
 };
 
-} // namespace janus
+} // namespace metis

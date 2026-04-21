@@ -19,7 +19,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 // Physical constants
 constexpr double g = 9.80665; // Standard gravity [m/s²]
@@ -37,15 +37,15 @@ constexpr double g = 9.80665; // Standard gravity [m/s²]
  * @tparam Scalar Type (double for numeric, SymbolicScalar for symbolic)
  */
 template <typename Scalar>
-janus::JanusVector<Scalar> brachistochrone_ode(const janus::JanusVector<Scalar> &state,
+metis::MetisVector<Scalar> brachistochrone_ode(const metis::MetisVector<Scalar> &state,
                                                const Scalar &theta) {
     Scalar v = state(2);
 
-    // Use janus:: math functions for dual-backend support
-    Scalar cos_theta = janus::cos(theta);
-    Scalar sin_theta = janus::sin(theta);
+    // Use metis:: math functions for dual-backend support
+    Scalar cos_theta = metis::cos(theta);
+    Scalar sin_theta = metis::sin(theta);
 
-    janus::JanusVector<Scalar> dydt(3);
+    metis::MetisVector<Scalar> dydt(3);
     dydt << v * sin_theta, // xdot = v * sin(θ)
         -v * cos_theta,    // ydot = -v * cos(θ)
         g * cos_theta;     // vdot = g * cos(θ)
@@ -72,7 +72,7 @@ int main() {
     // =========================================================================
     std::cout << "\n--- Numeric Mode ---" << std::endl;
 
-    janus::NumericVector state(3);
+    metis::NumericVector state(3);
     state << 0.5, 0.3, 5.0;  // x=0.5m, y=0.3m, v=5m/s
     double theta = M_PI / 4; // 45 degrees
 
@@ -92,8 +92,8 @@ int main() {
     // sym_vec_pair gives us both:
     //   state_sym (SymbolicVector) - works with templated ODE
     //   state_mx  (raw MX)         - required for jacobian/Function (CasADi needs original symbol)
-    auto [state_sym, state_mx] = janus::sym_vec_pair("state", 3);
-    auto theta_sym = janus::sym("theta");
+    auto [state_sym, state_mx] = metis::sym_vec_pair("state", 3);
+    auto theta_sym = metis::sym("theta");
 
     // Call the SAME ODE function with symbolic types!
     auto dydt_sym = brachistochrone_ode(state_sym, theta_sym);
@@ -109,13 +109,13 @@ int main() {
     std::cout << "\n--- Automatic Jacobians (no manual partials!) ---" << std::endl;
 
     // Jacobian: use state_mx (original symbol) for inputs, to_mx for outputs
-    auto jac = janus::jacobian({janus::to_mx(dydt_sym)}, {state_mx, theta_sym});
+    auto jac = metis::jacobian({metis::to_mx(dydt_sym)}, {state_mx, theta_sym});
 
     std::cout << "Jacobian d[xdot,ydot,vdot]/d[x,y,v,θ]:" << std::endl;
     std::cout << jac << std::endl;
 
     // Create function to evaluate Jacobian numerically
-    janus::Function jac_fn({state_mx, theta_sym}, {jac});
+    metis::Function jac_fn({state_mx, theta_sym}, {jac});
 
     // Evaluate at our test point
     auto jac_numeric = jac_fn.eval(state, theta);
@@ -126,8 +126,8 @@ int main() {
 
     // Verify against analytical values
     double v_val = state(2);
-    double c = janus::cos(theta);
-    double s = janus::sin(theta);
+    double c = metis::cos(theta);
+    double s = metis::sin(theta);
     std::cout << "\nPartials verification (column 3 = d/dv, column 4 = d/dθ):" << std::endl;
     std::cout << "  ∂xdot/∂v = sin(θ) = " << s << std::endl;
     std::cout << "  ∂xdot/∂θ = v·cos(θ) = " << v_val * c << std::endl;
@@ -150,16 +150,16 @@ int main() {
     double T_total = 2.0;               // Longer time for the larger distance
 
     // Initial state: x=0, y=10, v=0.01 (small initial velocity to avoid singularity)
-    janus::NumericVector y0(3);
+    metis::NumericVector y0(3);
     y0 << 0.0, 10.0, 0.01;
 
     // ODE wrapper for solve_ivp (includes time-varying theta)
-    auto ode_with_control = [=](double t, const janus::NumericVector &y) {
+    auto ode_with_control = [=](double t, const metis::NumericVector &y) {
         double theta_t = theta_start + (theta_end - theta_start) * t / T_total;
         return brachistochrone_ode(y, theta_t);
     };
 
-    auto sol = janus::solve_ivp(ode_with_control, {0.0, T_total}, y0, 100);
+    auto sol = metis::solve_ivp(ode_with_control, {0.0, T_total}, y0, 100);
 
     std::cout << "\nTrajectory with θ(t) from " << theta_start * 180 / M_PI << "° to "
               << theta_end * 180 / M_PI << "°:" << std::endl;

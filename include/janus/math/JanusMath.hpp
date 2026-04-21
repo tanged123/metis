@@ -1,28 +1,28 @@
 #pragma once
 
 /**
- * @file JanusMath.hpp
- * @brief Master header for Janus Math library
+ * @file MetisMath.hpp
+ * @brief Master header for Metis Math library
  * Includes all math sub-modules.
  */
 
-#include "janus/math/Arithmetic.hpp"
-#include "janus/math/AutoDiff.hpp"
-#include "janus/math/Calculus.hpp"
-#include "janus/math/FiniteDifference.hpp"
-#include "janus/math/Integrate.hpp"
-#include "janus/math/IntegrateDiscrete.hpp"
-#include "janus/math/IntegratorStep.hpp"
-#include "janus/math/Interpolate.hpp"
-#include "janus/math/Linalg.hpp"
-#include "janus/math/Logic.hpp"
-#include "janus/math/OrthogonalPolynomials.hpp"
-#include "janus/math/PolynomialChaos.hpp"
-#include "janus/math/Quadrature.hpp"
-#include "janus/math/Quaternion.hpp"
-#include "janus/math/RootFinding.hpp"
-#include "janus/math/Rotations.hpp"
-#include "janus/math/ScatteredInterpolator.hpp"
-#include "janus/math/Spacing.hpp"
-#include "janus/math/SurrogateModel.hpp"
-#include "janus/math/Trig.hpp"
+#include "metis/math/Arithmetic.hpp"
+#include "metis/math/AutoDiff.hpp"
+#include "metis/math/Calculus.hpp"
+#include "metis/math/FiniteDifference.hpp"
+#include "metis/math/Integrate.hpp"
+#include "metis/math/IntegrateDiscrete.hpp"
+#include "metis/math/IntegratorStep.hpp"
+#include "metis/math/Interpolate.hpp"
+#include "metis/math/Linalg.hpp"
+#include "metis/math/Logic.hpp"
+#include "metis/math/OrthogonalPolynomials.hpp"
+#include "metis/math/PolynomialChaos.hpp"
+#include "metis/math/Quadrature.hpp"
+#include "metis/math/Quaternion.hpp"
+#include "metis/math/RootFinding.hpp"
+#include "metis/math/Rotations.hpp"
+#include "metis/math/ScatteredInterpolator.hpp"
+#include "metis/math/Spacing.hpp"
+#include "metis/math/SurrogateModel.hpp"
+#include "metis/math/Trig.hpp"

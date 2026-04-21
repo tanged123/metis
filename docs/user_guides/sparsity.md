@@ -1,44 +1,44 @@
 # Sparsity
 
-Understanding the sparsity pattern of your Jacobian and Hessian matrices is crucial for high-performance optimization. Janus provides tools to inspect sparsity patterns from symbolic graphs, visualize them as ASCII/PDF/HTML spy plots, compile sparse derivative evaluators that return only structural nonzeros, and surface CasADi graph coloring metadata. Sparsity analysis works in **symbolic mode**; the NaN-propagation fallback also supports **numeric mode** for black-box functions.
+Understanding the sparsity pattern of your Jacobian and Hessian matrices is crucial for high-performance optimization. Metis provides tools to inspect sparsity patterns from symbolic graphs, visualize them as ASCII/PDF/HTML spy plots, compile sparse derivative evaluators that return only structural nonzeros, and surface CasADi graph coloring metadata. Sparsity analysis works in **symbolic mode**; the NaN-propagation fallback also supports **numeric mode** for black-box functions.
 
 ## Quick Start
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-auto x = janus::sym("x", 10);
-auto f = janus::SymbolicScalar::vertcat({
+auto x = metis::sym("x", 10);
+auto f = metis::SymbolicScalar::vertcat({
     x(1) - x(0),
-    x(2) - janus::sin(x(1)),
+    x(2) - metis::sin(x(1)),
     x(3) - x(2)
 });
 
 // Extract Jacobian sparsity pattern
-janus::SparsityPattern sp = janus::sparsity_of_jacobian(f, x);
+metis::SparsityPattern sp = metis::sparsity_of_jacobian(f, x);
 
 // Print ASCII spy plot
 std::cout << sp.to_string() << std::endl;
 
 // Build a sparse Jacobian evaluator (returns only nonzeros)
-auto J = janus::sparse_jacobian(f, x);
+auto J = metis::sparse_jacobian(f, x);
 std::cout << "nnz = " << J.nnz() << "\n";
 ```
 
 ## Core API
 
-The core class is `janus::SparsityPattern` in `<janus/core/Sparsity.hpp>`.
+The core class is `metis::SparsityPattern` in `<metis/core/Sparsity.hpp>`.
 
 ### Extracting Sparsity
 
 | Function | Description |
 |----------|-------------|
-| `janus::sparsity_of_jacobian(f, x)` | Jacobian sparsity from symbolic expressions |
-| `janus::sparsity_of_hessian(f, x)` | Hessian sparsity from symbolic expressions |
-| `janus::get_jacobian_sparsity(func, out_idx, in_idx)` | Jacobian sparsity from a compiled `janus::Function` |
-| `janus::get_hessian_sparsity(func, out_idx, in_idx)` | Hessian sparsity from a compiled `janus::Function` |
-| `janus::nan_propagation_sparsity(callable, n_in, n_out)` | Black-box sparsity via NaN propagation |
-| `janus::nan_propagation_sparsity(func)` | NaN-propagation sparsity from `janus::Function` |
+| `metis::sparsity_of_jacobian(f, x)` | Jacobian sparsity from symbolic expressions |
+| `metis::sparsity_of_hessian(f, x)` | Hessian sparsity from symbolic expressions |
+| `metis::get_jacobian_sparsity(func, out_idx, in_idx)` | Jacobian sparsity from a compiled `metis::Function` |
+| `metis::get_hessian_sparsity(func, out_idx, in_idx)` | Hessian sparsity from a compiled `metis::Function` |
+| `metis::nan_propagation_sparsity(callable, n_in, n_out)` | Black-box sparsity via NaN propagation |
+| `metis::nan_propagation_sparsity(func)` | NaN-propagation sparsity from `metis::Function` |
 
 ### Querying a SparsityPattern
 
@@ -54,10 +54,10 @@ The core class is `janus::SparsityPattern` in `<janus/core/Sparsity.hpp>`.
 
 | Function | Description |
 |----------|-------------|
-| `janus::sparse_jacobian(f, x)` | Build a sparse Jacobian evaluator from expressions |
-| `janus::sparse_hessian(phi, x)` | Build a sparse Hessian evaluator from a scalar expression |
-| `janus::sparse_jacobian(func, out_idx, in_idx)` | Build from a `janus::Function` block |
-| `janus::sparse_hessian(func, out_idx, in_idx)` | Build from a `janus::Function` block |
+| `metis::sparse_jacobian(f, x)` | Build a sparse Jacobian evaluator from expressions |
+| `metis::sparse_hessian(phi, x)` | Build a sparse Hessian evaluator from a scalar expression |
+| `metis::sparse_jacobian(func, out_idx, in_idx)` | Build from a `metis::Function` block |
+| `metis::sparse_hessian(func, out_idx, in_idx)` | Build from a `metis::Function` block |
 
 ### Visualization
 
@@ -72,63 +72,63 @@ The core class is `janus::SparsityPattern` in `<janus/core/Sparsity.hpp>`.
 ### From Symbolic Expressions
 
 ```cpp
-auto x = janus::sym("x", 10);
+auto x = metis::sym("x", 10);
 auto f = ...; // some expression depending on x
 
 // Jacobian sparsity (df/dx)
-janus::SparsityPattern J_sp = janus::sparsity_of_jacobian(f, x);
+metis::SparsityPattern J_sp = metis::sparsity_of_jacobian(f, x);
 
 // Hessian sparsity (d^2 f/dx^2)
-janus::SparsityPattern H_sp = janus::sparsity_of_hessian(f, x);
+metis::SparsityPattern H_sp = metis::sparsity_of_hessian(f, x);
 ```
 
 ### From a Compiled Function
 
 ```cpp
-janus::Function func(inputs, outputs);
-auto sp = janus::get_jacobian_sparsity(func);
+metis::Function func(inputs, outputs);
+auto sp = metis::get_jacobian_sparsity(func);
 ```
 
 For multi-input or multi-output functions, use explicit block selection:
 
 ```cpp
-auto J_sp = janus::get_jacobian_sparsity(func, output_idx, input_idx);
-auto H_sp = janus::get_hessian_sparsity(func, scalar_output_idx, input_idx);
+auto J_sp = metis::get_jacobian_sparsity(func, output_idx, input_idx);
+auto H_sp = metis::get_hessian_sparsity(func, scalar_output_idx, input_idx);
 ```
 
 ### From CasADi Types Directly
 
 ```cpp
 casadi::Sparsity raw = ...;
-janus::SparsityPattern sp(raw);
+metis::SparsityPattern sp(raw);
 
-janus::SymbolicScalar expr = ...;
-janus::SparsityPattern expr_sp(expr); // Extract from MX sparsity
+metis::SymbolicScalar expr = ...;
+metis::SparsityPattern expr_sp(expr); // Extract from MX sparsity
 ```
 
 ### Sparse Jacobian Pipeline
 
 ```cpp
-auto x = janus::sym("x", 6);
-auto f = janus::SymbolicScalar::vertcat({
+auto x = metis::sym("x", 6);
+auto f = metis::SymbolicScalar::vertcat({
     x(1) - x(0),
-    x(2) - janus::sin(x(1)),
+    x(2) - metis::sin(x(1)),
     x(3) - x(2)
 });
 
-auto J = janus::sparse_jacobian(f, x);
+auto J = metis::sparse_jacobian(f, x);
 
 std::cout << "nnz = " << J.nnz() << "\n";
 std::cout << "forward colors = " << J.forward_coloring().n_colors() << "\n";
 std::cout << "reverse colors = " << J.reverse_coloring().n_colors() << "\n";
 std::cout << "preferred mode = "
-          << (J.preferred_mode() == janus::SparseJacobianMode::Forward ? "forward" : "reverse")
+          << (J.preferred_mode() == metis::SparseJacobianMode::Forward ? "forward" : "reverse")
           << "\n";
 
-janus::NumericMatrix x_val(6, 1);
+metis::NumericMatrix x_val(6, 1);
 x_val << 0.0, 0.2, 0.5, 0.9, 0.0, 0.0;
 
-janus::NumericMatrix jac_nz = J.values(x_val);
+metis::NumericMatrix jac_nz = J.values(x_val);
 ```
 
 `jac_nz` is a column vector of derivative values in the same CCS ordering reported by `J.sparsity().get_triplet()` and `J.sparsity().get_ccs()`. That ordering is fixed, so the sparsity structure can be reused across many evaluations.
@@ -136,36 +136,36 @@ janus::NumericMatrix jac_nz = J.values(x_val);
 ### Sparse Hessian Pipeline
 
 ```cpp
-auto x = janus::sym("x", 5);
-janus::SymbolicScalar phi = 0;
+auto x = metis::sym("x", 5);
+metis::SymbolicScalar phi = 0;
 for (int k = 0; k < 4; ++k) {
     auto diff = x(k + 1) - x(k);
     phi = phi + diff * diff;
 }
 
-auto H = janus::sparse_hessian(phi, x);
+auto H = metis::sparse_hessian(phi, x);
 
 std::cout << "nnz = " << H.nnz() << "\n";
 std::cout << "star colors = " << H.coloring().n_colors() << "\n";
 
-janus::NumericMatrix x_val(5, 1);
+metis::NumericMatrix x_val(5, 1);
 x_val << 0.0, 0.1, 0.3, 0.7, 1.0;
 
-janus::NumericMatrix hess_nz = H.values(x_val);
+metis::NumericMatrix hess_nz = H.values(x_val);
 ```
 
-For Hessians, Janus exposes CasADi's star coloring through `H.coloring()`.
+For Hessians, Metis exposes CasADi's star coloring through `H.coloring()`.
 
 ### From Function Blocks
 
-Sparse derivative evaluators can also be built from an already-compiled `janus::Function`, selecting a specific output block and input block:
+Sparse derivative evaluators can also be built from an already-compiled `metis::Function`, selecting a specific output block and input block:
 
 ```cpp
-janus::Function terms("terms", {x, u}, {defects, objective});
+metis::Function terms("terms", {x, u}, {defects, objective});
 
-auto ddefects_dx = janus::sparse_jacobian(terms, 0, 0);
-auto ddefects_du = janus::sparse_jacobian(terms, 0, 1);
-auto hobjective_xx = janus::sparse_hessian(terms, 1, 0);
+auto ddefects_dx = metis::sparse_jacobian(terms, 0, 0);
+auto ddefects_du = metis::sparse_jacobian(terms, 0, 1);
+auto hobjective_xx = metis::sparse_hessian(terms, 1, 0);
 ```
 
 This is the most useful form for optimization pipelines where one compiled function already exposes multiple residual, constraint, and objective blocks.
@@ -178,8 +178,8 @@ When debugging, it is often useful to reconstruct the dense matrix from sparse v
 auto nz = J.values(x_val);
 auto [rows, cols] = J.sparsity().get_triplet();
 
-janus::NumericMatrix dense =
-    janus::NumericMatrix::Zero(J.sparsity().n_rows(), J.sparsity().n_cols());
+metis::NumericMatrix dense =
+    metis::NumericMatrix::Zero(J.sparsity().n_rows(), J.sparsity().n_cols());
 
 for (Eigen::Index k = 0; k < nz.size(); ++k) {
     dense(rows[static_cast<size_t>(k)], cols[static_cast<size_t>(k)]) = nz(k);
@@ -222,7 +222,7 @@ The HTML output includes pan/zoom, clickable cells with row/col details, axis la
 
 ### Reading Coloring Metadata
 
-`janus::GraphColoring` exposes:
+`metis::GraphColoring` exposes:
 - `n_entries()` for the uncompressed derivative size
 - `n_colors()` for the compressed directional count
 - `compression_ratio()` for a quick summary
@@ -232,7 +232,7 @@ This is useful when comparing derivative blocks and deciding whether sparse dire
 
 ### NaN-Propagation Sparsity Detection
 
-Sometimes you have **black-box functions** where symbolic sparsity analysis is not possible (external library calls, non-traceable operations, functions with runtime branching). Janus provides `nan_propagation_sparsity()` for these cases.
+Sometimes you have **black-box functions** where symbolic sparsity analysis is not possible (external library calls, non-traceable operations, functions with runtime branching). Metis provides `nan_propagation_sparsity()` for these cases.
 
 **How it works:**
 1. Evaluate f(x) at a reference point
@@ -241,36 +241,36 @@ Sometimes you have **black-box functions** where symbolic sparsity analysis is n
 
 ```cpp
 // For lambda/callable functions
-auto sp = janus::nan_propagation_sparsity(
-    [](const janus::NumericVector& x) {
-        janus::NumericVector y(x.size());
+auto sp = metis::nan_propagation_sparsity(
+    [](const metis::NumericVector& x) {
+        metis::NumericVector y(x.size());
         for (int i = 0; i < x.size(); ++i) y(i) = x(i) * x(i);
         return y;
     },
     n_inputs, n_outputs);
 
-// For janus::Function
-janus::Function fn(...);
-auto sp = janus::nan_propagation_sparsity(fn);
+// For metis::Function
+metis::Function fn(...);
+auto sp = metis::nan_propagation_sparsity(fn);
 
 // With custom options (reference point)
-janus::NaNSparsityOptions opts;
-opts.reference_point = janus::NumericVector{{1.0, 2.0, 3.0}};
-auto sp = janus::nan_propagation_sparsity(fn, opts);
+metis::NaNSparsityOptions opts;
+opts.reference_point = metis::NumericVector{{1.0, 2.0, 3.0}};
+auto sp = metis::nan_propagation_sparsity(fn, opts);
 ```
 
 **Verifying symbolic sparsity:**
 
 ```cpp
-auto x = janus::sym("x", 4);
+auto x = metis::sym("x", 4);
 auto f = x * x;  // Element-wise square
 
 // Symbolic sparsity
-auto sp_symbolic = janus::sparsity_of_jacobian(f, x);
+auto sp_symbolic = metis::sparsity_of_jacobian(f, x);
 
 // NaN-propagation sparsity (black-box equivalent)
-janus::Function fn({x}, {f});
-auto sp_nan = janus::nan_propagation_sparsity(fn);
+metis::Function fn({x}, {f});
+auto sp_nan = metis::nan_propagation_sparsity(fn);
 
 // They should match!
 assert(sp_symbolic == sp_nan);
@@ -289,12 +289,12 @@ The example `examples/intro/sparsity_intro.cpp` demonstrates four common structu
 
 3. **Independent Systems (Block Diagonal)** -- Two completely separate systems stacked together form a block-diagonal matrix. Solvers can parallelize this trivially.
 
-4. **2D Laplacian (5-Point Stencil)** -- Typical in PDE constraints. Each node depends on itself and its 4 neighbors. Uses `janus::sym_vec_pair` for 2D indexing:
+4. **2D Laplacian (5-Point Stencil)** -- Typical in PDE constraints. Each node depends on itself and its 4 neighbors. Uses `metis::sym_vec_pair` for 2D indexing:
 
 ```cpp
-auto [x_vec, x_mx] = janus::sym_vec_pair("x", n_vars);
+auto [x_vec, x_mx] = metis::sym_vec_pair("x", n_vars);
 // Build equations using x_vec(k), create Function using raw x_mx
-janus::Function f_pde({x_mx}, {janus::SymbolicScalar::vertcat(eqs)});
+metis::Function f_pde({x_mx}, {metis::SymbolicScalar::vertcat(eqs)});
 ```
 
 ### Example Walkthrough: `sparse_derivative_pipeline.cpp`
@@ -320,4 +320,4 @@ ninja -C build sparse_derivative_pipeline
 - [Structural Diagnostics Guide](structural_diagnostics.md) -- Use sparsity for observability and identifiability analysis
 - [sparsity_intro.cpp](../../examples/intro/sparsity_intro.cpp) -- Introductory sparsity patterns example
 - [sparse_derivative_pipeline.cpp](../../examples/math/sparse_derivative_pipeline.cpp) -- Full sparse derivative pipeline example
-- [Sparsity.hpp](../../include/janus/core/Sparsity.hpp) -- API reference
+- [Sparsity.hpp](../../include/metis/core/Sparsity.hpp) -- API reference

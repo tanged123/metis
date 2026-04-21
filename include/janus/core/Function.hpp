@@ -2,8 +2,8 @@
 /// @brief Symbolic function wrapper around CasADi with Eigen-native IO
 #pragma once
 
-#include "JanusError.hpp"
-#include "JanusTypes.hpp"
+#include "MetisError.hpp"
+#include "MetisTypes.hpp"
 #include <Eigen/Dense>
 #include <casadi/casadi.hpp>
 #include <string>
@@ -13,10 +13,10 @@
 #include <tuple>
 #include <utility>
 
-namespace janus {
+namespace metis {
 
 /**
- * @brief Batch mapping backend for janus::Function::map()
+ * @brief Batch mapping backend for metis::Function::map()
  * @see Function::map
  */
 enum class MapParallelization {
@@ -67,7 +67,7 @@ class Function {
   private:
     static std::string generate_unique_name() {
         static std::atomic<uint64_t> counter{0};
-        return "janus_fn_" + std::to_string(counter.fetch_add(1));
+        return "metis_fn_" + std::to_string(counter.fetch_add(1));
     }
 
     static std::vector<SymbolicScalar> convert_args(const std::vector<SymbolicArg> &args) {
@@ -97,7 +97,7 @@ class Function {
                       std::is_same_v<std::decay_t<T>, casadi::DM>) {
             return casadi::MX(val);
         } else {
-            return janus::to_mx(val);
+            return metis::to_mx(val);
         }
     }
 
@@ -201,7 +201,7 @@ class Function {
      *
      * @param n Number of batch samples
      * @param parallelization Mapping backend selection
-     * @return Function Batched Janus function wrapper
+     * @return Function Batched Metis function wrapper
      */
     Function map(int n, MapParallelization parallelization = MapParallelization::Parallel) const {
         return map(n, detail::to_casadi_parallelization(parallelization));
@@ -211,7 +211,7 @@ class Function {
      * @brief Create a batched version using a direct CasADi backend name
      * @param n Number of batch samples
      * @param parallelization Backend string ("openmp", "serial", or "unroll")
-     * @return Batched Janus function wrapper
+     * @return Batched Metis function wrapper
      */
     Function map(int n, const std::string &parallelization) const {
         if (n <= 0) {
@@ -226,7 +226,7 @@ class Function {
      * @param n Number of batch samples
      * @param parallelization Mapping backend selection
      * @param max_num_threads Maximum number of worker threads for supported backends
-     * @return Function Batched Janus function wrapper
+     * @return Function Batched Metis function wrapper
      */
     Function map(int n, MapParallelization parallelization, int max_num_threads) const {
         return map(n, detail::to_casadi_parallelization(parallelization), max_num_threads);
@@ -237,7 +237,7 @@ class Function {
      * @param n Number of batch samples
      * @param parallelization Backend string ("openmp", "serial", or "unroll")
      * @param max_num_threads Maximum worker threads
-     * @return Batched Janus function wrapper
+     * @return Batched Metis function wrapper
      */
     Function map(int n, const std::string &parallelization, int max_num_threads) const {
         if (n <= 0) {
@@ -255,15 +255,15 @@ class Function {
     casadi::Function fn_;
 
     template <typename Scalar, typename CasadiType>
-    std::vector<JanusMatrix<Scalar>> to_eigen_vector(const std::vector<CasadiType> &dms) const {
-        std::vector<JanusMatrix<Scalar>> ret;
+    std::vector<MetisMatrix<Scalar>> to_eigen_vector(const std::vector<CasadiType> &dms) const {
+        std::vector<MetisMatrix<Scalar>> ret;
         ret.reserve(dms.size());
         for (const auto &dm : dms) {
             // Use generic converter if possible, or manual
             if constexpr (std::is_same_v<CasadiType, casadi::MX>) {
-                ret.push_back(janus::to_eigen(dm));
+                ret.push_back(metis::to_eigen(dm));
             } else {
-                using MatType = JanusMatrix<Scalar>;
+                using MatType = MetisMatrix<Scalar>;
                 MatType mat(dm.size1(), dm.size2());
                 std::vector<double> elements = static_cast<std::vector<double>>(dm);
                 for (Eigen::Index j = 0; j < mat.cols(); ++j) {
@@ -328,12 +328,12 @@ auto invoke_with_symbols(Func &&fn, const std::vector<SymbolicScalar> &syms) {
  *
  * @code
  * // Single output
- * auto f = janus::make_function<2, 1>("f", [](auto x, auto y) {
+ * auto f = metis::make_function<2, 1>("f", [](auto x, auto y) {
  *     return x*x + y*y;
  * });
  *
  * // Multiple outputs (return a tuple)
- * auto g = janus::make_function<2, 2>("g", [](auto x, auto y) {
+ * auto g = metis::make_function<2, 2>("g", [](auto x, auto y) {
  *     return std::make_tuple(x + y, x - y);
  * });
  * @endcode
@@ -379,7 +379,7 @@ Function make_function(const std::string &name, Func &&fn) {
  * @brief Create a Function from a lambda with named inputs
  *
  * @code
- * auto f = janus::make_function<2>("f", {"x", "y"}, [](auto x, auto y) {
+ * auto f = metis::make_function<2>("f", {"x", "y"}, [](auto x, auto y) {
  *     return x*x + y*y;
  * });
  * @endcode
@@ -423,4 +423,4 @@ Function make_function(const std::string &name, const std::vector<std::string> &
     return Function(name, input_args, outputs);
 }
 
-} // namespace janus
+} // namespace metis

@@ -9,11 +9,11 @@
 
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <string>
 #include <vector>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 

@@ -2,12 +2,12 @@
 
 /**
  * @file using.hpp
- * @brief Convenience header bringing common Janus symbols into scope
+ * @brief Convenience header bringing common Metis symbols into scope
  *
- * Include this header for cleaner code without explicit janus:: prefixes.
+ * Include this header for cleaner code without explicit metis:: prefixes.
  *
  * @code
- * #include <janus/using.hpp>
+ * #include <metis/using.hpp>
  *
  * auto x = sym("x");
  * auto y = sin(x) + pow(x, 2);
@@ -15,102 +15,102 @@
  * @endcode
  *
  * @warning This header pollutes the global namespace. Use with care in
- * library code - prefer explicit janus:: prefixes there.
+ * library code - prefer explicit metis:: prefixes there.
  */
 
-#include "janus.hpp"
+#include "metis.hpp"
 
-// Bring common Janus symbols into the global namespace
-using janus::sym;
-using janus::sym_vec;
-using janus::sym_vec_pair;
-using janus::sym_vector;
+// Bring common Metis symbols into the global namespace
+using metis::sym;
+using metis::sym_vec;
+using metis::sym_vec_pair;
+using metis::sym_vector;
 
 // Type aliases
-using janus::DenseLinearSolver;
-using janus::IterativeKrylovSolver;
-using janus::IterativePreconditioner;
-using janus::LinearSolveBackend;
-using janus::LinearSolvePolicy;
-using janus::NumericMatrix;
-using janus::NumericScalar;
-using janus::NumericVector;
-using janus::PolynomialChaosBasis;
-using janus::PolynomialChaosBasisOptions;
-using janus::PolynomialChaosDimension;
-using janus::PolynomialChaosFamily;
-using janus::PolynomialChaosTerm;
-using janus::PolynomialChaosTruncation;
-using janus::SmolyakQuadratureOptions;
-using janus::SparseDirectLinearSolver;
-using janus::StochasticQuadratureGrid;
-using janus::StochasticQuadratureRule;
-using janus::StructuralDiagnosticsOptions;
-using janus::StructuralDiagnosticsReport;
-using janus::StructuralSensitivityOptions;
-using janus::StructuralSensitivityReport;
-using janus::SymbolicMatrix;
-using janus::SymbolicScalar;
-using janus::SymbolicVector;
-using janus::UnivariateQuadratureRule;
+using metis::DenseLinearSolver;
+using metis::IterativeKrylovSolver;
+using metis::IterativePreconditioner;
+using metis::LinearSolveBackend;
+using metis::LinearSolvePolicy;
+using metis::NumericMatrix;
+using metis::NumericScalar;
+using metis::NumericVector;
+using metis::PolynomialChaosBasis;
+using metis::PolynomialChaosBasisOptions;
+using metis::PolynomialChaosDimension;
+using metis::PolynomialChaosFamily;
+using metis::PolynomialChaosTerm;
+using metis::PolynomialChaosTruncation;
+using metis::SmolyakQuadratureOptions;
+using metis::SparseDirectLinearSolver;
+using metis::StochasticQuadratureGrid;
+using metis::StochasticQuadratureRule;
+using metis::StructuralDiagnosticsOptions;
+using metis::StructuralDiagnosticsReport;
+using metis::StructuralSensitivityOptions;
+using metis::StructuralSensitivityReport;
+using metis::SymbolicMatrix;
+using metis::SymbolicScalar;
+using metis::SymbolicVector;
+using metis::UnivariateQuadratureRule;
 
 // Conversion helpers
-using janus::as_mx;
-using janus::as_vector;
-using janus::to_eigen;
-using janus::to_mx;
+using metis::as_mx;
+using metis::as_vector;
+using metis::to_eigen;
+using metis::to_mx;
 
 // Structural diagnostics
-using janus::analyze_structural_diagnostics;
-using janus::analyze_structural_identifiability;
-using janus::analyze_structural_observability;
+using metis::analyze_structural_diagnostics;
+using metis::analyze_structural_identifiability;
+using metis::analyze_structural_observability;
 
 // Math functions
-using janus::abs;
-using janus::acos;
-using janus::asin;
-using janus::atan;
-using janus::atan2;
-using janus::ceil;
-using janus::cos;
-using janus::cosh;
-using janus::exp;
-using janus::fabs;
-using janus::floor;
-using janus::fmax;
-using janus::fmin;
-using janus::log;
-using janus::log10;
-using janus::pow;
-using janus::sin;
-using janus::sinh;
-using janus::sqrt;
-using janus::tan;
-using janus::tanh;
+using metis::abs;
+using metis::acos;
+using metis::asin;
+using metis::atan;
+using metis::atan2;
+using metis::ceil;
+using metis::cos;
+using metis::cosh;
+using metis::exp;
+using metis::fabs;
+using metis::floor;
+using metis::fmax;
+using metis::fmin;
+using metis::log;
+using metis::log10;
+using metis::pow;
+using metis::sin;
+using metis::sinh;
+using metis::sqrt;
+using metis::tan;
+using metis::tanh;
 
 // Control flow
-using janus::where;
+using metis::where;
 
 // Calculus
-using janus::gradient;
-using janus::hermite_dimension;
-using janus::hessian;
-using janus::hessian_vector_product;
-using janus::jacobi_dimension;
-using janus::jacobian;
-using janus::lagrangian_hessian_vector_product;
-using janus::laguerre_dimension;
-using janus::legendre_dimension;
-using janus::pce_mean;
-using janus::pce_polynomial;
-using janus::pce_projection_coefficients;
-using janus::pce_regression_coefficients;
-using janus::pce_squared_norm;
-using janus::pce_variance;
-using janus::smolyak_sparse_grid;
-using janus::stochastic_quadrature_level;
-using janus::stochastic_quadrature_rule;
-using janus::tensor_product_quadrature;
+using metis::gradient;
+using metis::hermite_dimension;
+using metis::hessian;
+using metis::hessian_vector_product;
+using metis::jacobi_dimension;
+using metis::jacobian;
+using metis::lagrangian_hessian_vector_product;
+using metis::laguerre_dimension;
+using metis::legendre_dimension;
+using metis::pce_mean;
+using metis::pce_polynomial;
+using metis::pce_projection_coefficients;
+using metis::pce_regression_coefficients;
+using metis::pce_squared_norm;
+using metis::pce_variance;
+using metis::smolyak_sparse_grid;
+using metis::stochastic_quadrature_level;
+using metis::stochastic_quadrature_rule;
+using metis::tensor_product_quadrature;
 
 // Spacing
-using janus::linspace;
+using metis::linspace;

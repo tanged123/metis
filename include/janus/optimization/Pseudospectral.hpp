@@ -6,12 +6,12 @@
 #pragma once
 
 #include "TranscriptionBase.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/math/OrthogonalPolynomials.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/math/OrthogonalPolynomials.hpp"
 #include <tuple>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /** @brief Available pseudospectral node distributions */
 enum class PseudospectralScheme {
@@ -187,4 +187,4 @@ class Pseudospectral : public TranscriptionBase<Pseudospectral> {
     }
 };
 
-} // namespace janus
+} // namespace metis

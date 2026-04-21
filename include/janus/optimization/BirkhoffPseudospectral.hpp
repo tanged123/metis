@@ -6,12 +6,12 @@
 #pragma once
 
 #include "TranscriptionBase.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/math/OrthogonalPolynomials.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/math/OrthogonalPolynomials.hpp"
 #include <tuple>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /** @brief Available Birkhoff node distributions */
 enum class BirkhoffScheme {
@@ -210,4 +210,4 @@ class BirkhoffPseudospectral : public TranscriptionBase<BirkhoffPseudospectral> 
     }
 };
 
-} // namespace janus
+} // namespace metis

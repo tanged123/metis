@@ -5,15 +5,15 @@
  * @see Interpolate.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/math/Interpolate.hpp"
-#include "janus/math/Linalg.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/math/Interpolate.hpp"
+#include "metis/math/Linalg.hpp"
 #include <cmath>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 // ============================================================================
 // RBF Kernel Types
@@ -262,7 +262,7 @@ class ScatteredInterpolator {
      * @param query Query point vector
      * @return Interpolated value
      */
-    template <JanusScalar Scalar> Scalar operator()(const JanusVector<Scalar> &query) const {
+    template <MetisScalar Scalar> Scalar operator()(const MetisVector<Scalar> &query) const {
         if (!m_valid) {
             throw InterpolationError("ScatteredInterpolator: not initialized");
         }
@@ -275,7 +275,7 @@ class ScatteredInterpolator {
      * @param query Scalar query value
      * @return Interpolated value
      */
-    template <JanusScalar Scalar> Scalar operator()(const Scalar &query) const {
+    template <MetisScalar Scalar> Scalar operator()(const Scalar &query) const {
         if (!m_valid) {
             throw InterpolationError("ScatteredInterpolator: not initialized");
         }
@@ -422,4 +422,4 @@ class ScatteredInterpolator {
     }
 };
 
-} // namespace janus
+} // namespace metis

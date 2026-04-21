@@ -9,10 +9,10 @@
 #include "OptiSol.hpp"
 #include "OptiSweep.hpp"
 #include "Scaling.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/math/Calculus.hpp"
-#include "janus/math/FiniteDifference.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/math/Calculus.hpp"
+#include "metis/math/FiniteDifference.hpp"
 #include <algorithm>
 #include <casadi/casadi.hpp>
 #include <cmath>
@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 namespace detail {
 
@@ -131,12 +131,12 @@ struct VariableOptions {
 /**
  * @brief Main optimization environment class
  *
- * Wraps CasADi's Opti interface to provide Janus-native types
+ * Wraps CasADi's Opti interface to provide Metis-native types
  * and a clean C++ API for nonlinear programming with IPOPT backend.
  *
  * Example:
  * @code
- *   janus::Opti opti;
+ *   metis::Opti opti;
  *   auto x = opti.variable(0.0);  // scalar, init_guess=0
  *   auto y = opti.variable(0.0);
  *   opti.minimize((1 - x) * (1 - x) + 100 * (y - x * x) * (y - x * x));
@@ -146,14 +146,14 @@ struct VariableOptions {
  *
  * Rosenbrock Benchmark:
  * @code
- *   janus::Opti opti;
+ *   metis::Opti opti;
  *   auto x = opti.variable(10, 0.0);  // 10 variables
  *   opti.subject_to(x >= 0);
  *   // minimize sum(100*(x[i+1] - x[i]^2)^2 + (1 - x[i])^2)
  *   SymbolicScalar obj = 0;
  *   for (int i = 0; i < 9; ++i) {
- *       obj = obj + 100 * janus::pow(x(i+1) - x(i)*x(i), 2)
- *                 + janus::pow(1 - x(i), 2);
+ *       obj = obj + 100 * metis::pow(x(i+1) - x(i)*x(i), 2)
+ *                 + metis::pow(1 - x(i), 2);
  *   }
  *   opti.minimize(obj);
  *   auto sol = opti.solve();  // All x[i] ~= 1.0
@@ -297,7 +297,7 @@ class Opti {
         register_variable_block(NumericVector::Constant(n_vars, init_guess), "Uncategorized", s,
                                 scale.has_value(), lower_bound, upper_bound);
 
-        return janus::to_eigen(scaled_var);
+        return metis::to_eigen(scaled_var);
     }
 
     /**
@@ -342,7 +342,7 @@ class Opti {
         register_variable_block(init_guess, "Uncategorized", s, scale.has_value(), lower_bound,
                                 upper_bound);
 
-        return janus::to_eigen(scaled_var);
+        return metis::to_eigen(scaled_var);
     }
 
     // =========================================================================
@@ -374,7 +374,7 @@ class Opti {
         SymbolicScalar param = opti_.parameter(n, 1);
         std::vector<double> vals(value.data(), value.data() + value.size());
         opti_.set_value(param, vals);
-        return janus::to_eigen(param);
+        return metis::to_eigen(param);
     }
 
     // =========================================================================
@@ -727,7 +727,7 @@ class Opti {
      *
      * Example:
      * @code
-     *   NumericVector time = janus::linspace(0, 1, 100);
+     *   NumericVector time = metis::linspace(0, 1, 100);
      *   auto position = opti.variable(100, 0.0);
      *   auto velocity = opti.derivative_of(position, time, 0.0);
      *   // velocity is now constrained: d(position)/dt = velocity
@@ -780,8 +780,8 @@ class Opti {
                               const NumericVector &with_respect_to, IntegrationMethod method) {
         int n = static_cast<int>(var.size());
 
-        // Use janus::diff from Calculus.hpp
-        NumericVector dt = janus::diff(with_respect_to);
+        // Use metis::diff from Calculus.hpp
+        NumericVector dt = metis::diff(with_respect_to);
 
         switch (method) {
         case IntegrationMethod::Trapezoidal:
@@ -1136,4 +1136,4 @@ class Opti {
     }
 };
 
-} // namespace janus
+} // namespace metis

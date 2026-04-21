@@ -5,11 +5,11 @@
  * @see PolynomialChaos.hpp, OrthogonalPolynomials.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/math/OrthogonalPolynomials.hpp"
-#include "janus/math/PolynomialChaos.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/math/OrthogonalPolynomials.hpp"
+#include "metis/math/PolynomialChaos.hpp"
 #include <Eigen/Eigenvalues>
 #include <array>
 #include <cmath>
@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief One-dimensional stochastic quadrature rule on a probability measure.
@@ -641,10 +641,10 @@ smolyak_sparse_grid(const std::vector<PolynomialChaosDimension> &dimensions, int
  * @param sample_values Function values at quadrature nodes
  * @return PCE coefficient vector
  */
-template <JanusScalar Scalar>
-JanusVector<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basis,
+template <MetisScalar Scalar>
+MetisVector<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basis,
                                                 const UnivariateQuadratureRule &rule,
-                                                const JanusVector<Scalar> &sample_values) {
+                                                const MetisVector<Scalar> &sample_values) {
     if (basis.dimension() != 1) {
         throw InvalidArgument("pce_projection_coefficients(rule): univariate rule requires a "
                               "one-dimensional PolynomialChaosBasis");
@@ -663,10 +663,10 @@ JanusVector<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basi
  * @param sample_values Function values at quadrature nodes (matrix)
  * @return PCE coefficient matrix
  */
-template <JanusScalar Scalar>
-JanusMatrix<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basis,
+template <MetisScalar Scalar>
+MetisMatrix<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basis,
                                                 const UnivariateQuadratureRule &rule,
-                                                const JanusMatrix<Scalar> &sample_values) {
+                                                const MetisMatrix<Scalar> &sample_values) {
     if (basis.dimension() != 1) {
         throw InvalidArgument("pce_projection_coefficients(rule): univariate rule requires a "
                               "one-dimensional PolynomialChaosBasis");
@@ -685,10 +685,10 @@ JanusMatrix<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basi
  * @param sample_values Function values at grid points
  * @return PCE coefficient vector
  */
-template <JanusScalar Scalar>
-JanusVector<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basis,
+template <MetisScalar Scalar>
+MetisVector<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basis,
                                                 const StochasticQuadratureGrid &grid,
-                                                const JanusVector<Scalar> &sample_values) {
+                                                const MetisVector<Scalar> &sample_values) {
     return pce_projection_coefficients(basis, grid.samples, grid.weights, sample_values);
 }
 
@@ -700,11 +700,11 @@ JanusVector<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basi
  * @param sample_values Function values at grid points (matrix)
  * @return PCE coefficient matrix
  */
-template <JanusScalar Scalar>
-JanusMatrix<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basis,
+template <MetisScalar Scalar>
+MetisMatrix<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basis,
                                                 const StochasticQuadratureGrid &grid,
-                                                const JanusMatrix<Scalar> &sample_values) {
+                                                const MetisMatrix<Scalar> &sample_values) {
     return pce_projection_coefficients(basis, grid.samples, grid.weights, sample_values);
 }
 
-} // namespace janus
+} // namespace metis

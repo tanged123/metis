@@ -1,14 +1,14 @@
-/// @file JanusConcepts.hpp
-/// @brief C++20 concepts constraining valid Janus scalar types
+/// @file MetisConcepts.hpp
+/// @brief C++20 concepts constraining valid Metis scalar types
 #pragma once
 #include <casadi/casadi.hpp>
 #include <concepts>
 
-namespace janus {
+namespace metis {
 /**
- * @brief Concept for valid Janus scalars
+ * @brief Concept for valid Metis scalars
  * @tparam T Type to check (must be floating-point or casadi::MX)
  */
 template <typename T>
-concept JanusScalar = std::floating_point<T> || std::same_as<T, casadi::MX>;
-} // namespace janus
+concept MetisScalar = std::floating_point<T> || std::same_as<T, casadi::MX>;
+} // namespace metis

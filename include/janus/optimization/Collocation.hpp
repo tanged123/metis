@@ -6,10 +6,10 @@
 #pragma once
 
 #include "TranscriptionBase.hpp"
-#include "janus/math/Spacing.hpp"
+#include "metis/math/Spacing.hpp"
 #include <tuple>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Collocation scheme for dynamics discretization
@@ -228,4 +228,4 @@ class DirectCollocation : public TranscriptionBase<DirectCollocation> {
     }
 };
 
-} // namespace janus
+} // namespace metis

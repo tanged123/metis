@@ -1,7 +1,7 @@
 #pragma once
 /**
  * @file Integrate.hpp
- * @brief ODE integration for Janus framework
+ * @brief ODE integration for Metis framework
  *
  * Provides `quad` (definite integration) and `solve_ivp` (initial value problem)
  * with dual-backend support: numeric fallback and CasADi CVODES for symbolic graphs.
@@ -9,14 +9,14 @@
  * See also IntegratorStep.hpp for single-step integrators (euler_step, rk4_step, etc.)
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/math/Arithmetic.hpp"
-#include "janus/math/IntegratorStep.hpp"
-#include "janus/math/Linalg.hpp"
-#include "janus/math/Quadrature.hpp"
-#include "janus/math/Spacing.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/math/Arithmetic.hpp"
+#include "metis/math/IntegratorStep.hpp"
+#include "metis/math/Linalg.hpp"
+#include "metis/math/Quadrature.hpp"
+#include "metis/math/Spacing.hpp"
 #include <Eigen/Dense>
 #include <casadi/casadi.hpp>
 #include <functional>
@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 namespace detail {
 inline NumericVector to_numeric_vector(std::initializer_list<double> init) {
@@ -51,10 +51,10 @@ inline NumericVector to_numeric_vector(std::initializer_list<double> init) {
  */
 template <typename Scalar> struct OdeResult {
     /// Time points where solution was computed
-    JanusVector<Scalar> t;
+    MetisVector<Scalar> t;
 
     /// Solution values at each time point (each column is a state at time t[i])
-    JanusMatrix<Scalar> y;
+    MetisMatrix<Scalar> y;
 
     /// Whether integration was successful
     bool success = true;
@@ -89,13 +89,13 @@ enum class MassMatrixIntegratorMethod {
  */
 template <typename Scalar> struct SecondOrderOdeResult {
     /// Time points where solution was computed
-    JanusVector<Scalar> t;
+    MetisVector<Scalar> t;
 
     /// Generalized coordinates at each time point (each column is q(t[i]))
-    JanusMatrix<Scalar> q;
+    MetisMatrix<Scalar> q;
 
     /// Generalized velocities at each time point (each column is v(t[i]))
-    JanusMatrix<Scalar> v;
+    MetisMatrix<Scalar> v;
 
     /// Whether integration was successful
     bool success = true;
@@ -273,7 +273,7 @@ NumericVector rosenbrock_euler_step(RhsFunc &&rhs, MassFunc &&mass_matrix, const
     auto rhs_at_t = [&](const NumericVector &state) { return rhs(t, state); };
     NumericMatrix J = finite_difference_jacobian(rhs_at_t, y, opts.finite_difference_epsilon);
     NumericMatrix A = (M - dt * J).eval();
-    NumericVector k = janus::solve(A, f, opts.linear_solve_policy);
+    NumericVector k = metis::solve(A, f, opts.linear_solve_policy);
     return (y + dt * k).eval();
 }
 
@@ -295,7 +295,7 @@ NumericVector bdf1_step(RhsFunc &&rhs, MassFunc &&mass_matrix, const NumericVect
     try {
         NumericVector f0 = rhs(t, y);
         NumericMatrix M0 = evaluate_mass_matrix(mass_matrix, t, y, "solve_ivp_mass_matrix");
-        guess = (y + dt * janus::solve(M0, f0, opts.linear_solve_policy)).eval();
+        guess = (y + dt * metis::solve(M0, f0, opts.linear_solve_policy)).eval();
     } catch (...) {
     }
 
@@ -307,7 +307,7 @@ NumericVector bdf1_step(RhsFunc &&rhs, MassFunc &&mass_matrix, const NumericVect
 
         NumericMatrix J =
             finite_difference_jacobian(residual, guess, opts.finite_difference_epsilon);
-        NumericVector delta = janus::solve(J, -r, opts.linear_solve_policy);
+        NumericVector delta = metis::solve(J, -r, opts.linear_solve_policy);
         guess += delta;
         if (inf_norm(delta) <= opts.newton_tolerance) {
             return guess;
@@ -341,13 +341,13 @@ NumericVector bdf1_step(RhsFunc &&rhs, MassFunc &&mass_matrix, const NumericVect
  *
  * @code
  * // Numeric integration
- * auto result = janus::quad([](double x) { return x*x; }, 0.0, 1.0);
+ * auto result = metis::quad([](double x) { return x*x; }, 0.0, 1.0);
  * // result.value ≈ 1/3
  *
  * // Symbolic integration (generates CasADi graph)
- * auto x = janus::sym("x");
+ * auto x = metis::sym("x");
  * auto expr = x * x;
- * auto sym_result = janus::quad(expr, x, 0.0, 1.0);
+ * auto sym_result = metis::quad(expr, x, 0.0, 1.0);
  * @endcode
  */
 template <typename Func, typename T>
@@ -455,8 +455,8 @@ inline QuadResult<SymbolicScalar> quad(const SymbolicScalar &expr, const Symboli
  *
  * @code
  * // Simple exponential decay: dy/dt = -0.5*y
- * auto sol = janus::solve_ivp(
- *     [](double t, const janus::NumericVector& y) { return -0.5 * y; },
+ * auto sol = metis::solve_ivp(
+ *     [](double t, const metis::NumericVector& y) { return -0.5 * y; },
  *     {0.0, 10.0},  // t_span
  *     {2.5},        // y0 as initializer list
  *     100           // n_eval
@@ -465,9 +465,9 @@ inline QuadResult<SymbolicScalar> quad(const SymbolicScalar &expr, const Symboli
  * // Multi-state ODE (harmonic oscillator):
  * // dy/dt = v, dv/dt = -ω²y
  * double omega = 2.0;
- * auto sol = janus::solve_ivp(
- *     [omega](double t, const janus::NumericVector& state) {
- *         janus::NumericVector dydt(2);
+ * auto sol = metis::solve_ivp(
+ *     [omega](double t, const metis::NumericVector& state) {
+ *         metis::NumericVector dydt(2);
  *         dydt << state(1), -omega * omega * state(0);
  *         return dydt;
  *     },
@@ -521,8 +521,8 @@ OdeResult<double> solve_ivp(Func &&fun, std::pair<double, double> t_span, const 
  * @brief Convenience overload: solve_ivp with initializer list for y0
  *
  * @code
- * auto sol = janus::solve_ivp(
- *     [](double t, const janus::NumericVector& y) { return -0.5 * y; },
+ * auto sol = metis::solve_ivp(
+ *     [](double t, const metis::NumericVector& y) { return -0.5 * y; },
  *     {0.0, 10.0},
  *     {2.5}  // Single-element initial state
  * );
@@ -1141,4 +1141,4 @@ inline OdeResult<double> solve_ivp_expr(const SymbolicScalar &ode_expr, const Sy
     return result;
 }
 
-} // namespace janus
+} // namespace metis

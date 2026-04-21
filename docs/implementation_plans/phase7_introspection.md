@@ -1,6 +1,6 @@
-# Janus Phase 7: Advanced Introspection & Optimization Extensions
+# Metis Phase 7: Advanced Introspection & Optimization Extensions
 
-**Goal**: Implement sparsity introspection, higher-order symbolic derivatives, and optimization extensions to complete the Janus core math library.
+**Goal**: Implement sparsity introspection, higher-order symbolic derivatives, and optimization extensions to complete the Metis core math library.
 
 **Status**: In Progress
 **Created**: 2025-12-16
@@ -28,14 +28,14 @@ Phase 7 adds advanced introspection and analysis capabilities:
 ## User Review Required
 
 > [!IMPORTANT]
-> **Breaking Changes Allowed**: Per user confirmation, no downstream repos depend on Janus yet. Breaking API changes are acceptable for Phase 7.
+> **Breaking Changes Allowed**: Per user confirmation, no downstream repos depend on Metis yet. Breaking API changes are acceptable for Phase 7.
 
 ---
 
 ## Proposed Implementation Structure
 
 ```
-include/janus/
+include/metis/
 ├── core/
 │   └── Sparsity.hpp           # [NEW] SparsityPattern class
 ├── math/
@@ -63,7 +63,7 @@ docs/implementation_plans/
 
 ### Milestone 7.1: Sparsity Introspection — **P0**
 
-#### [NEW] `include/janus/core/Sparsity.hpp`
+#### [NEW] `include/metis/core/Sparsity.hpp`
 
 ```cpp
 #pragma once
@@ -72,7 +72,7 @@ docs/implementation_plans/
 #include <tuple>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Wrapper around CasADi Sparsity for pattern analysis
@@ -126,29 +126,29 @@ SparsityPattern hessian_sparsity(const SymbolicScalar& expr,
                                   const SymbolicScalar& vars);
 
 /**
- * @brief Get sparsity of a janus::Function Jacobian
+ * @brief Get sparsity of a metis::Function Jacobian
  */
 SparsityPattern get_jacobian_sparsity(const Function& fn);
 
-} // namespace janus
+} // namespace metis
 ```
 
 **Implementation Notes**:
 - Wrap `casadi::Sparsity` class
 - Use `casadi::MX::jacobian_sparsity()` for efficient pattern extraction
 - ASCII spy plot: iterate nonzeros and print `*` vs `.`
-- **COMPLETED**: Implemented `SparsityPattern` in `include/janus/core/Sparsity.hpp`. Refactored to use `janus::SymbolicScalar` and `janus::NumericMatrix` native types. Added `visualize_spy` for PDF generation using Graphviz HTML tables. Added `examples/intro/sparsity_intro.cpp` with 2D Laplacian example.
+- **COMPLETED**: Implemented `SparsityPattern` in `include/metis/core/Sparsity.hpp`. Refactored to use `metis::SymbolicScalar` and `metis::NumericMatrix` native types. Added `visualize_spy` for PDF generation using Graphviz HTML tables. Added `examples/intro/sparsity_intro.cpp` with 2D Laplacian example.
 
 ---
 
 ### Milestone 7.2: Higher-Order Symbolic Derivatives — **P0**
 
-#### [MODIFY] `include/janus/math/AutoDiff.hpp`
+#### [MODIFY] `include/metis/math/AutoDiff.hpp`
 
 Add the following functions:
 
 ```cpp
-namespace janus {
+namespace metis {
 
 /**
  * @brief Symbolic gradient (for scalar-output functions)
@@ -194,7 +194,7 @@ SymbolicMatrix hessian_lagrangian(
     const SymbolicScalar& vars,
     const SymbolicScalar& multipliers);
 
-} // namespace janus
+} // namespace metis
 ```
 
 **Implementation**:
@@ -215,10 +215,10 @@ inline SymbolicMatrix hessian(const SymbolicScalar& expr,
 
 ### Milestone 7.3: Variable Freezing & Categories — **P1**
 
-#### [MODIFY] `include/janus/optimization/Opti.hpp`
+#### [MODIFY] `include/metis/optimization/Opti.hpp`
 
 ```cpp
-namespace janus {
+namespace metis {
 
 /**
  * @brief Variable creation options
@@ -265,16 +265,16 @@ class Opti {
     std::set<SymbolicScalar> frozen_vars_;
 };
 
-} // namespace janus
+} // namespace metis
 ```
 
-**Reference**: [opti.py L72-L366](file:///home/tanged/sources/janus/reference/AeroSandbox/aerosandbox/optimization/opti.py#L72-L366)
+**Reference**: [opti.py L72-L366](file:///home/tanged/sources/metis/reference/AeroSandbox/aerosandbox/optimization/opti.py#L72-L366)
 
 ---
 
 ### Milestone 7.4: Solution Caching — **P1**
 
-#### [NEW] `include/janus/optimization/OptiCache.hpp`
+#### [NEW] `include/metis/optimization/OptiCache.hpp`
 
 ```cpp
 #pragma once
@@ -282,7 +282,7 @@ class Opti {
 #include <fstream>
 #include <nlohmann/json.hpp>  // or lightweight JSON alternative
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Save optimization solution to JSON file
@@ -297,10 +297,10 @@ void save_solution(const OptiSol& sol,
  */
 std::map<std::string, Eigen::VectorXd> load_solution(const std::string& filename);
 
-} // namespace janus
+} // namespace metis
 ```
 
-#### [MODIFY] `include/janus/optimization/OptiSol.hpp`
+#### [MODIFY] `include/metis/optimization/OptiSol.hpp`
 
 ```cpp
 class OptiSol {
@@ -319,7 +319,7 @@ class OptiSol {
 };
 ```
 
-**Reference**: [opti.py L952-L997](file:///home/tanged/sources/janus/reference/AeroSandbox/aerosandbox/optimization/opti.py#L952-L997)
+**Reference**: [opti.py L952-L997](file:///home/tanged/sources/metis/reference/AeroSandbox/aerosandbox/optimization/opti.py#L952-L997)
 
 ---
 
@@ -327,7 +327,7 @@ class OptiSol {
 
 #### A. ADL-Friendly Math Functions
 
-Ensure `janus::pow`, `janus::sin`, etc. are found via ADL when called without namespace:
+Ensure `metis::pow`, `metis::sin`, etc. are found via ADL when called without namespace:
 
 ```cpp
 // In Arithmetic.hpp - already works via ADL when operands are SymbolicScalar
@@ -337,7 +337,7 @@ Ensure `janus::pow`, `janus::sin`, etc. are found via ADL when called without na
 #### B. Simplified Symbol Creation
 
 ```cpp
-namespace janus {
+namespace metis {
 
 /**
  * @brief Create a named symbolic scalar (shorthand)
@@ -353,7 +353,7 @@ inline SymbolicVector sym(const std::string& name, int size) {
     return to_eigen(SymbolicScalar::sym(name, size, 1));
 }
 
-} // namespace janus
+} // namespace metis
 ```
 
 #### C. Cleaner Function Construction (Future)
@@ -367,10 +367,10 @@ inline SymbolicVector sym(const std::string& name, int size) {
 
 ### Milestone 7.6: Parametric Studies (`solve_sweep`) — **P2**
 
-#### [MODIFY] `include/janus/optimization/Opti.hpp`
+#### [MODIFY] `include/metis/optimization/Opti.hpp`
 
 ```cpp
-namespace janus {
+namespace metis {
 
 /**
  * @brief Result of a parametric sweep
@@ -398,21 +398,21 @@ class Opti {
         const OptiOptions& options = {});
 };
 
-} // namespace janus
+} // namespace metis
 ```
 
-**Reference**: [opti.py L734-L837](file:///home/tanged/sources/janus/reference/AeroSandbox/aerosandbox/optimization/opti.py#L734-L837)
+**Reference**: [opti.py L734-L837](file:///home/tanged/sources/metis/reference/AeroSandbox/aerosandbox/optimization/opti.py#L734-L837)
 
 ---
 
 ### Milestone 7.7: Sparse Matrix Types — **P3**
 
-#### [MODIFY] `include/janus/core/JanusTypes.hpp`
+#### [MODIFY] `include/metis/core/MetisTypes.hpp`
 
 ```cpp
 #include <Eigen/Sparse>
 
-namespace janus {
+namespace metis {
 
 // === Sparse Matrix Types ===
 using SparseMatrix = Eigen::SparseMatrix<double>;
@@ -430,7 +430,7 @@ SparseMatrix sparse_from_triplets(
     int rows, int cols,
     const std::vector<Eigen::Triplet<double>>& triplets);
 
-} // namespace janus
+} // namespace metis
 ```
 
 ---
@@ -439,7 +439,7 @@ SparseMatrix sparse_from_triplets(
 
 ### Milestone 7.1: Sparsity Introspection (Completed)
 
-- [x] Create `include/janus/core/Sparsity.hpp`
+- [x] Create `include/metis/core/Sparsity.hpp`
 - [x] Implement `SparsityPattern` class with query methods
 - [x] Implement `jacobian_sparsity()`, `hessian_sparsity()`
 - [x] Implement ASCII spy plot visualization
@@ -465,7 +465,7 @@ SparseMatrix sparse_from_triplets(
 
 ### Milestone 7.4: Solution Caching (Completed)
 
-- [x] Create simple JSON read/write utility (`janus/utils/JsonUtils.hpp`)
+- [x] Create simple JSON read/write utility (`metis/utils/JsonUtils.hpp`)
 - [x] Add `save(filename, vars)` to `OptiSol`
 - [x] Create `OptiCache::load(filename)` helper
 - [x] Verify roundtrip persistence with testsave()` method
@@ -488,7 +488,7 @@ SparseMatrix sparse_from_triplets(
 
 ### Milestone 7.7: Sparse Matrix Types (Completed)
 
-- [x] Add sparse type aliases to JanusTypes.hpp
+- [x] Add sparse type aliases to MetisTypes.hpp
 - [x] Add `to_sparse()`, `sparse_from_triplets()` to Linalg.hpp
 - [x] Add `is_numeric_scalar_v` trait for compile-time checks
 
@@ -562,4 +562,4 @@ Features deferred from Phase 7:
 
 ---
 
-*Generated by Janus Dev Team - Phase 7 Planning*
+*Generated by Metis Dev Team - Phase 7 Planning*

@@ -5,18 +5,18 @@
  * @see Logic.hpp, Arithmetic.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/math/Arithmetic.hpp"
-#include "janus/math/Logic.hpp"
-#include "janus/math/Trig.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/math/Arithmetic.hpp"
+#include "metis/math/Logic.hpp"
+#include "metis/math/Trig.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <numeric>
 #include <string>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 // ======================================================================
 // Softmax (Smooth Maximum / LogSumExp)
@@ -46,7 +46,7 @@ template <typename T> auto softmax(const std::vector<T> &args, double softness =
     // 1. Find max element-wise
     auto max_val = args[0];
     for (size_t i = 1; i < args.size(); ++i) {
-        max_val = janus::max(max_val, args[i]);
+        max_val = metis::max(max_val, args[i]);
     }
 
     // 2. Compute sum of exponentials: sum(exp((x - max) / softness))
@@ -54,15 +54,15 @@ template <typename T> auto softmax(const std::vector<T> &args, double softness =
     // We can compute the first term to initialize.
 
     // Using auto type deduction for the result of exp operation
-    auto first_term = janus::exp((args[0] - max_val) / softness);
+    auto first_term = metis::exp((args[0] - max_val) / softness);
     auto sum_exp = first_term;
 
     for (size_t i = 1; i < args.size(); ++i) {
-        sum_exp = sum_exp + janus::exp((args[i] - max_val) / softness);
+        sum_exp = sum_exp + metis::exp((args[i] - max_val) / softness);
     }
 
     // 3. Final computation
-    return max_val + softness * janus::log(sum_exp);
+    return max_val + softness * metis::log(sum_exp);
 }
 
 // Convenience overload for 2 arguments
@@ -73,24 +73,24 @@ template <typename T1, typename T2> auto softmax(const T1 &a, const T2 &b, doubl
     // For simplicity in the generic case, let's implement the 2-arg logic directly to allow
     // standard promotions.
 
-    auto max_val = janus::max(a, b);
+    auto max_val = metis::max(a, b);
 
     // Compute exp terms
     // exp((a - max) / softness) + exp((b - max) / softness)
     // Note: One of the exponents will include (max - max) = 0, so exp(0) = 1.
     // But we just compute blindly for simplicity and consistency.
 
-    auto term1 = janus::exp((a - max_val) / softness);
-    auto term2 = janus::exp((b - max_val) / softness);
+    auto term1 = metis::exp((a - max_val) / softness);
+    auto term2 = metis::exp((b - max_val) / softness);
 
     // Check if we need to broadcast scalar to matrix if one is matrix and other is scalar
-    // janus::exp usually handles this if implemented correctly or if using Eigen arrays.
+    // metis::exp usually handles this if implemented correctly or if using Eigen arrays.
     // However, addition `term1 + term2` might fail if one is scalar and other is matrix in standard
-    // Eigen without array(). We assume janus::exp returns compatible types (Eigen matrix or
+    // Eigen without array(). We assume metis::exp returns compatible types (Eigen matrix or
     // scalar). If mixed scalar/matrix, standard Eigen requires array operation or broadcasting.
 
-    // Let's rely on janus::exp returning something compatible with operator+
-    return max_val + softness * janus::log(term1 + term2);
+    // Let's rely on metis::exp returning something compatible with operator+
+    return max_val + softness * metis::log(term1 + term2);
 }
 
 // ======================================================================
@@ -158,7 +158,7 @@ inline auto softplus_scalar(const SymbolicScalar &x, double beta) {
 }
 } // namespace detail
 
-template <JanusScalar T> auto softplus(const T &x, double beta = 1.0, double /*threshold*/ = 20.0) {
+template <MetisScalar T> auto softplus(const T &x, double beta = 1.0, double /*threshold*/ = 20.0) {
     return detail::softplus_scalar(x, beta);
 }
 
@@ -166,7 +166,7 @@ template <typename Derived>
 auto softplus(const Eigen::MatrixBase<Derived> &x, double beta = 1.0, double threshold = 20.0) {
     using Scalar = typename Derived::Scalar;
     return x.derived().unaryExpr(
-        [beta, threshold](const Scalar &v) { return janus::softplus(v, beta, threshold); });
+        [beta, threshold](const Scalar &v) { return metis::softplus(v, beta, threshold); });
 }
 
 // ======================================================================
@@ -249,7 +249,7 @@ auto smooth_clamp(const TX &x, const TLow &low, const THigh &high, double hardne
  * @param rho Aggregation sharpness. Higher values approach max(values).
  * @return Smooth maximum aggregate
  */
-template <JanusScalar T> auto ks_max(const std::vector<T> &values, double rho = 1.0) {
+template <MetisScalar T> auto ks_max(const std::vector<T> &values, double rho = 1.0) {
     if (values.empty()) {
         throw InvalidArgument("ks_max: requires at least one value");
     }
@@ -315,16 +315,16 @@ auto sigmoid(const T &x, SigmoidType type = SigmoidType::Tanh, double norm_min =
 
     switch (type) {
     case SigmoidType::Tanh:
-        s = janus::tanh(x);
+        s = metis::tanh(x);
         break;
     case SigmoidType::Logistic:
-        s = janus::tanh(0.5 * x);
+        s = metis::tanh(0.5 * x);
         break;
     case SigmoidType::Arctan:
-        s = (2.0 / M_PI) * janus::atan((M_PI / 2.0) * x);
+        s = (2.0 / M_PI) * metis::atan((M_PI / 2.0) * x);
         break;
     case SigmoidType::Polynomial:
-        s = x / janus::sqrt(1.0 + x * x);
+        s = x / metis::sqrt(1.0 + x * x);
         break;
     }
 
@@ -348,7 +348,7 @@ auto sigmoid(const T &x, SigmoidType type = SigmoidType::Tanh, double norm_min =
  * @return Swish value
  */
 template <typename T> auto swish(const T &x, double beta = 1.0) {
-    return x / (1.0 + janus::exp(-beta * x));
+    return x / (1.0 + metis::exp(-beta * x));
 }
 
 // ======================================================================
@@ -371,4 +371,4 @@ auto blend(const TSwitch &switch_val, const THigh &val_high, const TLow &val_low
     return val_high * weights + val_low * (1.0 - weights);
 }
 
-} // namespace janus
+} // namespace metis

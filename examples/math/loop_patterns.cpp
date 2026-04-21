@@ -1,8 +1,8 @@
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 /**
- * @brief Demonstrate loop patterns in Janus
+ * @brief Demonstrate loop patterns in Metis
  *
  * KEY INSIGHT: Loop indices and bounds must be STRUCTURAL (known at graph-building time),
  * but the VALUES being computed can be symbolic.
@@ -26,15 +26,15 @@ template <typename Scalar> Scalar sum_of_squares(int n) {
 
 // Example 2: Nested For Loops - Matrix Operations
 template <typename Scalar>
-janus::JanusMatrix<Scalar> matrix_multiply_manual(const janus::JanusMatrix<Scalar> &A,
-                                                  const janus::JanusMatrix<Scalar> &B) {
+metis::MetisMatrix<Scalar> matrix_multiply_manual(const metis::MetisMatrix<Scalar> &A,
+                                                  const metis::MetisMatrix<Scalar> &B) {
     // Nested loops for matrix multiplication
     // Loop bounds are structural (matrix dimensions)
     int m = A.rows();
     int n = A.cols();
     int p = B.cols();
 
-    janus::JanusMatrix<Scalar> C(m, p);
+    metis::MetisMatrix<Scalar> C(m, p);
     C.setZero();
 
     for (int i = 0; i < m; ++i) {
@@ -80,14 +80,14 @@ template <typename Scalar> Scalar exponential_series(const Scalar &x, int n_term
 
 // Example 5: Element-wise Operations with Loops
 template <typename Scalar>
-janus::JanusVector<Scalar> apply_sigmoid_loop(const janus::JanusVector<Scalar> &input) {
+metis::MetisVector<Scalar> apply_sigmoid_loop(const metis::MetisVector<Scalar> &input) {
     // Process each element in a loop
     int n = input.size();
-    janus::JanusVector<Scalar> output(n);
+    metis::MetisVector<Scalar> output(n);
 
     for (int i = 0; i < n; ++i) {
         // Apply sigmoid: 1 / (1 + exp(-x))
-        output(i) = 1.0 / (1.0 + janus::exp(-input(i)));
+        output(i) = 1.0 / (1.0 + metis::exp(-input(i)));
     }
 
     return output;
@@ -95,15 +95,15 @@ janus::JanusVector<Scalar> apply_sigmoid_loop(const janus::JanusVector<Scalar> &
 
 // Example 6: Conditional Accumulation
 template <typename Scalar>
-Scalar selective_sum(const janus::JanusVector<Scalar> &values,
-                     const janus::JanusVector<Scalar> &thresholds) {
+Scalar selective_sum(const metis::MetisVector<Scalar> &values,
+                     const metis::MetisVector<Scalar> &thresholds) {
     // Sum only values above thresholds
     // Use where() for conditional logic inside loop
     Scalar sum = 0.0;
 
     for (int i = 0; i < values.size(); ++i) {
         // Add value if above threshold, else add 0
-        sum += janus::where(values(i) > thresholds(i), values(i), Scalar(0.0));
+        sum += metis::where(values(i) > thresholds(i), values(i), Scalar(0.0));
     }
 
     return sum;
@@ -142,7 +142,7 @@ Scalar aerodynamic_load_distribution(int n_panels, const Scalar &alpha, const Sc
 
 // Example 8: Break/Continue Pattern
 template <typename Scalar>
-Scalar find_first_above_threshold(const janus::JanusVector<Scalar> &values,
+Scalar find_first_above_threshold(const metis::MetisVector<Scalar> &values,
                                   const Scalar &threshold) {
     // C++ break/continue: ❌ NO! (depends on symbolic condition)
     // Workaround: Use select() to accumulate result
@@ -156,10 +156,10 @@ Scalar find_first_above_threshold(const janus::JanusVector<Scalar> &values,
         Scalar new_find = (1.0 - found) * is_match; // Only if not found yet
 
         // Update result if we found a new match
-        result = janus::where(new_find > 0.5, static_cast<Scalar>(i), result);
+        result = metis::where(new_find > 0.5, static_cast<Scalar>(i), result);
 
         // Update found flag
-        found = janus::where(new_find > 0.5, Scalar(1.0), found);
+        found = metis::where(new_find > 0.5, Scalar(1.0), found);
     }
 
     return result;
@@ -279,7 +279,7 @@ double find_zero_crossing_numeric(double (*func)(double), double x_start, double
 }
 
 int main() {
-    std::cout << "=== Loop Patterns in Janus ===\n\n";
+    std::cout << "=== Loop Patterns in Metis ===\n\n";
 
     // Test 1: Sum of Squares
     std::cout << "1. Simple For Loop - Sum of Squares (1² + 2² + ... + 5²):\n";
@@ -288,9 +288,9 @@ int main() {
 
     // Test 2: Matrix Multiply
     std::cout << "\n2. Nested For Loops - Matrix Multiplication:\n";
-    janus::JanusMatrix<double> A(2, 3);
+    metis::MetisMatrix<double> A(2, 3);
     A << 1, 2, 3, 4, 5, 6;
-    janus::JanusMatrix<double> B(3, 2);
+    metis::MetisMatrix<double> B(3, 2);
     B << 7, 8, 9, 10, 11, 12;
     auto C = matrix_multiply_manual(A, B);
     std::cout << "   A =\n" << A << "\n";
@@ -310,7 +310,7 @@ int main() {
 
     // Test 5: Element-wise Sigmoid
     std::cout << "\n5. Element-wise Operations:\n";
-    janus::JanusVector<double> input(3);
+    metis::MetisVector<double> input(3);
     input << 0.0, 1.0, -1.0;
     auto output = apply_sigmoid_loop(input);
     std::cout << "   Input: " << input.transpose() << "\n";
@@ -318,9 +318,9 @@ int main() {
 
     // Test 6: Conditional Sum
     std::cout << "\n6. Conditional Accumulation:\n";
-    janus::JanusVector<double> values(5);
+    metis::MetisVector<double> values(5);
     values << 1.0, 5.0, 3.0, 7.0, 2.0;
-    janus::JanusVector<double> thresholds(5);
+    metis::MetisVector<double> thresholds(5);
     thresholds << 2.0, 4.0, 4.0, 6.0, 3.0;
     double selective = selective_sum(values, thresholds);
     std::cout << "   Values: " << values.transpose() << "\n";
@@ -330,14 +330,14 @@ int main() {
 
     // Test 7: Symbolic Mode - Aerodynamic Load
     std::cout << "\n7. Symbolic Mode - Distributed Loads with Derivatives:\n";
-    auto alpha_sym = janus::sym("alpha");
-    auto v_sym = janus::sym("v");
+    auto alpha_sym = metis::sym("alpha");
+    auto v_sym = metis::sym("v");
 
     auto lift_expr = aerodynamic_load_distribution(10, alpha_sym, v_sym);
 
     // Compute dLift/dv (sensitivity to velocity)
-    auto dL_dv = janus::jacobian({lift_expr}, {v_sym});
-    janus::Function dL_dv_fun({alpha_sym, v_sym}, {dL_dv});
+    auto dL_dv = metis::jacobian({lift_expr}, {v_sym});
+    metis::Function dL_dv_fun({alpha_sym, v_sym}, {dL_dv});
 
     double alpha_val = 0.1; // ~5.7 degrees
     double v_val = 50.0;
@@ -349,7 +349,7 @@ int main() {
 
     // Test 8: Find First
     std::cout << "\n8. Break/Continue Pattern - Find First Above Threshold:\n";
-    janus::JanusVector<double> search_vals(5);
+    metis::MetisVector<double> search_vals(5);
     search_vals << 1.0, 3.0, 5.0, 7.0, 9.0;
     double found_idx = find_first_above_threshold(search_vals, 4.5);
     std::cout << "   Values: " << search_vals.transpose() << "\n";
@@ -365,9 +365,9 @@ int main() {
 
     // Test 10: Symbolic Version with Fixed Iterations
     std::cout << "\n10. Symbolic Mode with Fixed Iterations:\n";
-    auto x_sym = janus::sym("x");
+    auto x_sym = metis::sym("x");
     auto sqrt_expr = simulate_fixed_iterations_symbolic(x_sym, 5);
-    janus::Function sqrt_fun({x_sym}, {sqrt_expr});
+    metis::Function sqrt_fun({x_sym}, {sqrt_expr});
     double sqrt2_symbolic = sqrt_fun.eval(2.0)(0, 0);
     std::cout << "   sqrt(2) with fixed 5 iterations (symbolic compatible): " << sqrt2_symbolic
               << "\n";

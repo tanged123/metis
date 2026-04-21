@@ -1,30 +1,30 @@
 # N-Dimensional Interpolation
 
-The `interpn` function provides N-dimensional interpolation on regular grids, supporting dimensions from 1D up to 7D and beyond. It works seamlessly with Janus's dual-backend architecture, allowing the same code to run in both fast numeric mode and symbolic trace mode for optimization. For unstructured point clouds, `ScatteredInterpolator` fits RBF models and resamples onto grids for symbolic-compatible queries.
+The `interpn` function provides N-dimensional interpolation on regular grids, supporting dimensions from 1D up to 7D and beyond. It works seamlessly with Metis's dual-backend architecture, allowing the same code to run in both fast numeric mode and symbolic trace mode for optimization. For unstructured point clouds, `ScatteredInterpolator` fits RBF models and resamples onto grids for symbolic-compatible queries.
 
 ## Quick Start
 
 ```cpp
-#include <janus/math/Interpolate.hpp>
+#include <metis/math/Interpolate.hpp>
 
 // Create a 2D grid
-janus::NumericVector x_pts(3), y_pts(3);
+metis::NumericVector x_pts(3), y_pts(3);
 x_pts << 0.0, 1.0, 2.0;
 y_pts << 0.0, 1.0, 2.0;
 
-std::vector<janus::NumericVector> points = {x_pts, y_pts};
+std::vector<metis::NumericVector> points = {x_pts, y_pts};
 
 // Grid values: z = x + y (Fortran order)
-janus::NumericVector values(9);
+metis::NumericVector values(9);
 values << 0, 1, 2, 1, 2, 3, 2, 3, 4;
 
 // Query points
-janus::NumericMatrix xi(2, 2);
+metis::NumericMatrix xi(2, 2);
 xi << 0.5, 0.5,   // Point 1
       1.5, 1.0;   // Point 2
 
 // Interpolate
-auto result = janus::interpn<double>(points, values, xi);
+auto result = metis::interpn<double>(points, values, xi);
 // result(0) ~ 1.0, result(1) ~ 2.5
 ```
 
@@ -63,16 +63,16 @@ Returns `Eigen::Matrix<Scalar, Dynamic, 1>` -- vector of interpolated values at 
 
 ### Symbolic Table Values
 
-`interpn()` also accepts a `janus::SymbolicVector` of table values, keeping the lookup table coefficients inside the symbolic graph so they can be optimized directly:
+`interpn()` also accepts a `metis::SymbolicVector` of table values, keeping the lookup table coefficients inside the symbolic graph so they can be optimized directly:
 
 ```cpp
-auto [table_values, table_values_mx] = janus::sym_vec_pair("table", 4);
+auto [table_values, table_values_mx] = metis::sym_vec_pair("table", 4);
 
-janus::NumericMatrix xi(1, 2);
+metis::NumericMatrix xi(1, 2);
 xi << 0.25, 0.75;
 
-auto result = janus::interpn(points, table_values, xi,
-                             janus::InterpolationMethod::Linear);
+auto result = metis::interpn(points, table_values, xi,
+                             metis::InterpolationMethod::Linear);
 ```
 
 This parameterized-table path currently supports `Linear` and `BSpline`.
@@ -82,14 +82,14 @@ This parameterized-table path currently supports `Linear` and `BSpline`.
 
 ```cpp
 // Numeric
-janus::NumericVector  // = Eigen::VectorXd
-janus::NumericMatrix  // = Eigen::MatrixXd
-janus::NumericScalar  // = double
+metis::NumericVector  // = Eigen::VectorXd
+metis::NumericMatrix  // = Eigen::MatrixXd
+metis::NumericScalar  // = double
 
 // Symbolic
-janus::SymbolicVector // = Eigen::Matrix<casadi::MX, Dynamic, 1>
-janus::SymbolicMatrix // = Eigen::Matrix<casadi::MX, Dynamic, Dynamic>
-janus::SymbolicScalar // = casadi::MX
+metis::SymbolicVector // = Eigen::Matrix<casadi::MX, Dynamic, 1>
+metis::SymbolicMatrix // = Eigen::Matrix<casadi::MX, Dynamic, Dynamic>
+metis::SymbolicScalar // = casadi::MX
 ```
 
 ## Usage Patterns
@@ -143,13 +143,13 @@ x=1  d     e     f             ^  ^
 
 ```cpp
 // 2D grid: x = [0, 1], y = [0, 1, 2]
-janus::NumericVector x(2), y(3);
+metis::NumericVector x(2), y(3);
 x << 0, 1;
 y << 0, 1, 2;
 
 // Values: z(x,y) = x + y
 // Fortran order: iterate x first for each y
-janus::NumericVector values(6);
+metis::NumericVector values(6);
 values << 0,   // (0,0) = 0+0
           1,   // (1,0) = 1+0
           1,   // (0,1) = 0+1
@@ -165,16 +165,16 @@ When `fill_value` is not provided, out-of-bounds queries are **clamped** to the 
 ```cpp
 xi << -1.0, 0.5;  // x = -1 is outside [0, 1]
 
-auto result = janus::interpn<double>(points, values, xi);
+auto result = metis::interpn<double>(points, values, xi);
 // Effectively queries at (0.0, 0.5) - clamped to boundary
 ```
 
 Use `fill_value` to return a specific value for out-of-bounds queries:
 
 ```cpp
-auto result = janus::interpn<double>(
+auto result = metis::interpn<double>(
     points, values, xi,
-    janus::InterpolationMethod::Linear,
+    metis::InterpolationMethod::Linear,
     std::optional<double>(-999.0)  // Fill value
 );
 // Returns -999.0 for any query outside grid bounds
@@ -185,13 +185,13 @@ auto result = janus::interpn<double>(
 For optimization problems, clamping produces **zero gradients** outside bounds, which can stall solvers. The `ExtrapolationConfig` class provides linear extrapolation with optional safety bounds:
 
 ```cpp
-janus::NumericVector x(4), y(4);
+metis::NumericVector x(4), y(4);
 x << 0, 1, 2, 3;
 y << 0, 10, 40, 90;
 
-janus::Interpolator interp(x, y,
-    janus::InterpolationMethod::BSpline,
-    janus::ExtrapolationConfig::linear(0.0, 200.0));
+metis::Interpolator interp(x, y,
+    metis::InterpolationMethod::BSpline,
+    metis::ExtrapolationConfig::linear(0.0, 200.0));
 
 double val = interp(4.0);  // Extrapolates linearly from boundary slope
                             // then clamps result to [0, 200]
@@ -206,10 +206,10 @@ double val = interp(4.0);  // Extrapolates linearly from boundary slope
 Linear extrapolation works in symbolic mode with full AD support:
 
 ```cpp
-auto x_sym = janus::sym("x");
+auto x_sym = metis::sym("x");
 auto y_sym = interp(x_sym);
 
-auto dy_dx = janus::jacobian(y_sym, x_sym);
+auto dy_dx = metis::jacobian(y_sym, x_sym);
 ```
 
 N-D extrapolation is fully supported. For each dimension that falls outside bounds, the extrapolation adds a correction term:
@@ -219,11 +219,11 @@ result = interp(clamped_query) + sum( slope_d * (query_d - boundary_d) )
 ```
 
 ```cpp
-janus::Interpolator interp2d(points, values,
-    janus::InterpolationMethod::Linear,
-    janus::ExtrapolationConfig::linear(-10.0, 100.0));
+metis::Interpolator interp2d(points, values,
+    metis::InterpolationMethod::Linear,
+    metis::ExtrapolationConfig::linear(-10.0, 100.0));
 
-janus::NumericVector query(2);
+metis::NumericVector query(2);
 query << 3.0, 3.0;
 double result = interp2d(query);
 ```
@@ -233,27 +233,27 @@ double result = interp2d(query);
 ```cpp
 Eigen::MatrixXd data = load_csv("aero_coeffs.csv");
 
-janus::NumericVector mach = data.col(0).head(n_mach);
-janus::NumericVector alpha = data.col(1).head(n_alpha);
-janus::NumericVector CL = data.col(2);
+metis::NumericVector mach = data.col(0).head(n_mach);
+metis::NumericVector alpha = data.col(1).head(n_alpha);
+metis::NumericVector CL = data.col(2);
 
-std::vector<janus::NumericVector> points = {mach, alpha};
+std::vector<metis::NumericVector> points = {mach, alpha};
 
-auto cl = janus::interpn<double>(points, CL, query_pts);
+auto cl = metis::interpn<double>(points, CL, query_pts);
 ```
 
 ### Surrogate Model in Optimization
 
 ```cpp
 template <typename Scalar>
-Scalar drag_model(const janus::JanusVector<Scalar>& state) {
-    janus::JanusMatrix<Scalar> query(1, 2);
+Scalar drag_model(const metis::MetisVector<Scalar>& state) {
+    metis::MetisMatrix<Scalar> query(1, 2);
     query(0, 0) = state(0);  // Mach
     query(0, 1) = state(1);  // Angle of attack
 
-    auto cd = janus::interpn<Scalar>(
+    auto cd = metis::interpn<Scalar>(
         aero_grid, cd_values, query,
-        janus::InterpolationMethod::BSpline
+        metis::InterpolationMethod::BSpline
     );
     return cd(0);
 }
@@ -264,16 +264,16 @@ Scalar drag_model(const janus::JanusVector<Scalar>& state) {
 For optimization problems, use symbolic interpolation to embed lookups in your objective:
 
 ```cpp
-janus::SymbolicMatrix xi(1, 2);
-xi(0, 0) = janus::sym("x");
-xi(0, 1) = janus::sym("y");
+metis::SymbolicMatrix xi(1, 2);
+xi(0, 0) = metis::sym("x");
+xi(0, 1) = metis::sym("y");
 
-auto z_sym = janus::interpn<janus::SymbolicScalar>(
+auto z_sym = metis::interpn<metis::SymbolicScalar>(
     points, values, xi,
-    janus::InterpolationMethod::BSpline
+    metis::InterpolationMethod::BSpline
 );
 
-auto f = janus::Function("lookup", {xi(0,0), xi(0,1)}, {z_sym(0)});
+auto f = metis::Function("lookup", {xi(0,0), xi(0,1)}, {z_sym(0)});
 ```
 
 | Method | Symbolic Mode | Reason |
@@ -288,15 +288,15 @@ auto f = janus::Function("lookup", {xi(0,0), xi(0,1)}, {z_sym(0)});
 For unstructured point cloud data (non-gridded), use `ScatteredInterpolator`. It fits Radial Basis Functions (RBF) to scattered points, then resamples onto a grid for fast symbolic-compatible queries.
 
 ```cpp
-#include <janus/math/ScatteredInterpolator.hpp>
+#include <metis/math/ScatteredInterpolator.hpp>
 
-janus::NumericMatrix points(20, 2);  // 20 test points, 2D input
-janus::NumericVector values(20);
+metis::NumericMatrix points(20, 2);  // 20 test points, 2D input
+metis::NumericVector values(20);
 // ... fill in data ...
 
-janus::ScatteredInterpolator interp(points, values);
+metis::ScatteredInterpolator interp(points, values);
 
-janus::NumericVector query(2);
+metis::NumericVector query(2);
 query << 0.6, 5.0;
 double result = interp(query);
 ```
@@ -323,31 +323,31 @@ Check fit quality and use in symbolic mode:
 ```cpp
 std::cout << "RMS error: " << interp.reconstruction_error() << "\n";
 
-auto sym_x = janus::sym("x");
+auto sym_x = metis::sym("x");
 auto result = interp(sym_x);
-auto grad = janus::jacobian(result, sym_x);
+auto grad = metis::jacobian(result, sym_x);
 ```
 
 ## Advanced Usage
 
 ### High-Dimensional Interpolation
 
-Janus supports interpolation in arbitrary dimensions using **tensor product** extension:
+Metis supports interpolation in arbitrary dimensions using **tensor product** extension:
 
 ```cpp
-janus::NumericVector pts(3);
+metis::NumericVector pts(3);
 pts << 0.0, 1.0, 2.0;
 
-std::vector<janus::NumericVector> points(5, pts);  // 5 dimensions
+std::vector<metis::NumericVector> points(5, pts);  // 5 dimensions
 
 // Values: 3^5 = 243 grid points
-janus::NumericVector values(243);
+metis::NumericVector values(243);
 // ... fill values ...
 
-janus::NumericMatrix xi(1, 5);
+metis::NumericMatrix xi(1, 5);
 xi << 0.5, 0.5, 0.5, 0.5, 0.5;
 
-auto result = janus::interpn<double>(points, values, xi);
+auto result = metis::interpn<double>(points, values, xi);
 ```
 
 | Dimensions | Grid Size | Points | Memory |
@@ -365,7 +365,7 @@ Both numeric and symbolic interpolation use **CasADi** as the underlying engine:
 
 ```text
 +-----------------------------------------------------+
-|                   janus::interpn                     |
+|                   metis::interpn                     |
 +-----------------------------------------------------+
 |                                                      |
 |  Scalar = double        Scalar = casadi::MX          |
@@ -400,19 +400,19 @@ The Hermite method uses a **custom Catmull-Rom implementation** because CasADi d
 // p(t) = h00*y0 + h10*m0*h + h01*y1 + h11*m1*h
 ```
 
-This is intentionally **numeric-only** in Janus: symbolic Hermite queries throw an
+This is intentionally **numeric-only** in Metis: symbolic Hermite queries throw an
 `InterpolationError` because interval selection requires runtime comparisons that
 cannot be traced cleanly into a symbolic graph. For symbolic optimization workflows,
 use `InterpolationMethod::BSpline`.
 
 ## Diagnostics & Troubleshooting
 
-The interpolation functions throw `janus::InterpolationError` for invalid inputs:
+The interpolation functions throw `metis::InterpolationError` for invalid inputs:
 
 ```cpp
 try {
-    auto result = janus::interpn<double>(points, values, xi);
-} catch (const janus::InterpolationError& e) {
+    auto result = metis::interpn<double>(points, values, xi);
+} catch (const metis::InterpolationError& e) {
     std::cerr << "Interpolation failed: " << e.what() << std::endl;
 }
 ```
@@ -435,9 +435,9 @@ Scattered interpolation best practices:
 ## See Also
 
 - [Symbolic Computing Guide](symbolic_computing.md) - Working with CasADi symbolic types
-- [Numeric Computing Guide](numeric_computing.md) - Janus type system overview
+- [Numeric Computing Guide](numeric_computing.md) - Metis type system overview
 - [Optimization Guide](optimization.md) - Using interpolation as surrogate models
-- [`include/janus/math/Interpolate.hpp`](../../include/janus/math/Interpolate.hpp) - Full API implementation
-- [`include/janus/math/ScatteredInterpolator.hpp`](../../include/janus/math/ScatteredInterpolator.hpp) - Scattered interpolation API
+- [`include/metis/math/Interpolate.hpp`](../../include/metis/math/Interpolate.hpp) - Full API implementation
+- [`include/metis/math/ScatteredInterpolator.hpp`](../../include/metis/math/ScatteredInterpolator.hpp) - Scattered interpolation API
 - [`examples/interpolation/nd_interpolation_demo.cpp`](../../examples/interpolation/nd_interpolation_demo.cpp) - N-D interpolation example
 - [`examples/interpolation/scattered_interpolation_demo.cpp`](../../examples/interpolation/scattered_interpolation_demo.cpp) - Scattered data example

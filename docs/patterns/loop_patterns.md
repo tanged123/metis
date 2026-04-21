@@ -1,4 +1,4 @@
-# Loop Patterns in Janus
+# Loop Patterns in Metis
 
 ## The Core Distinction: Structural vs Dynamic
 
@@ -75,7 +75,7 @@ for (int i = 0; i < n; ++i) {
 // ✅ WORKS (Both modes):
 Scalar result = default_value;
 for (int i = 0; i < n; ++i) {
-    result = janus::where(values(i) > threshold,
+    result = metis::where(values(i) > threshold,
                          values(i),      // Use this value
                          result);        // Keep previous
 }
@@ -140,7 +140,7 @@ Scalar selective_sum(const Vector<Scalar>& values,
     
     for (int i = 0; i < values.size(); ++i) {
         // Use where() for conditions on values
-        sum += janus::where(values(i) > thresholds(i),
+        sum += metis::where(values(i) > thresholds(i),
                            values(i),
                            Scalar(0.0));
     }

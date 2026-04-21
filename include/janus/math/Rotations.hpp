@@ -5,14 +5,14 @@
  * @see Quaternion.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/math/Arithmetic.hpp"
-#include "janus/math/Linalg.hpp"
-#include "janus/math/Trig.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/math/Arithmetic.hpp"
+#include "metis/math/Linalg.hpp"
+#include "metis/math/Trig.hpp"
 
-namespace janus {
+namespace metis {
 
 // --- 2D Rotation Matrix ---
 /**
@@ -22,8 +22,8 @@ namespace janus {
  * @return 2x2 Rotation matrix
  */
 template <typename T> Mat2<T> rotation_matrix_2d(const T &theta) {
-    T c = janus::cos(theta);
-    T s = janus::sin(theta);
+    T c = metis::cos(theta);
+    T s = metis::sin(theta);
 
     Mat2<T> R;
     R(0, 0) = c;
@@ -42,8 +42,8 @@ template <typename T> Mat2<T> rotation_matrix_2d(const T &theta) {
  * @return 3x3 Rotation matrix
  */
 template <typename T> Mat3<T> rotation_matrix_3d(const T &theta, int axis) {
-    T c = janus::cos(theta);
-    T s = janus::sin(theta);
+    T c = metis::cos(theta);
+    T s = metis::sin(theta);
     T one = static_cast<T>(1.0);
     T zero = static_cast<T>(0.0);
 
@@ -85,12 +85,12 @@ template <typename T> Mat3<T> rotation_matrix_3d(const T &theta, int axis) {
  */
 template <typename T>
 Mat3<T> rotation_matrix_from_euler_angles(const T &roll, const T &pitch, const T &yaw) {
-    T sa = janus::sin(yaw);
-    T ca = janus::cos(yaw);
-    T sb = janus::sin(pitch);
-    T cb = janus::cos(pitch);
-    T sc = janus::sin(roll);
-    T cc = janus::cos(roll);
+    T sa = metis::sin(yaw);
+    T ca = metis::cos(yaw);
+    T sb = metis::sin(pitch);
+    T cb = metis::cos(pitch);
+    T sc = metis::sin(roll);
+    T cc = metis::cos(roll);
 
     Mat3<T> R;
     // Row 0
@@ -131,7 +131,7 @@ auto is_valid_rotation_matrix(const Eigen::MatrixBase<Derived> &a, double tol = 
     } else if (a.rows() == 2 && a.cols() == 2) {
         det_a = a(0, 0) * a(1, 1) - a(0, 1) * a(1, 0);
     } else {
-        det_a = janus::det(a);
+        det_a = metis::det(a);
     }
 
     // Identity check: a.T * a approx I
@@ -149,14 +149,14 @@ auto is_valid_rotation_matrix(const Eigen::MatrixBase<Derived> &a, double tol = 
         auto diff_eye = eye_approx - eye;
 
         // Use Frobenius norm for matrix error
-        auto err_ortho = janus::norm(diff_eye, NormType::Frobenius);
+        auto err_ortho = metis::norm(diff_eye, NormType::Frobenius);
 
         // Conditions
-        auto det_cond = (janus::abs(diff_det) < tol);
+        auto det_cond = (metis::abs(diff_det) < tol);
         auto ortho_cond = (err_ortho < tol);
 
         return det_cond && ortho_cond;
     }
 }
 
-} // namespace janus
+} // namespace metis

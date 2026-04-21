@@ -1,6 +1,6 @@
-janus-repo-setup.md
-Janus Repository Setup Instructions
-Project: Janus (Traceable C++ Numerical Framework)
+metis-repo-setup.md
+Metis Repository Setup Instructions
+Project: Metis (Traceable C++ Numerical Framework)
 Goal: Initialize a robust, modern C++20 repository with Nix flake management, CMake build system, and GitHub Actions CI.
 Philosophy: Reproducibility first. The development environment (Nix) must match CI exactly.
 1. Directory Structure Definition
@@ -9,7 +9,7 @@ Agent Action: Create the following directory hierarchy.
 Plaintext
 
 
-janus/
+metis/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml          # Main Nix-based CI workflow
@@ -18,15 +18,15 @@ janus/
 ├── examples/               # User-facing demo code
 │   └── basic_optimization.cpp
 ├── include/
-│   └── janus/
+│   └── metis/
 │       ├── core/           # Type aliases & Concepts
-│       │   ├── JanusTypes.hpp
-│       │   └── JanusConcepts.hpp
+│       │   ├── MetisTypes.hpp
+│       │   └── MetisConcepts.hpp
 │       ├── math/           # Math dispatch layer
-│       │   └── JanusMath.hpp
+│       │   └── MetisMath.hpp
 │       ├── linalg/         # Eigen integration
-│       │   └── JanusMatrix.hpp
-│       └── janus.hpp       # Main include file
+│       │   └── MetisMatrix.hpp
+│       └── metis.hpp       # Main include file
 ├── tests/                  # GoogleTest suite
 │   ├── CMakeLists.txt
 │   └── test_core.cpp
@@ -54,7 +54,7 @@ Nix
 
 
 {
-  description = "Janus: Traceable C++ Framework";
+  description = "Metis: Traceable C++ Framework";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
@@ -89,7 +89,7 @@ Nix
 Agent Action: Create the root build script.
 Requirements:
 Standard: Require CMAKE_CXX_STANDARD 20.
-Target: Define janus as an INTERFACE library (header-only).
+Target: Define metis as an INTERFACE library (header-only).
 Dependencies: Use find_package for Eigen3 and CasADi.
 Note: Nix provides these config files.
 Flags: Enable -Wall -Wextra -Werror to enforce quality.
@@ -99,7 +99,7 @@ CMake
 
 
 cmake_minimum_required(VERSION 3.20)
-project(janus VERSION 0.1.0 LANGUAGES CXX)
+project(metis VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -109,11 +109,11 @@ find_package(Eigen3 3.4 REQUIRED)
 find_package(casadi REQUIRED)
 
 # --- Main Library ---
-add_library(janus INTERFACE)
-target_include_directories(janus INTERFACE include)
+add_library(metis INTERFACE)
+target_include_directories(metis INTERFACE include)
 
 # Link Dependencies
-target_link_libraries(janus INTERFACE 
+target_link_libraries(metis INTERFACE 
     Eigen3::Eigen 
     casadi
 )
@@ -124,9 +124,9 @@ add_subdirectory(tests)
 
 
 4. The Foundation Code (Phase 1)
-Agent Action: Populate include/janus/core/ to establish the "Janus" identity.
-A. JanusConcepts.hpp
-Define the JanusScalar concept.
+Agent Action: Populate include/metis/core/ to establish the "Metis" identity.
+A. MetisConcepts.hpp
+Define the MetisScalar concept.
 
 C++
 
@@ -135,13 +135,13 @@ C++
 #include <concepts>
 #include <casadi/casadi.hpp>
 
-namespace janus {
+namespace metis {
     template <typename T>
-    concept JanusScalar = std::floating_point<T> || std::same_as<T, casadi::MX>;
+    concept MetisScalar = std::floating_point<T> || std::same_as<T, casadi::MX>;
 }
 
 
-B. JanusTypes.hpp
+B. MetisTypes.hpp
 Define the backend aliases.
 
 C++
@@ -151,7 +151,7 @@ C++
 #include <Eigen/Dense>
 #include <casadi/casadi.hpp>
 
-namespace janus {
+namespace metis {
     // Numeric Backend
     using NumericScalar = double;
     using NumericMatrix = Eigen::MatrixXd;
@@ -171,7 +171,7 @@ Snippet Reference:
 YAML
 
 
-name: Janus CI
+name: Metis CI
 
 on: [push, pull_request]
 
@@ -202,7 +202,7 @@ C++
 
 // tests/test_core.cpp
 #include <gtest/gtest.h>
-#include "janus/core/JanusConcepts.hpp"
+#include "metis/core/MetisConcepts.hpp"
 
 // Generic test logic
 template <typename Scalar>
@@ -229,6 +229,6 @@ Init: Initialize Git repository.
 Nix: Write flake.nix and validate with nix develop (ensure shells load).
 Skeleton: Create directory tree and empty files.
 CMake: Write CMakeLists.txt configurations.
-Code: Implement the JanusScalar concept (Phase 1).
+Code: Implement the MetisScalar concept (Phase 1).
 Test: Write and pass the first dual-mode test using ctest.
 CI: Commit workflows and verify green checkmark on GitHub.

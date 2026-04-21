@@ -4,14 +4,14 @@
  */
 
 #include <gtest/gtest.h>
-#include <janus/core/Function.hpp>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/math/OrthogonalPolynomials.hpp>
-#include <janus/math/PolynomialChaos.hpp>
+#include <metis/core/Function.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/math/OrthogonalPolynomials.hpp>
+#include <metis/math/PolynomialChaos.hpp>
 
 #include <cmath>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 

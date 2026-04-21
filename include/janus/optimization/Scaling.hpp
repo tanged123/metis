@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Severity used by Opti scaling diagnostics
@@ -138,4 +138,4 @@ struct ScalingReport {
     bool has_issues() const { return !issues.empty(); }
 };
 
-} // namespace janus
+} // namespace metis

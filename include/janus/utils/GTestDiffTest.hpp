@@ -10,9 +10,9 @@
  */
 
 #include <gtest/gtest.h>
-#include <janus/utils/DiffTestHarness.hpp>
+#include <metis/utils/DiffTestHarness.hpp>
 
-namespace janus::diff_test {
+namespace metis::diff_test {
 
 /**
  * @brief Assert that a dual-mode function compiles symbolically and that
@@ -20,8 +20,8 @@ namespace janus::diff_test {
  *
  * @code
  * TEST(MyTests, FloorDualMode) {
- *     janus::diff_test::expect_dual_mode(
- *         [](auto x) { return janus::floor(x); },
+ *     metis::diff_test::expect_dual_mode(
+ *         [](auto x) { return metis::floor(x); },
  *         {{0.5}, {1.7}, {-2.3}}
  *     );
  * }
@@ -41,8 +41,8 @@ void expect_dual_mode(Func &&f, const std::vector<std::vector<double>> &test_poi
  *
  * @code
  * TEST(MyTests, SinDifferentiable) {
- *     janus::diff_test::expect_differentiable(
- *         [](auto x) { return janus::sin(x); },
+ *     metis::diff_test::expect_differentiable(
+ *         [](auto x) { return metis::sin(x); },
  *         {{0.5}, {1.0}, {2.0}}
  *     );
  * }
@@ -57,4 +57,4 @@ void expect_differentiable(Func &&f, const std::vector<std::vector<double>> &tes
     EXPECT_TRUE(result.jacobian_matches) << result.failure_detail;
 }
 
-} // namespace janus::diff_test
+} // namespace metis::diff_test

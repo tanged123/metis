@@ -1,15 +1,15 @@
-/// @file janus.hpp
-/// @brief Umbrella header that includes the entire Janus public API
+/// @file metis.hpp
+/// @brief Umbrella header that includes the entire Metis public API
 #pragma once
 
 #include "core/Diagnostics.hpp"
 #include "core/Function.hpp"
-#include "core/JanusConcepts.hpp"
-#include "core/JanusIO.hpp"
-#include "core/JanusTypes.hpp"
+#include "core/MetisConcepts.hpp"
+#include "core/MetisIO.hpp"
+#include "core/MetisTypes.hpp"
 #include "core/Sparsity.hpp"
 #include "core/StructuralTransforms.hpp"
-#include "math/JanusMath.hpp"
+#include "math/MetisMath.hpp"
 #include "optimization/BirkhoffPseudospectral.hpp"
 #include "optimization/Collocation.hpp"
 #include "optimization/MultiShooting.hpp"

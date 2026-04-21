@@ -2,7 +2,7 @@
  * @file aircraft_attitudes.cpp
  * @brief Graduation Example: Aircraft Attitude Dynamics
  *
- * Demonstrates Phase 3 Janus features:
+ * Demonstrates Phase 3 Metis features:
  * - Euler angles and rotation matrices
  * - Discrete integration for state propagation
  * - Finite differences for rate estimation
@@ -17,14 +17,14 @@
 
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <numbers>
 
-using namespace janus;
+using namespace metis;
 
 int main() {
     std::cout << "=== Aircraft Attitude Dynamics ===" << std::endl;
-    std::cout << "Demonstrating Phase 3 Janus features\n" << std::endl;
+    std::cout << "Demonstrating Phase 3 Metis features\n" << std::endl;
 
     // --- 1. Define time history ---
     constexpr int N = 51;                    // Time steps
@@ -40,7 +40,7 @@ int main() {
     // --- 2. Define attitude angles (Euler: roll, pitch, yaw) ---
     std::cout << "\n2. Attitude Profile (Coordinated Turn)" << std::endl;
 
-    JanusVector<double> roll(N), pitch(N), yaw(N);
+    MetisVector<double> roll(N), pitch(N), yaw(N);
 
     // Maneuver phases:
     // Phase 1 (0-1s): Roll into 30° bank
@@ -150,7 +150,7 @@ int main() {
     auto yaw_sym = sym("yaw");
 
     // Simple model: yaw = f(roll) via turn coordination
-    auto yaw_model = yaw_sym + 0.5 * janus::sin(roll_sym);
+    auto yaw_model = yaw_sym + 0.5 * metis::sin(roll_sym);
 
     // Compute Jacobian
     auto J = jacobian(yaw_model, roll_sym);
@@ -159,7 +159,7 @@ int main() {
     // Evaluate at specific roll angle
     Function eval_jac("eval_jac", {roll_sym}, {J});
     auto J_val = eval_jac(bank_max);
-    std::cout << "   At roll=30°: d(yaw)/d(roll) = " << janus::eval(J_val[0](0, 0)) << std::endl;
+    std::cout << "   At roll=30°: d(yaw)/d(roll) = " << metis::eval(J_val[0](0, 0)) << std::endl;
 
     // --- 8. Summary table ---
     std::cout << "\n8. Maneuver Summary Table" << std::endl;

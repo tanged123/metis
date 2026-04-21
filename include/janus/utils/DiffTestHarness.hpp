@@ -17,18 +17,18 @@
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
-#include <janus/core/Function.hpp>
-#include <janus/core/JanusIO.hpp>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/math/AutoDiff.hpp>
 #include <limits>
+#include <metis/core/Function.hpp>
+#include <metis/core/MetisIO.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/math/AutoDiff.hpp>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
 
-namespace janus::diff_test {
+namespace metis::diff_test {
 
 // ============================================================================
 // Configuration
@@ -252,7 +252,7 @@ DualModeResult verify_dual_mode_at_point(Func &&f, const std::vector<double> &po
     std::vector<SymbolicScalar> sym_vars;
     sym_vars.reserve(static_cast<size_t>(n));
     for (int i = 0; i < n; ++i) {
-        sym_vars.push_back(janus::sym("x" + std::to_string(i)));
+        sym_vars.push_back(metis::sym("x" + std::to_string(i)));
     }
 
     try {
@@ -271,7 +271,7 @@ DualModeResult verify_dual_mode_at_point(Func &&f, const std::vector<double> &po
         }
         casadi::MX out_cat = casadi::MX::vertcat(mx_outputs);
 
-        janus::Function func(input_args, {SymbolicArg(out_cat)});
+        metis::Function func(input_args, {SymbolicArg(out_cat)});
         auto results = func(point);
         Eigen::VectorXd symbolic_output =
             Eigen::Map<Eigen::VectorXd>(results[0].data(), results[0].rows() * results[0].cols());
@@ -400,7 +400,7 @@ DiffTestResult verify_differentiable_at_point(Func &&f, const std::vector<double
     std::vector<SymbolicScalar> sym_vars;
     sym_vars.reserve(static_cast<size_t>(n));
     for (int i = 0; i < n; ++i) {
-        sym_vars.push_back(janus::sym("x" + std::to_string(i)));
+        sym_vars.push_back(metis::sym("x" + std::to_string(i)));
     }
 
     try {
@@ -409,10 +409,10 @@ DiffTestResult verify_differentiable_at_point(Func &&f, const std::vector<double
         std::vector<SymbolicArg> input_args(sym_vars.begin(), sym_vars.end());
 
         // Compute symbolic Jacobian
-        auto J_sym = janus::jacobian(output_args, input_args);
+        auto J_sym = metis::jacobian(output_args, input_args);
 
         // Wrap in Function and evaluate
-        janus::Function J_func(input_args, {SymbolicArg(J_sym)});
+        metis::Function J_func(input_args, {SymbolicArg(J_sym)});
         auto J_results = J_func(point);
         result.ad_jacobian = J_results[0];
 
@@ -489,7 +489,7 @@ DiffTestResult verify_differentiable_at_point(Func &&f, const std::vector<double
  *   2. Symbolic output matches numeric output within value_tol
  *   3. AD Jacobian matches FD Jacobian within jac_rtol/jac_atol
  *
- * @tparam Func Lambda type: auto f(Scalar x1, ..., Scalar xN) -> Scalar or JanusVector<Scalar>
+ * @tparam Func Lambda type: auto f(Scalar x1, ..., Scalar xN) -> Scalar or MetisVector<Scalar>
  * @param f The dual-mode function to test
  * @param test_points Vector of test points, each a vector of doubles
  * @param opts Tolerance and step size options
@@ -538,4 +538,4 @@ DiffTestResult verify_differentiable(Func &&f, const std::vector<std::vector<dou
     return overall;
 }
 
-} // namespace janus::diff_test
+} // namespace metis::diff_test

@@ -5,11 +5,11 @@
  * @see Quadrature.hpp, OrthogonalPolynomials.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/math/Arithmetic.hpp"
-#include "janus/math/OrthogonalPolynomials.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/math/Arithmetic.hpp"
+#include "metis/math/OrthogonalPolynomials.hpp"
 #include <Eigen/SVD>
 #include <algorithm>
 #include <cmath>
@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Univariate Askey-scheme family used for a PCE input dimension.
@@ -129,7 +129,7 @@ inline void validate_dimension(const PolynomialChaosDimension &dimension,
     }
 }
 
-template <JanusScalar Scalar> Scalar raw_hermite_polynomial(int degree, const Scalar &x) {
+template <MetisScalar Scalar> Scalar raw_hermite_polynomial(int degree, const Scalar &x) {
     validate_degree(degree, "raw_hermite_polynomial");
 
     if (degree == 0) {
@@ -149,7 +149,7 @@ template <JanusScalar Scalar> Scalar raw_hermite_polynomial(int degree, const Sc
     return h_n;
 }
 
-template <JanusScalar Scalar> Scalar raw_legendre_polynomial(int degree, const Scalar &x) {
+template <MetisScalar Scalar> Scalar raw_legendre_polynomial(int degree, const Scalar &x) {
     validate_degree(degree, "raw_legendre_polynomial");
 
     if constexpr (std::floating_point<Scalar>) {
@@ -174,7 +174,7 @@ template <JanusScalar Scalar> Scalar raw_legendre_polynomial(int degree, const S
     }
 }
 
-template <JanusScalar Scalar>
+template <MetisScalar Scalar>
 Scalar raw_jacobi_polynomial(int degree, const Scalar &x, double alpha, double beta) {
     validate_degree(degree, "raw_jacobi_polynomial");
     validate_dimension(jacobi_dimension(alpha, beta), "raw_jacobi_polynomial");
@@ -204,7 +204,7 @@ Scalar raw_jacobi_polynomial(int degree, const Scalar &x, double alpha, double b
     return p_n;
 }
 
-template <JanusScalar Scalar>
+template <MetisScalar Scalar>
 Scalar raw_laguerre_polynomial(int degree, const Scalar &x, double alpha) {
     validate_degree(degree, "raw_laguerre_polynomial");
     validate_dimension(laguerre_dimension(alpha), "raw_laguerre_polynomial");
@@ -321,15 +321,15 @@ inline std::vector<std::vector<int>> generate_multi_indices(int dim, int order,
     return indices;
 }
 
-template <JanusScalar Scalar>
-JanusVector<Scalar> apply_operator(const NumericMatrix &op, const JanusVector<Scalar> &values,
+template <MetisScalar Scalar>
+MetisVector<Scalar> apply_operator(const NumericMatrix &op, const MetisVector<Scalar> &values,
                                    const std::string &context) {
     if (values.rows() != op.cols()) {
         throw InvalidArgument(context + ": sample value size must match the number of rows in the "
                                         "design matrix");
     }
 
-    JanusVector<Scalar> out(op.rows());
+    MetisVector<Scalar> out(op.rows());
     for (Eigen::Index i = 0; i < op.rows(); ++i) {
         Scalar accum = Scalar(0.0);
         for (Eigen::Index j = 0; j < op.cols(); ++j) {
@@ -340,15 +340,15 @@ JanusVector<Scalar> apply_operator(const NumericMatrix &op, const JanusVector<Sc
     return out;
 }
 
-template <JanusScalar Scalar>
-JanusMatrix<Scalar> apply_operator(const NumericMatrix &op, const JanusMatrix<Scalar> &values,
+template <MetisScalar Scalar>
+MetisMatrix<Scalar> apply_operator(const NumericMatrix &op, const MetisMatrix<Scalar> &values,
                                    const std::string &context) {
     if (values.rows() != op.cols()) {
         throw InvalidArgument(context + ": sample value rows must match the number of rows in the "
                                         "design matrix");
     }
 
-    JanusMatrix<Scalar> out(op.rows(), values.cols());
+    MetisMatrix<Scalar> out(op.rows(), values.cols());
     for (Eigen::Index i = 0; i < op.rows(); ++i) {
         for (Eigen::Index col = 0; col < values.cols(); ++col) {
             Scalar accum = Scalar(0.0);
@@ -409,7 +409,7 @@ inline NumericMatrix regression_operator(const NumericMatrix &design_matrix, dou
  * - Legendre/Jacobi: support [-1, 1]
  * - Laguerre: support [0, inf)
  */
-template <JanusScalar Scalar>
+template <MetisScalar Scalar>
 Scalar pce_polynomial(const PolynomialChaosDimension &dimension, int degree, const Scalar &x,
                       bool normalized = true) {
     detail::validate_degree(degree, "pce_polynomial");
@@ -436,7 +436,7 @@ Scalar pce_polynomial(const PolynomialChaosDimension &dimension, int degree, con
     }
 
     const double norm = detail::squared_norm_probability(dimension, degree);
-    return value / janus::sqrt(Scalar(norm));
+    return value / metis::sqrt(Scalar(norm));
 }
 
 /**
@@ -501,14 +501,14 @@ class PolynomialChaosBasis {
 
     const NumericVector &squared_norms() const { return squared_norms_; }
 
-    template <JanusScalar Scalar>
-    JanusVector<Scalar> evaluate(const JanusVector<Scalar> &point) const {
+    template <MetisScalar Scalar>
+    MetisVector<Scalar> evaluate(const MetisVector<Scalar> &point) const {
         if (point.size() != dimension()) {
             throw InvalidArgument("PolynomialChaosBasis::evaluate(point): point dimension must "
                                   "match the basis dimension");
         }
 
-        JanusVector<Scalar> values(size());
+        MetisVector<Scalar> values(size());
         for (int term_idx = 0; term_idx < size(); ++term_idx) {
             Scalar value = Scalar(1.0);
             for (int axis = 0; axis < dimension(); ++axis) {
@@ -550,11 +550,11 @@ class PolynomialChaosBasis {
  * @param sample_values Function values at sample points
  * @return PCE coefficient vector
  */
-template <JanusScalar Scalar>
-JanusVector<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basis,
+template <MetisScalar Scalar>
+MetisVector<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basis,
                                                 const NumericMatrix &samples,
                                                 const NumericVector &weights,
-                                                const JanusVector<Scalar> &sample_values) {
+                                                const MetisVector<Scalar> &sample_values) {
     detail::validate_samples(samples, basis.dimension(), "pce_projection_coefficients");
     if (weights.size() != samples.rows()) {
         throw InvalidArgument("pce_projection_coefficients: weights size must match the number of "
@@ -566,7 +566,7 @@ JanusVector<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basi
     }
 
     const NumericMatrix design = basis.evaluate(samples);
-    JanusVector<Scalar> coeffs(basis.size());
+    MetisVector<Scalar> coeffs(basis.size());
     for (int term_idx = 0; term_idx < basis.size(); ++term_idx) {
         Scalar accum = Scalar(0.0);
         for (Eigen::Index sample_idx = 0; sample_idx < samples.rows(); ++sample_idx) {
@@ -586,11 +586,11 @@ JanusVector<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basi
  * @param sample_values Function values at sample points (matrix)
  * @return PCE coefficient matrix
  */
-template <JanusScalar Scalar>
-JanusMatrix<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basis,
+template <MetisScalar Scalar>
+MetisMatrix<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basis,
                                                 const NumericMatrix &samples,
                                                 const NumericVector &weights,
-                                                const JanusMatrix<Scalar> &sample_values) {
+                                                const MetisMatrix<Scalar> &sample_values) {
     detail::validate_samples(samples, basis.dimension(), "pce_projection_coefficients");
     if (weights.size() != samples.rows()) {
         throw InvalidArgument("pce_projection_coefficients: weights size must match the number of "
@@ -602,7 +602,7 @@ JanusMatrix<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basi
     }
 
     const NumericMatrix design = basis.evaluate(samples);
-    JanusMatrix<Scalar> coeffs(basis.size(), sample_values.cols());
+    MetisMatrix<Scalar> coeffs(basis.size(), sample_values.cols());
     for (int term_idx = 0; term_idx < basis.size(); ++term_idx) {
         for (Eigen::Index col = 0; col < sample_values.cols(); ++col) {
             Scalar accum = Scalar(0.0);
@@ -625,10 +625,10 @@ JanusMatrix<Scalar> pce_projection_coefficients(const PolynomialChaosBasis &basi
  * @param ridge Ridge regularization parameter
  * @return PCE coefficient vector
  */
-template <JanusScalar Scalar>
-JanusVector<Scalar>
+template <MetisScalar Scalar>
+MetisVector<Scalar>
 pce_regression_coefficients(const PolynomialChaosBasis &basis, const NumericMatrix &samples,
-                            const JanusVector<Scalar> &sample_values, double ridge = 1e-12) {
+                            const MetisVector<Scalar> &sample_values, double ridge = 1e-12) {
     detail::validate_samples(samples, basis.dimension(), "pce_regression_coefficients");
     const NumericMatrix design = basis.evaluate(samples);
     const NumericMatrix op =
@@ -645,10 +645,10 @@ pce_regression_coefficients(const PolynomialChaosBasis &basis, const NumericMatr
  * @param ridge Ridge regularization parameter
  * @return PCE coefficient matrix
  */
-template <JanusScalar Scalar>
-JanusMatrix<Scalar>
+template <MetisScalar Scalar>
+MetisMatrix<Scalar>
 pce_regression_coefficients(const PolynomialChaosBasis &basis, const NumericMatrix &samples,
-                            const JanusMatrix<Scalar> &sample_values, double ridge = 1e-12) {
+                            const MetisMatrix<Scalar> &sample_values, double ridge = 1e-12) {
     detail::validate_samples(samples, basis.dimension(), "pce_regression_coefficients");
     const NumericMatrix design = basis.evaluate(samples);
     const NumericMatrix op =
@@ -662,7 +662,7 @@ pce_regression_coefficients(const PolynomialChaosBasis &basis, const NumericMatr
  * @param coefficients PCE coefficient vector
  * @return Mean value
  */
-template <JanusScalar Scalar> Scalar pce_mean(const JanusVector<Scalar> &coefficients) {
+template <MetisScalar Scalar> Scalar pce_mean(const MetisVector<Scalar> &coefficients) {
     if (coefficients.size() == 0) {
         throw InvalidArgument("pce_mean: coefficient vector must be non-empty");
     }
@@ -676,8 +676,8 @@ template <JanusScalar Scalar> Scalar pce_mean(const JanusVector<Scalar> &coeffic
  * @param coefficients PCE coefficient vector
  * @return Variance
  */
-template <JanusScalar Scalar>
-Scalar pce_variance(const PolynomialChaosBasis &basis, const JanusVector<Scalar> &coefficients) {
+template <MetisScalar Scalar>
+Scalar pce_variance(const PolynomialChaosBasis &basis, const MetisVector<Scalar> &coefficients) {
     if (coefficients.size() != basis.size()) {
         throw InvalidArgument("pce_variance: coefficient vector size must match the basis size");
     }
@@ -689,4 +689,4 @@ Scalar pce_variance(const PolynomialChaosBasis &basis, const JanusVector<Scalar>
     return variance;
 }
 
-} // namespace janus
+} // namespace metis

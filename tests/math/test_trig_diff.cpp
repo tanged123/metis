@@ -1,25 +1,25 @@
 #include <gtest/gtest.h>
-#include <janus/math/Arithmetic.hpp>
-#include <janus/math/Trig.hpp>
-#include <janus/utils/GTestDiffTest.hpp>
+#include <metis/math/Arithmetic.hpp>
+#include <metis/math/Trig.hpp>
+#include <metis/utils/GTestDiffTest.hpp>
 
 // ============================================================================
 // Basic Trigonometric Functions
 // ============================================================================
 
 TEST(TrigDiffTests, Sin) {
-    janus::diff_test::expect_differentiable([](auto x) { return janus::sin(x); },
+    metis::diff_test::expect_differentiable([](auto x) { return metis::sin(x); },
                                             {{0.0}, {0.5}, {1.0}, {2.0}, {-1.0}});
 }
 
 TEST(TrigDiffTests, Cos) {
-    janus::diff_test::expect_differentiable([](auto x) { return janus::cos(x); },
+    metis::diff_test::expect_differentiable([](auto x) { return metis::cos(x); },
                                             {{0.0}, {0.5}, {1.0}, {2.0}, {-1.0}});
 }
 
 TEST(TrigDiffTests, Tan) {
     // Avoid pi/2 where tan is undefined
-    janus::diff_test::expect_differentiable([](auto x) { return janus::tan(x); },
+    metis::diff_test::expect_differentiable([](auto x) { return metis::tan(x); },
                                             {{0.0}, {0.3}, {0.7}, {-0.5}});
 }
 
@@ -29,23 +29,23 @@ TEST(TrigDiffTests, Tan) {
 
 TEST(TrigDiffTests, Asin) {
     // Domain: (-1, 1), avoid endpoints where derivative is infinite
-    janus::diff_test::expect_differentiable([](auto x) { return janus::asin(x); },
+    metis::diff_test::expect_differentiable([](auto x) { return metis::asin(x); },
                                             {{-0.5}, {0.0}, {0.3}, {0.7}});
 }
 
 TEST(TrigDiffTests, Acos) {
-    janus::diff_test::expect_differentiable([](auto x) { return janus::acos(x); },
+    metis::diff_test::expect_differentiable([](auto x) { return metis::acos(x); },
                                             {{-0.5}, {0.0}, {0.3}, {0.7}});
 }
 
 TEST(TrigDiffTests, Atan) {
-    janus::diff_test::expect_differentiable([](auto x) { return janus::atan(x); },
+    metis::diff_test::expect_differentiable([](auto x) { return metis::atan(x); },
                                             {{-2.0}, {-0.5}, {0.0}, {0.5}, {2.0}});
 }
 
 TEST(TrigDiffTests, Atan2) {
     // Avoid origin and negative x-axis where atan2 is non-smooth
-    janus::diff_test::expect_differentiable([](auto y, auto x) { return janus::atan2(y, x); },
+    metis::diff_test::expect_differentiable([](auto y, auto x) { return metis::atan2(y, x); },
                                             {{1.0, 1.0}, {1.0, 2.0}, {2.0, 1.0}, {-1.0, 2.0}});
 }
 
@@ -54,19 +54,19 @@ TEST(TrigDiffTests, Atan2) {
 // ============================================================================
 
 TEST(TrigDiffTests, Asinh) {
-    janus::diff_test::expect_differentiable([](auto x) { return janus::asinh(x); },
+    metis::diff_test::expect_differentiable([](auto x) { return metis::asinh(x); },
                                             {{-2.0}, {-0.5}, {0.0}, {0.5}, {2.0}});
 }
 
 TEST(TrigDiffTests, Acosh) {
     // Domain: [1, inf), avoid x=1 where derivative is infinite
-    janus::diff_test::expect_differentiable([](auto x) { return janus::acosh(x); },
+    metis::diff_test::expect_differentiable([](auto x) { return metis::acosh(x); },
                                             {{1.1}, {1.5}, {2.0}, {3.0}});
 }
 
 TEST(TrigDiffTests, Atanh) {
     // Domain: (-1, 1), avoid endpoints
-    janus::diff_test::expect_differentiable([](auto x) { return janus::atanh(x); },
+    metis::diff_test::expect_differentiable([](auto x) { return metis::atanh(x); },
                                             {{-0.5}, {0.0}, {0.3}, {0.7}});
 }
 
@@ -76,18 +76,18 @@ TEST(TrigDiffTests, Atanh) {
 
 TEST(TrigDiffTests, SinCosComposition) {
     // f(x) = sin(x) * cos(x) = 0.5 * sin(2x)
-    janus::diff_test::expect_differentiable([](auto x) { return janus::sin(x) * janus::cos(x); },
+    metis::diff_test::expect_differentiable([](auto x) { return metis::sin(x) * metis::cos(x); },
                                             {{0.0}, {0.5}, {1.0}, {2.0}});
 }
 
 TEST(TrigDiffTests, TanIdentity) {
     // f(x) = sin(x) / cos(x) should equal tan(x)
-    janus::diff_test::expect_differentiable([](auto x) { return janus::sin(x) / janus::cos(x); },
+    metis::diff_test::expect_differentiable([](auto x) { return metis::sin(x) / metis::cos(x); },
                                             {{0.3}, {0.7}, {-0.5}});
 }
 
 TEST(TrigDiffTests, AtanSqrt) {
     // f(x) = atan(sqrt(x))
-    janus::diff_test::expect_differentiable([](auto x) { return janus::atan(janus::sqrt(x)); },
+    metis::diff_test::expect_differentiable([](auto x) { return metis::atan(metis::sqrt(x)); },
                                             {{0.25}, {1.0}, {4.0}});
 }

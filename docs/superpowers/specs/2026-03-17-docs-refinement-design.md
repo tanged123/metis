@@ -1,14 +1,14 @@
-# Docs Refinement Design -- Janus v2.0.0
+# Docs Refinement Design -- Metis v2.0.0
 
 ## Context
 
-Janus v2.0.0 was just released with a massive feature PR adding polynomial chaos, quadrature, sparse derivative pipelines, sensitivity regime selection, matrix-free HVPs, multi-method root finding, implicit function builders, structural diagnostics/transforms, second-order and mass-matrix integrators, policy-driven linear solves, scaling diagnostics, and many examples/tests. Documentation needs a consistency and usability pass.
+Metis v2.0.0 was just released with a massive feature PR adding polynomial chaos, quadrature, sparse derivative pipelines, sensitivity regime selection, matrix-free HVPs, multi-method root finding, implicit function builders, structural diagnostics/transforms, second-order and mass-matrix integrators, policy-driven linear solves, scaling diagnostics, and many examples/tests. Documentation needs a consistency and usability pass.
 
 **Audience priority:** Contributors (C) > New users (A) > Upgraders (B)
 
 ## 1. Doxygen Comment Standard
 
-Standardize comment style across all 42 headers in `include/janus/` (core: 8, math: 21, optimization: 10, utils: 1, top-level: 2).
+Standardize comment style across all 42 headers in `include/metis/` (core: 8, math: 21, optimization: 10, utils: 1, top-level: 2).
 
 ### Format
 
@@ -16,7 +16,7 @@ Standardize comment style across all 42 headers in `include/janus/` (core: 8, ma
 /// @file Interpolate.hpp
 /// @brief N-dimensional interpolation (Linear, Hermite, BSpline, Nearest)
 
-namespace janus {
+namespace metis {
 
 /// @brief One-line description of the class/struct
 ///
@@ -41,7 +41,7 @@ enum class InterpolationMethod {
     Nearest   ///< Nearest-neighbor lookup
 };
 
-} // namespace janus
+} // namespace metis
 ```
 
 ### Rules
@@ -103,7 +103,7 @@ Common workflows and recipes. Real-world-ish examples with explanation.
 - Every guide gets H1 -> Quick Start -> Core API -> Usage Patterns flow
 - The one-paragraph intro under H1 replaces any existing "Overview" or "Introduction" sections -- do not keep both
 - "See Also" section is mandatory -- minimum one link to another user guide AND one link to an example or header file
-- Code examples use `janus::` namespace (not `using namespace janus`)
+- Code examples use `metis::` namespace (not `using namespace metis`)
 - Guides that don't need Advanced/Diagnostics sections omit them
 - No theory/math preamble before Quick Start
 
@@ -114,7 +114,7 @@ Full rewrite as contributor-first landing page.
 ### Structure
 
 ```
-# Janus
+# Metis
 
 Elevator pitch (one paragraph).
 
@@ -169,12 +169,12 @@ Code style, how to add tests/examples, PR workflow.
 - Add cross-references to new user guides
 - Target ~150 lines max (currently 89 -- growth ceiling, not reduction target)
 
-### janus_usage_guide.md
+### metis_usage_guide.md
 
 - Audit against v2.0.0 API -- fix stale signatures, removed types, renamed enums
 - Add sections for new features not currently covered
 - Cross-reference user guides rather than duplicating content
-- Standardize code examples to `janus::` namespace
+- Standardize code examples to `metis::` namespace
 - Serve as a map, not a manual -- trim comprehensive API tables and replace with brief descriptions that link to the relevant user guide for details
 
 ## 5. Doxyfile Configuration
@@ -182,7 +182,7 @@ Code style, how to add tests/examples, PR workflow.
 - Add `PROJECT_NUMBER = 2.0.0`
 - Verify `PROJECT_BRIEF` is set
 - Ensure `USE_MDFILE_AS_MAINPAGE = README.md`
-- Full intended INPUT: `README.md include docs/design_overview.md docs/janus_usage_guide.md docs/user_guides docs/patterns`
+- Full intended INPUT: `README.md include docs/design_overview.md docs/metis_usage_guide.md docs/user_guides docs/patterns`
 - EXCLUDE_PATTERNS: `docs/implementation_plans/* docs/saved_work/* docs/design_reviews/* docs/examples/*`
 - Keep `EXTRACT_ALL=YES`
 - Verify `GENERATE_TREEVIEW=YES`
@@ -200,7 +200,7 @@ Code style, how to add tests/examples, PR workflow.
 | User guides | Every guide has H1, Quick Start, Core API, Usage Patterns, See Also sections |
 | README | Follows the approved structure; builds contributor-first flow |
 | design_overview.md | Covers all v2.0.0 modules; <= 150 lines |
-| janus_usage_guide.md | No stale API references; links to user guides instead of duplicating API tables |
+| metis_usage_guide.md | No stale API references; links to user guides instead of duplicating API tables |
 | Doxyfile | Only specified keys changed; generates clean HTML |
 
 ## Scope Exclusions

@@ -1,6 +1,6 @@
-# Janus Phase 5: Advanced Math Utilities Implementation Plan
+# Metis Phase 5: Advanced Math Utilities Implementation Plan
 
-**Goal**: Extend Janus with advanced numerical methods for N-dimensional interpolation, root finding, and B-spline support.
+**Goal**: Extend Metis with advanced numerical methods for N-dimensional interpolation, root finding, and B-spline support.
 **Status**: Planning Draft
 **Created**: 2025-12-15
 
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Phase 5 builds upon the solid foundation of Janus beta 1.0 by adding advanced mathematical utilities commonly needed in engineering and scientific computing. This phase focuses on:
+Phase 5 builds upon the solid foundation of Metis beta 1.0 by adding advanced mathematical utilities commonly needed in engineering and scientific computing. This phase focuses on:
 
 1. **N-Dimensional Interpolation** — Extend beyond 1D with `interpn` for gridded data
 2. **B-Spline Interpolation** — Smooth, differentiable interpolation via CasADi
@@ -16,7 +16,7 @@ Phase 5 builds upon the solid foundation of Janus beta 1.0 by adding advanced ma
 4. **Enhanced 1D Interpolation** — Additional methods (cubic, nearest) for existing interpolator
 
 > [!IMPORTANT]
-> These features extend Janus's numerical toolkit significantly. N-D interpolation and root finding are essential for lookup tables and implicit constraint handling in trajectory optimization.
+> These features extend Metis's numerical toolkit significantly. N-D interpolation and root finding are essential for lookup tables and implicit constraint handling in trajectory optimization.
 
 ---
 
@@ -26,10 +26,10 @@ Phase 5 builds upon the solid foundation of Janus beta 1.0 by adding advanced ma
 
 | Module | Status | Features |
 |--------|--------|----------|
-| `Interpolate.hpp` | ✅ Basic | 1D linear interpolation with `JanusInterpolator` |
+| `Interpolate.hpp` | ✅ Basic | 1D linear interpolation with `MetisInterpolator` |
 | `Integrate.hpp` | ✅ Complete | `quad`, `solve_ivp` with symbolic support |
 | `Quaternion.hpp` | ✅ Complete | Full quaternion algebra with `slerp` |
-| `JanusIO.hpp` | ✅ Complete | Graph visualization with DOT export |
+| `MetisIO.hpp` | ✅ Complete | Graph visualization with DOT export |
 | Code Coverage | ✅ Complete | >95% line coverage achieved |
 
 ### ❌ Phase 5 Scope
@@ -47,10 +47,10 @@ Phase 5 builds upon the solid foundation of Janus beta 1.0 by adding advanced ma
 ## Proposed Implementation Structure
 
 ```
-include/janus/math/
+include/metis/math/
 ├── Interpolate.hpp       # [EXTEND] Add interpn, InterpolationMethod enum
 ├── RootFinding.hpp       # [NEW] Root finding wrapper for CasADi rootfinder
-├── JanusMath.hpp         # [EXTEND] Include RootFinding.hpp
+├── MetisMath.hpp         # [EXTEND] Include RootFinding.hpp
 └── ...
 
 tests/math/
@@ -70,9 +70,9 @@ examples/
 
 ### Component 1: N-Dimensional Interpolation (`interpn`) — **P0**
 
-**Source Reference**: [interpolate.py](file:///home/tanged/sources/janus/reference/aerosandbox_numpy_reference/interpolate.py)
+**Source Reference**: [interpolate.py](file:///home/tanged/sources/metis/reference/aerosandbox_numpy_reference/interpolate.py)
 
-#### [EXTEND] `include/janus/math/Interpolate.hpp`
+#### [EXTEND] `include/metis/math/Interpolate.hpp`
 
 Implement `interpn` for N-dimensional gridded data interpolation, mirroring scipy's `interpolate.interpn`.
 
@@ -126,12 +126,12 @@ Eigen::Matrix<Scalar, Eigen::Dynamic, 1> interpn(
 
 ### Component 2: B-Spline Support for 1D Interpolation — **P0**
 
-#### [EXTEND] `include/janus/math/Interpolate.hpp`
+#### [EXTEND] `include/metis/math/Interpolate.hpp`
 
-Extend `JanusInterpolator` to support multiple interpolation methods:
+Extend `MetisInterpolator` to support multiple interpolation methods:
 
 ```cpp
-class JanusInterpolator {
+class MetisInterpolator {
   public:
     /**
      * @brief Construct interpolator with method selection
@@ -140,7 +140,7 @@ class JanusInterpolator {
      * @param y Function values
      * @param method Interpolation method (Linear or BSpline)
      */
-    JanusInterpolator(
+    MetisInterpolator(
         const Eigen::VectorXd& x,
         const Eigen::VectorXd& y,
         InterpolationMethod method = InterpolationMethod::Linear
@@ -163,17 +163,17 @@ class JanusInterpolator {
 
 ### Component 3: Root Finding (`RootFinding.hpp`) — **P1**
 
-#### [NEW] `include/janus/math/RootFinding.hpp`
+#### [NEW] `include/metis/math/RootFinding.hpp`
 
-Provide a Janus root-finding layer for solving implicit equations `F(x) = 0`.
+Provide a Metis root-finding layer for solving implicit equations `F(x) = 0`.
 
 ```cpp
 #pragma once
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusFunction.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisFunction.hpp"
 #include <casadi/casadi.hpp>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Options for root finding algorithms
@@ -201,14 +201,14 @@ struct RootResult {
  * Uses Newton's method with optional line search. The function F must
  * return a vector of the same dimension as x.
  *
- * @param F Function mapping x -> residual (must be janus::Function)
+ * @param F Function mapping x -> residual (must be metis::Function)
  * @param x0 Initial guess
  * @param opts Solver options
  * @return RootResult containing solution and diagnostics
  */
 template <typename Scalar>
 RootResult<Scalar> rootfinder(
-    const janus::Function& F,
+    const metis::Function& F,
     const Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& x0,
     const RootFinderOptions& opts = {}
 );
@@ -222,19 +222,19 @@ RootResult<Scalar> rootfinder(
  * @param G Implicit function G(x, p) where first input is unknown
  * @param x_guess Initial guess for x
  * @param opts Solver options
- * @return janus::Function mapping p -> x(p)
+ * @return metis::Function mapping p -> x(p)
  */
-janus::Function create_implicit_function(
-    const janus::Function& G,
+metis::Function create_implicit_function(
+    const metis::Function& G,
     const Eigen::VectorXd& x_guess,
     const RootFinderOptions& opts = {}
 );
 
-} // namespace janus
+} // namespace metis
 ```
 
 **Implementation Notes**:
-- Numeric backend: Use Janus-compiled residual/Jacobian kernels with a globalization stack
+- Numeric backend: Use Metis-compiled residual/Jacobian kernels with a globalization stack
   (trust-region Newton, line-search Newton, Broyden, pseudo-transient continuation)
 - Symbolic backend: Embed `casadi::rootfinder` in the expression graph
 - Differentiable implicit solves: CasADi provides exact implicit differentiation
@@ -246,7 +246,7 @@ janus::Function create_implicit_function(
 
 ### Component 4: Enhanced 1D Methods — **P2**
 
-#### [EXTEND] `include/janus/math/Interpolate.hpp`
+#### [EXTEND] `include/metis/math/Interpolate.hpp`
 
 Add natural cubic spline for higher accuracy:
 
@@ -261,7 +261,7 @@ class CubicSplineInterpolator {
   public:
     CubicSplineInterpolator(const Eigen::VectorXd& x, const Eigen::VectorXd& y);
     
-    template <JanusScalar T>
+    template <MetisScalar T>
     T operator()(const T& query) const;
     
   private:
@@ -275,7 +275,7 @@ class CubicSplineInterpolator {
 
 ### Component 5: Gridded C1 Interpolant (Hermite) — **P1**
 
-#### [EXTEND] `include/janus/math/Interpolate.hpp`
+#### [EXTEND] `include/metis/math/Interpolate.hpp`
 
 Implement a C1-continuous gridded interpolant using piecewise Hermite cubic polynomials. This provides:
 - **Continuous first derivatives** (essential for gradient-based optimization)
@@ -325,7 +325,7 @@ Eigen::Matrix<Scalar, Eigen::Dynamic, 1> interpn_hermite(
 
 1. **1D Case**: Compute slopes at each grid point using chosen method, then evaluate cubic Hermite basis
 2. **N-D Case**: Use tensor-product extension (interpolate along each dimension sequentially)
-3. **Symbolic Support**: Express Hermite basis functions using `janus::where` for cell selection
+3. **Symbolic Support**: Express Hermite basis functions using `metis::where` for cell selection
 
 > [!TIP]
 > For trajectory optimization, C1 continuity (Hermite) is often sufficient—it ensures gradients are continuous without the additional smoothness constraints of C2 (B-spline) that can introduce oscillations.
@@ -343,7 +343,7 @@ Eigen::Matrix<Scalar, Eigen::Dynamic, 1> interpn_hermite(
 - [x] **Task 1.6**: Test linear vs bspline accuracy comparison
 
 ### Milestone 2: B-Spline for 1D Interpolation (Week 1)
-- [x] **Task 2.1**: Extend `JanusInterpolator` constructor with `method` parameter
+- [x] **Task 2.1**: Extend `MetisInterpolator` constructor with `method` parameter
 - [x] **Task 2.2**: Update CasADi interpolant creation for bspline method
 - [x] **Task 2.3**: Update numeric `eval_numeric` for bspline (delegate to CasADi)
 - [x] **Task 2.4**: Write tests comparing linear vs bspline smoothness
@@ -366,7 +366,7 @@ Eigen::Matrix<Scalar, Eigen::Dynamic, 1> interpn_hermite(
 ### Milestone 5: Documentation & Polish (Week 3)
 - [x] **Task 6.1**: Create `nd_interpolation_demo.cpp` example
 - [x] **Task 6.2**: Create `rootfinding_demo.cpp` example
-- [x] **Task 6.3**: Update `JanusMath.hpp` includes
+- [x] **Task 6.3**: Update `MetisMath.hpp` includes
 - [ ] **Task 6.4**: Update `docs/design_overview.md` with Phase 5 summary
 - [ ] **Task 6.5**: Update README with new feature highlights
 - [ ] **Task 6.6**: Run full test suite and coverage check
@@ -434,12 +434,12 @@ void test_interpn_2d() {
     Eigen::Matrix<Scalar, 2, 1> xi;
     xi << 0.5, 0.5;
     
-    auto result = janus::interpn(points, values, xi);
+    auto result = metis::interpn(points, values, xi);
     
     if constexpr (std::is_floating_point_v<Scalar>) {
         EXPECT_NEAR(result(0), 1.0, 1e-10);
     } else {
-        EXPECT_NEAR(janus::eval(result(0)), 1.0, 1e-9);
+        EXPECT_NEAR(metis::eval(result(0)), 1.0, 1e-9);
     }
 }
 
@@ -481,7 +481,7 @@ TEST(InterpnTests, 2D_Symbolic) { test_interpn_2d<casadi::MX>(); }
 ## Success Criteria
 
 1. ☐ `interpn` working for 2D and 3D grids with linear, hermite, and bspline methods
-2. ☐ `JanusInterpolator` supports bspline and hermite method selection
+2. ☐ `MetisInterpolator` supports bspline and hermite method selection
 3. ☐ C1 Hermite interpolant with Catmull-Rom, Akima, and Monotone slope methods
 4. ☐ `rootfinder` solves simple and multi-dimensional equations
 5. ☐ `create_implicit_function` produces differentiable implicit constraints
@@ -503,4 +503,4 @@ TEST(InterpnTests, 2D_Symbolic) { test_interpn_2d<casadi::MX>(); }
 
 ---
 
-*Generated by Janus Dev Team - Phase 5 Planning*
+*Generated by Metis Dev Team - Phase 5 Planning*

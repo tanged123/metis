@@ -8,7 +8,7 @@
 
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 int main() {
     std::cout << "========================================\n";
@@ -24,7 +24,7 @@ int main() {
     // Sweep over air density (altitude effect)
     // =========================================================================
 
-    janus::Opti opti;
+    metis::Opti opti;
 
     // Parameters (can be swept)
     auto rho = opti.parameter(1.225); // Air density [kg/m³]

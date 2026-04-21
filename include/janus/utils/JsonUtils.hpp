@@ -2,7 +2,7 @@
 /// @brief Simple JSON read/write utilities for flat string-to-vector maps
 #pragma once
 
-#include "janus/core/JanusError.hpp"
+#include "metis/core/MetisError.hpp"
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace janus::utils {
+namespace metis::utils {
 
 /**
  * @brief Write a map of string-to-vector<double> as JSON
@@ -23,7 +23,7 @@ inline void write_json(const std::string &filename,
                        const std::map<std::string, std::vector<double>> &data) {
     std::ofstream file(filename);
     if (!file.is_open()) {
-        throw janus::RuntimeError("Could not open file for writing: " + filename);
+        throw metis::RuntimeError("Could not open file for writing: " + filename);
     }
 
     file << "{\n";
@@ -55,7 +55,7 @@ inline void write_json(const std::string &filename,
 inline std::map<std::string, std::vector<double>> read_json(const std::string &filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
-        throw janus::RuntimeError("Could not open file for reading: " + filename);
+        throw metis::RuntimeError("Could not open file for reading: " + filename);
     }
 
     std::stringstream buffer;
@@ -74,7 +74,7 @@ inline std::map<std::string, std::vector<double>> read_json(const std::string &f
 
         size_t quote_end = content.find('"', quote_start + 1);
         if (quote_end == std::string::npos)
-            throw janus::RuntimeError("Malformed JSON: Unclosed string");
+            throw metis::RuntimeError("Malformed JSON: Unclosed string");
 
         std::string key = content.substr(quote_start + 1, quote_end - quote_start - 1);
         pos = quote_end + 1;
@@ -82,18 +82,18 @@ inline std::map<std::string, std::vector<double>> read_json(const std::string &f
         // Find colon
         size_t colon = content.find(':', pos);
         if (colon == std::string::npos)
-            throw janus::RuntimeError("Malformed JSON: Missing colon");
+            throw metis::RuntimeError("Malformed JSON: Missing colon");
         pos = colon + 1;
 
         // Find value (array)
         size_t bracket_start = content.find('[', pos);
         if (bracket_start == std::string::npos)
-            throw janus::RuntimeError("Malformed JSON: Missing array start [");
+            throw metis::RuntimeError("Malformed JSON: Missing array start [");
         pos = bracket_start + 1;
 
         size_t bracket_end = content.find(']', pos);
         if (bracket_end == std::string::npos)
-            throw janus::RuntimeError("Malformed JSON: Missing array end ]");
+            throw metis::RuntimeError("Malformed JSON: Missing array end ]");
 
         // Parse array content
         std::string array_content = content.substr(pos, bracket_end - pos);
@@ -109,7 +109,7 @@ inline std::map<std::string, std::vector<double>> read_json(const std::string &f
                 try {
                     vec.push_back(std::stod(number_str));
                 } catch (const std::exception &e) {
-                    throw janus::RuntimeError("Malformed JSON: could not parse number '" +
+                    throw metis::RuntimeError("Malformed JSON: could not parse number '" +
                                               number_str + "': " + e.what());
                 }
             }
@@ -122,4 +122,4 @@ inline std::map<std::string, std::vector<double>> read_json(const std::string &f
     return data;
 }
 
-} // namespace janus::utils
+} // namespace metis::utils

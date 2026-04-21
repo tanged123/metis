@@ -4,11 +4,11 @@
 #pragma once
 
 #include "OptiSol.hpp"
-#include "janus/core/JanusError.hpp"
+#include "metis/core/MetisError.hpp"
 #include <optional>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /// @brief Result of a parametric sweep
 ///
@@ -113,4 +113,4 @@ struct SweepResult {
     }
 };
 
-} // namespace janus
+} // namespace metis

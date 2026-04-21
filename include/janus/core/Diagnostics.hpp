@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Function.hpp"
-#include "JanusError.hpp"
+#include "MetisError.hpp"
 #include "Sparsity.hpp"
 
 #include <algorithm>
@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Structural property being analyzed from a symbolic sensitivity pattern.
@@ -593,4 +593,4 @@ analyze_structural_diagnostics(const Function &fn, const StructuralDiagnosticsOp
     return report;
 }
 
-} // namespace janus
+} // namespace metis

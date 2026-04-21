@@ -1,4 +1,4 @@
-# Graph Visualization for JanusIO.hpp
+# Graph Visualization for MetisIO.hpp
 
 **Status**: ✅ COMPLETE
 
@@ -8,9 +8,9 @@ Implements user-friendly tools to visualize CasADi computational graphs as speci
 
 ## Implemented Changes
 
-### JanusIO
+### MetisIO
 
-#### [MODIFY] [JanusIO.hpp](file:///home/tanged/sources/janus/include/janus/core/JanusIO.hpp)
+#### [MODIFY] [MetisIO.hpp](file:///home/tanged/sources/metis/include/metis/core/MetisIO.hpp)
 
 Added graph visualization functions:
 
@@ -48,17 +48,17 @@ bool visualize_graph(const Function& func, const std::string& output_base);
 
 ### Tests
 
-#### [MODIFY] [test_janus_io.cpp](file:///home/tanged/sources/janus/tests/core/test_janus_io.cpp)
+#### [MODIFY] [test_metis_io.cpp](file:///home/tanged/sources/metis/tests/core/test_metis_io.cpp)
 
-Add tests to existing `test_janus_io.cpp`:
+Add tests to existing `test_metis_io.cpp`:
 
 ```cpp
-TEST(JanusIOTests, ExportGraphDot) {
-    auto x = janus::sym("x");
+TEST(MetisIOTests, ExportGraphDot) {
+    auto x = metis::sym("x");
     auto y = x * x + 2 * x + 1;
     
     std::string dot_file = "/tmp/test_graph.dot";
-    janus::export_graph_dot(y, dot_file, "quadratic");
+    metis::export_graph_dot(y, dot_file, "quadratic");
     
     std::ifstream f(dot_file);
     EXPECT_TRUE(f.good());
@@ -67,13 +67,13 @@ TEST(JanusIOTests, ExportGraphDot) {
     EXPECT_TRUE(content.find("digraph") != std::string::npos);
 }
 
-TEST(JanusIOTests, RenderGraph) {
+TEST(MetisIOTests, RenderGraph) {
     if (std::system("which dot > /dev/null 2>&1") != 0) {
         GTEST_SKIP() << "Graphviz not available";
     }
     
-    auto x = janus::sym("x");
-    bool success = janus::visualize_graph(x * x, "/tmp/test_viz");
+    auto x = metis::sym("x");
+    bool success = metis::visualize_graph(x * x, "/tmp/test_viz");
     EXPECT_TRUE(success);
 }
 ```
@@ -82,19 +82,19 @@ TEST(JanusIOTests, RenderGraph) {
 
 ### Examples
 
-#### [NEW] [graph_visualization.cpp](file:///home/tanged/sources/janus/examples/graph_visualization.cpp)
+#### [NEW] [graph_visualization.cpp](file:///home/tanged/sources/metis/examples/graph_visualization.cpp)
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <iostream>
 
 int main() {
-    auto x = janus::sym("x");
-    auto y = janus::sym("y");
-    auto z = janus::sin(x) * janus::cos(y) + x * y;
+    auto x = metis::sym("x");
+    auto y = metis::sym("y");
+    auto z = metis::sin(x) * metis::cos(y) + x * y;
     
-    janus::export_graph_dot(z, "expression_graph.dot", "trig_expr");
-    janus::visualize_graph(z, "expression");
+    metis::export_graph_dot(z, "expression_graph.dot", "trig_expr");
+    metis::visualize_graph(z, "expression");
     
     return 0;
 }
@@ -108,7 +108,7 @@ int main() {
 
 ```bash
 ./scripts/test.sh
-cd build && ctest -R test_janus_io --output-on-failure
+cd build && ctest -R test_metis_io --output-on-failure
 ```
 
 ### Manual Verification

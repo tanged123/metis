@@ -1,4 +1,4 @@
-/// @file JanusTypes.hpp
+/// @file MetisTypes.hpp
 /// @brief Core type aliases for numeric and symbolic Eigen/CasADi interop
 #pragma once
 #include <Eigen/Dense>
@@ -32,7 +32,7 @@ template <> struct NumTraits<casadi::MX> : GenericNumTraits<casadi::MX> {
 };
 } // namespace Eigen
 
-namespace janus {
+namespace metis {
 
 // --- Matrix Types ---
 /**
@@ -40,13 +40,13 @@ namespace janus {
  * @tparam Scalar Element type (double or casadi::MX)
  */
 template <typename Scalar>
-using JanusMatrix = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>;
+using MetisMatrix = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>;
 
 /**
  * @brief Dynamic-size column vector for both numeric and symbolic backends
  * @tparam Scalar Element type (double or casadi::MX)
  */
-template <typename Scalar> using JanusVector = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
+template <typename Scalar> using MetisVector = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
 
 // --- Fixed-Size Types ---
 /**
@@ -63,18 +63,18 @@ template <typename Scalar> using Mat4 = Eigen::Matrix<Scalar, 4, 4>;
 
 // Numeric Backend
 using NumericScalar = double;                     ///< Numeric scalar type
-using NumericMatrix = JanusMatrix<NumericScalar>; ///< Eigen::MatrixXd equivalent
-using NumericVector = JanusVector<NumericScalar>; ///< Eigen::VectorXd equivalent
+using NumericMatrix = MetisMatrix<NumericScalar>; ///< Eigen::MatrixXd equivalent
+using NumericVector = MetisVector<NumericScalar>; ///< Eigen::VectorXd equivalent
 
 // Symbolic Backend
 using SymbolicScalar = casadi::MX;                  ///< CasADi MX symbolic scalar
-using SymbolicMatrix = JanusMatrix<SymbolicScalar>; ///< Eigen matrix of MX elements
-using SymbolicVector = JanusVector<SymbolicScalar>; ///< Eigen vector of MX elements
+using SymbolicMatrix = MetisMatrix<SymbolicScalar>; ///< Eigen matrix of MX elements
+using SymbolicVector = MetisVector<SymbolicScalar>; ///< Eigen vector of MX elements
 
 // --- Sparse Numeric Types ---
 /**
  * @brief Sparse matrix types for efficient storage of large, sparse numeric data
- * @note For symbolic sparsity analysis, use janus::SparsityPattern.
+ * @note For symbolic sparsity analysis, use metis::SparsityPattern.
  * @see SparsityPattern
  */
 using SparseMatrix = Eigen::SparseMatrix<double>; ///< Sparse numeric matrix (CSC)
@@ -104,7 +104,7 @@ inline SymbolicScalar sym(const std::string &name, int rows, int cols = 1) {
  * @brief Create a named symbolic vector (returns SymbolicVector)
  *
  * @code
- * auto x = janus::sym_vector("x", 3);  // Returns SymbolicVector
+ * auto x = metis::sym_vector("x", 3);  // Returns SymbolicVector
  * @endcode
  *
  * @param name Name of the variable
@@ -125,8 +125,8 @@ inline SymbolicVector sym_vector(const std::string &name, int size) {
  * @brief Create a symbolic vector preserving the CasADi primitive connection
  *
  * @code
- * auto state = janus::sym_vec("state", 3);
- * auto jac = janus::jacobian({janus::to_mx(dydt)}, {janus::to_mx(state)});
+ * auto state = metis::sym_vec("state", 3);
+ * auto jac = metis::jacobian({metis::to_mx(dydt)}, {metis::to_mx(state)});
  * @endcode
  *
  * @param name Name of the variable
@@ -143,8 +143,8 @@ inline SymbolicVector sym_vec(const std::string &name, int size) {
  * @brief Create symbolic vector and return both SymbolicVector and underlying MX
  *
  * @code
- * auto [state_vec, state_mx] = janus::sym_vec_pair("state", 3);
- * auto jac = janus::jacobian({janus::to_mx(dydt)}, {state_mx, theta});
+ * auto [state_vec, state_mx] = metis::sym_vec_pair("state", 3);
+ * auto jac = metis::jacobian({metis::to_mx(dydt)}, {state_mx, theta});
  * @endcode
  *
  * @param name Name of the variable
@@ -165,7 +165,7 @@ inline std::pair<SymbolicVector, SymbolicScalar> sym_vec_pair(const std::string 
  * @brief Get the underlying MX representation of a SymbolicVector
  *
  * This packs an Eigen container of MX elements back into a single CasADi MX
- * for use with janus::Function or janus::jacobian.
+ * for use with metis::Function or metis::jacobian.
  *
  * @param v SymbolicVector to convert
  * @return Single casadi::MX representing the vector
@@ -289,4 +289,4 @@ class SymbolicArg {
     SymbolicScalar mx_;
 };
 
-} // namespace janus
+} // namespace metis

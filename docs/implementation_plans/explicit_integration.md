@@ -1,13 +1,13 @@
-# Explicit ODE Integration API for Janus
+# Explicit ODE Integration API for Metis
 
-Designing a clean API for explicit fixed-step ODE integrators that supports dual-mode (numeric/symbolic) execution while respecting Janus's existing integration infrastructure.
+Designing a clean API for explicit fixed-step ODE integrators that supports dual-mode (numeric/symbolic) execution while respecting Metis's existing integration infrastructure.
 
 ## Background: Current State
 
 | File | Purpose | Backend |
 |------|---------|---------|
-| [`Integrate.hpp`](file:///home/tanged/sources/janus/include/janus/math/Integrate.hpp) | `quad()`, `solve_ivp()`, `solve_ivp_symbolic()`, `solve_ivp_expr()` | RK4 (numeric), CVODES (symbolic) |
-| [`IntegrateDiscrete.hpp`](file:///home/tanged/sources/janus/include/janus/math/IntegrateDiscrete.hpp) | `integrate_discrete_intervals()`, Simpson/cubic methods | Numeric only (discrete samples) |
+| [`Integrate.hpp`](file:///home/tanged/sources/metis/include/metis/math/Integrate.hpp) | `quad()`, `solve_ivp()`, `solve_ivp_symbolic()`, `solve_ivp_expr()` | RK4 (numeric), CVODES (symbolic) |
+| [`IntegrateDiscrete.hpp`](file:///home/tanged/sources/metis/include/metis/math/IntegrateDiscrete.hpp) | `integrate_discrete_intervals()`, Simpson/cubic methods | Numeric only (discrete samples) |
 
 **Key Observations:**
 1. `solve_ivp()` internally uses RK4 but is a **trajectory solver** (returns full history over span)
@@ -48,17 +48,17 @@ Create a **single-step integrator API** that works in both numeric and symbolic 
 ### API Design
 
 ```cpp
-namespace janus {
+namespace metis {
 
 // Single-step integrators (return x_{n+1} given x_n, t_n, dt)
 template <typename Scalar, typename Func>
-JanusVector<Scalar> euler_step(Func&& f, const JanusVector<Scalar>& x, Scalar t, Scalar dt);
+MetisVector<Scalar> euler_step(Func&& f, const MetisVector<Scalar>& x, Scalar t, Scalar dt);
 
 template <typename Scalar, typename Func>
-JanusVector<Scalar> rk2_step(Func&& f, const JanusVector<Scalar>& x, Scalar t, Scalar dt);
+MetisVector<Scalar> rk2_step(Func&& f, const MetisVector<Scalar>& x, Scalar t, Scalar dt);
 
 template <typename Scalar, typename Func>
-JanusVector<Scalar> rk4_step(Func&& f, const JanusVector<Scalar>& x, Scalar t, Scalar dt);
+MetisVector<Scalar> rk4_step(Func&& f, const MetisVector<Scalar>& x, Scalar t, Scalar dt);
 
 // ... higher order variants (rk45 with error estimate)
 }
@@ -77,7 +77,7 @@ JanusVector<Scalar> rk4_step(Func&& f, const JanusVector<Scalar>& x, Scalar t, S
 
 ## Proposed Changes
 
-### [NEW] [IntegratorStep.hpp](file:///home/tanged/sources/janus/include/janus/math/IntegratorStep.hpp)
+### [NEW] [IntegratorStep.hpp](file:///home/tanged/sources/metis/include/metis/math/IntegratorStep.hpp)
 
 New header with single-step explicit integrators:
 
@@ -92,7 +92,7 @@ All templated on `Scalar` for dual-mode compatibility.
 
 ```cpp
 template <typename Scalar, typename Func>
-JanusVector<Scalar> rk4_step(Func&& f, const JanusVector<Scalar>& x, Scalar t, Scalar dt) {
+MetisVector<Scalar> rk4_step(Func&& f, const MetisVector<Scalar>& x, Scalar t, Scalar dt) {
     // f(t, x) -> dx/dt
     auto k1 = f(t, x);
     auto k2 = f(t + dt * 0.5, x + dt * 0.5 * k1);
@@ -104,11 +104,11 @@ JanusVector<Scalar> rk4_step(Func&& f, const JanusVector<Scalar>& x, Scalar t, S
 ```
 
 > [!IMPORTANT]
-> All arithmetic uses Janus types directly. `Scalar * JanusVector<Scalar>` relies on Eigen's scalar multiplication which works for both `double` and `MX`.
+> All arithmetic uses Metis types directly. `Scalar * MetisVector<Scalar>` relies on Eigen's scalar multiplication which works for both `double` and `MX`.
 
 ---
 
-### [MODIFY] [Integrate.hpp](file:///home/tanged/sources/janus/include/janus/math/Integrate.hpp)
+### [MODIFY] [Integrate.hpp](file:///home/tanged/sources/metis/include/metis/math/Integrate.hpp)
 
 Refactor `solve_ivp` to use the new step functions internally:
 
@@ -145,16 +145,16 @@ This change:
 
 ---
 
-### [MODIFY] [janus.hpp](file:///home/tanged/sources/janus/include/janus/janus.hpp)
+### [MODIFY] [metis.hpp](file:///home/tanged/sources/metis/include/metis/metis.hpp)
 
 Add include for the new header:
 ```cpp
-#include "janus/math/IntegratorStep.hpp"
+#include "metis/math/IntegratorStep.hpp"
 ```
 
 ---
 
-### [NEW] [test_integrator_step.cpp](file:///home/tanged/sources/janus/tests/math/test_integrator_step.cpp)
+### [NEW] [test_integrator_step.cpp](file:///home/tanged/sources/metis/tests/math/test_integrator_step.cpp)
 
 Test suite covering:
 - **Numeric mode**: Compare step outputs against analytical solutions
@@ -200,7 +200,7 @@ Specific test file:
 | `EulerStepExponential` | dy/dt = -y, y(0) = 1 | Compare `euler_step` to ~1 + h*(-1) = 1-h |
 | `RK4StepExponential` | dy/dt = -y, y(0) = 1 | Compare to `exp(-h)` with 1e-6 tolerance |
 | `RK4StepHarmonic` | Harmonic oscillator state | Verify over one period |
-| `SymbolicRK4Step` | Same ODE symbolically | `janus::eval()` matches numeric |
+| `SymbolicRK4Step` | Same ODE symbolically | `metis::eval()` matches numeric |
 | `ConvergenceOrderEuler` | Error vs step size | Confirm O(h) |
 | `ConvergenceOrderRK4` | Error vs step size | Confirm O(h⁴) |
 
@@ -212,7 +212,7 @@ Specific test file:
 ```cpp
 struct ButcherTableau { /* a, b, c coefficients */ };
 template <typename Scalar>
-JanusVector<Scalar> runge_kutta_step(const ButcherTableau& tableau, ...);
+MetisVector<Scalar> runge_kutta_step(const ButcherTableau& tableau, ...);
 ```
 **Pros**: Maximum extensibility, supports any RK method
 **Cons**: More complex API, overkill for common use cases
@@ -221,7 +221,7 @@ JanusVector<Scalar> runge_kutta_step(const ButcherTableau& tableau, ...);
 ```cpp
 enum class RKMethod { Euler, RK2, RK4, RK45 };
 template <typename Scalar>
-JanusVector<Scalar> rk_step(RKMethod method, ...);
+MetisVector<Scalar> rk_step(RKMethod method, ...);
 ```
 **Pros**: Single entry point
 **Cons**: Runtime dispatch, less type-safe

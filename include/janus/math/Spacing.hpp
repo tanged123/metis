@@ -4,15 +4,15 @@
  * @brief Point distribution generators (linspace, cosine, sine, log, geometric)
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/math/Arithmetic.hpp"
-#include "janus/math/Trig.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/math/Arithmetic.hpp"
+#include "metis/math/Trig.hpp"
 #include <Eigen/Dense>
 #include <numbers>
 
-namespace janus {
+namespace metis {
 
 // --- linspace ---
 /**
@@ -23,17 +23,17 @@ namespace janus {
  * @param n Number of points
  * @return Vector of n linearly spaced points
  */
-template <typename T> JanusVector<T> linspace(const T &start, const T &end, int n) {
+template <typename T> MetisVector<T> linspace(const T &start, const T &end, int n) {
     if (n < 1) {
         throw InvalidArgument("linspace: n must be >= 1");
     }
     if (n == 1) {
-        JanusVector<T> ret(1);
+        MetisVector<T> ret(1);
         ret(0) = start;
         return ret;
     }
 
-    JanusVector<T> ret(n);
+    MetisVector<T> ret(n);
     // Explicit loop to support symbolic types (cannot use .setLinSpaced)
     T step = (end - start) / static_cast<double>(n - 1);
 
@@ -54,17 +54,17 @@ template <typename T> JanusVector<T> linspace(const T &start, const T &end, int 
  * @param n Number of points
  * @return Vector of n cosine-spaced points
  */
-template <typename T> JanusVector<T> cosine_spacing(const T &start, const T &end, int n) {
+template <typename T> MetisVector<T> cosine_spacing(const T &start, const T &end, int n) {
     if (n < 1) {
         throw InvalidArgument("cosine_spacing: n must be >= 1");
     }
     if (n == 1) {
-        JanusVector<T> ret(1);
+        MetisVector<T> ret(1);
         ret(0) = start;
         return ret;
     }
 
-    JanusVector<T> ret(n);
+    MetisVector<T> ret(n);
     T center = 0.5 * (start + end);
     T radius = 0.5 * (end - start);
     double pi = std::numbers::pi_v<double>;
@@ -87,12 +87,12 @@ template <typename T> JanusVector<T> cosine_spacing(const T &start, const T &end
  * @return Vector of n sine-spaced points
  */
 template <typename T>
-JanusVector<T> sinspace(const T &start, const T &end, int n, bool reverse_spacing = false) {
+MetisVector<T> sinspace(const T &start, const T &end, int n, bool reverse_spacing = false) {
     if (n < 1) {
         throw InvalidArgument("sinspace: n must be >= 1");
     }
     if (n == 1) {
-        JanusVector<T> ret(1);
+        MetisVector<T> ret(1);
         ret(0) = start;
         return ret;
     }
@@ -102,7 +102,7 @@ JanusVector<T> sinspace(const T &start, const T &end, int n, bool reverse_spacin
         return ret.reverse();
     }
 
-    JanusVector<T> ret(n);
+    MetisVector<T> ret(n);
     double pi_half = std::numbers::pi_v<double> / 2.0;
 
     for (int i = 0; i < n; ++i) {
@@ -126,22 +126,22 @@ JanusVector<T> sinspace(const T &start, const T &end, int n, bool reverse_spacin
  * @param n Number of points
  * @return Vector of n log-spaced points
  */
-template <typename T> JanusVector<T> logspace(const T &start, const T &end, int n) {
+template <typename T> MetisVector<T> logspace(const T &start, const T &end, int n) {
     if (n < 1) {
         throw InvalidArgument("logspace: n must be >= 1");
     }
     if (n == 1) {
-        JanusVector<T> ret(1);
-        ret(0) = janus::pow(10.0, start);
+        MetisVector<T> ret(1);
+        ret(0) = metis::pow(10.0, start);
         return ret;
     }
 
-    JanusVector<T> ret(n);
+    MetisVector<T> ret(n);
     // Linear spacing in exponent
     for (int i = 0; i < n; ++i) {
         double fraction = static_cast<double>(i) / static_cast<double>(n - 1);
         T exponents = start + (end - start) * fraction;
-        ret(i) = janus::pow(10.0, exponents);
+        ret(i) = metis::pow(10.0, exponents);
     }
     // ret(0) is 10^start, ret(n-1) is 10^end
     return ret;
@@ -156,13 +156,13 @@ template <typename T> JanusVector<T> logspace(const T &start, const T &end, int 
  * @param n Number of points
  * @return Vector of n geometrically spaced points
  */
-template <typename T> JanusVector<T> geomspace(const T &start, const T &end, int n) {
+template <typename T> MetisVector<T> geomspace(const T &start, const T &end, int n) {
     if (n < 1) {
         throw InvalidArgument("geomspace: n must be >= 1");
     }
-    T log_start = janus::log10(start);
-    T log_end = janus::log10(end);
+    T log_start = metis::log10(start);
+    T log_end = metis::log10(end);
     return logspace(log_start, log_end, n);
 }
 
-} // namespace janus
+} // namespace metis

@@ -6,11 +6,11 @@
 #pragma once
 
 #include "TranscriptionBase.hpp"
-#include "janus/math/Spacing.hpp"
+#include "metis/math/Spacing.hpp"
 #include <string>
 #include <tuple>
 
-namespace janus {
+namespace metis {
 
 /**
  * @brief Options for MultipleShooting
@@ -187,4 +187,4 @@ class MultipleShooting : public TranscriptionBase<MultipleShooting> {
     }
 };
 
-} // namespace janus
+} // namespace metis

@@ -1,6 +1,6 @@
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <string>
 
 /**
@@ -13,23 +13,23 @@
  */
 namespace {
 
-std::string method_name(janus::RootSolveMethod method) {
+std::string method_name(metis::RootSolveMethod method) {
     switch (method) {
-    case janus::RootSolveMethod::None:
+    case metis::RootSolveMethod::None:
         return "none";
-    case janus::RootSolveMethod::TrustRegionNewton:
+    case metis::RootSolveMethod::TrustRegionNewton:
         return "trust-region Newton";
-    case janus::RootSolveMethod::LineSearchNewton:
+    case metis::RootSolveMethod::LineSearchNewton:
         return "line-search Newton";
-    case janus::RootSolveMethod::QuasiNewtonBroyden:
+    case metis::RootSolveMethod::QuasiNewtonBroyden:
         return "quasi-Newton Broyden";
-    case janus::RootSolveMethod::PseudoTransientContinuation:
+    case metis::RootSolveMethod::PseudoTransientContinuation:
         return "pseudo-transient continuation";
     }
     return "unknown";
 }
 
-void print_result(const std::string &label, const janus::RootResult<double> &result) {
+void print_result(const std::string &label, const metis::RootResult<double> &result) {
     std::cout << label << "\n";
     std::cout << "  converged: " << (result.converged ? "yes" : "no") << "\n";
     std::cout << "  method:    " << method_name(result.method) << "\n";
@@ -51,17 +51,17 @@ int main() {
     // so Auto must fall through to pseudo-transient continuation.
     // ---------------------------------------------------------
     std::cout << "\n--- 1. Automatic Globalization Fallback ---\n";
-    auto xs = janus::sym("xs");
-    janus::Function singular_start("SingularStart", {xs}, {xs * xs - 1.0});
+    auto xs = metis::sym("xs");
+    metis::Function singular_start("SingularStart", {xs}, {xs * xs - 1.0});
 
     Eigen::VectorXd singular_guess(1);
     singular_guess << 0.0;
 
-    janus::RootFinderOptions auto_opts;
+    metis::RootFinderOptions auto_opts;
     auto_opts.max_iter = 60;
     auto_opts.pseudo_transient_dt0 = 0.1;
 
-    auto auto_res = janus::rootfinder<double>(singular_start, singular_guess, auto_opts);
+    auto auto_res = metis::rootfinder<double>(singular_start, singular_guess, auto_opts);
     print_result("Auto solve for x^2 - 1 = 0 from x0 = 0", auto_res);
     if (auto_res.converged) {
         std::cout << "  solution:  " << auto_res.x(0) << "\n";
@@ -75,7 +75,7 @@ int main() {
     std::cout << "\n--- 2. Persistent Solver With Explicit Strategy ---\n";
     std::cout << "System:\n  x^2 + y^2 - 1 = 0\n  x^2 - y = 0\n";
 
-    auto [q, q_mx] = janus::sym_vec_pair("q", 2);
+    auto [q, q_mx] = metis::sym_vec_pair("q", 2);
 
     auto x = q(0);
     auto y = q(1);
@@ -84,14 +84,14 @@ int main() {
     auto F2 = x * x - y;
 
     // Residual vector [F1, F2]
-    auto Res = janus::SymbolicVector(2);
+    auto Res = metis::SymbolicVector(2);
     Res << F1, F2;
 
-    janus::Function F("System2D", {janus::SymbolicArg(q_mx)}, {janus::to_mx(Res)});
+    metis::Function F("System2D", {metis::SymbolicArg(q_mx)}, {metis::to_mx(Res)});
 
-    janus::RootFinderOptions line_search_opts;
-    line_search_opts.strategy = janus::RootSolveStrategy::LineSearchNewton;
-    janus::NewtonSolver solver(F, line_search_opts);
+    metis::RootFinderOptions line_search_opts;
+    line_search_opts.strategy = metis::RootSolveStrategy::LineSearchNewton;
+    metis::NewtonSolver solver(F, line_search_opts);
 
     Eigen::VectorXd q0(2);
     q0 << 0.5, 0.5;
@@ -115,16 +115,16 @@ int main() {
     std::cout << "\n--- 3. Implicit Function z(p) from G(z, p)=0 ---\n";
     std::cout << "G(z, p) = z^3 + p*z + 1 = 0\n";
 
-    auto z = janus::sym("z");
-    auto p = janus::sym("p");
+    auto z = metis::sym("z");
+    auto p = metis::sym("p");
     auto G_expr = z * z * z + p * z + 1.0;
 
-    janus::Function G("G", {z, p}, {G_expr});
+    metis::Function G("G", {z, p}, {G_expr});
 
     Eigen::VectorXd z_guess(1);
     z_guess << -1.0;
 
-    auto z_of_p = janus::create_implicit_function(G, z_guess);
+    auto z_of_p = metis::create_implicit_function(G, z_guess);
 
     auto res_0 = z_of_p(0.0)[0];
     std::cout << "z(0): " << res_0(0, 0) << " (Expected -1.0)\n";
@@ -134,8 +134,8 @@ int main() {
 
     std::cout << "Computing dz/dp symbolically...\n";
 
-    auto J_sym = janus::jacobian(z_of_p(p)[0](0), p);
-    janus::Function J_fn("dzdp", {p}, {J_sym});
+    auto J_sym = metis::jacobian(z_of_p(p)[0](0), p);
+    metis::Function J_fn("dzdp", {p}, {J_sym});
 
     auto dzdp_0 = J_fn(0.0)[0];
     std::cout << "dz/dp at p=0: " << dzdp_0(0, 0) << " (Expected 0.33333)\n";

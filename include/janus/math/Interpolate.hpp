@@ -5,17 +5,17 @@
  * @see ScatteredInterpolator.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/math/Linalg.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/math/Linalg.hpp"
 #include <algorithm>
 #include <casadi/casadi.hpp>
 #include <cmath>
 #include <optional>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 // ============================================================================
 // Interpolation Method Enum
@@ -111,10 +111,10 @@ inline const char *hermite_symbolic_error_message() {
  * the first dimension fastest.
  */
 template <typename Derived>
-inline JanusVector<typename Derived::Scalar>
+inline MetisVector<typename Derived::Scalar>
 flatten_fortran_order(const Eigen::MatrixBase<Derived> &values) {
     using Scalar = typename Derived::Scalar;
-    JanusVector<Scalar> flattened(values.size());
+    MetisVector<Scalar> flattened(values.size());
 
     Eigen::Index idx = 0;
     for (Eigen::Index j = 0; j < values.cols(); ++j) {
@@ -188,8 +188,8 @@ inline void validate_bspline_grid(const std::vector<std::vector<double>> &grid,
     }
 }
 
-template <JanusScalar Scalar>
-inline JanusMatrix<Scalar> normalize_query_matrix(const JanusMatrix<Scalar> &xi, int n_dims,
+template <MetisScalar Scalar>
+inline MetisMatrix<Scalar> normalize_query_matrix(const MetisMatrix<Scalar> &xi, int n_dims,
                                                   const char *context) {
     if (xi.cols() != n_dims && xi.rows() != n_dims) {
         throw InterpolationError(std::string(context) +
@@ -203,8 +203,8 @@ inline JanusMatrix<Scalar> normalize_query_matrix(const JanusMatrix<Scalar> &xi,
     return xi.eval();
 }
 
-template <JanusScalar Scalar>
-inline SymbolicScalar clamp_query_point(const JanusVector<Scalar> &point,
+template <MetisScalar Scalar>
+inline SymbolicScalar clamp_query_point(const MetisVector<Scalar> &point,
                                         const std::vector<std::vector<double>> &grid) {
     SymbolicScalar clamped(point.size(), 1);
     for (int d = 0; d < point.size(); ++d) {
@@ -217,8 +217,8 @@ inline SymbolicScalar clamp_query_point(const JanusVector<Scalar> &point,
     return clamped;
 }
 
-template <JanusScalar Scalar>
-inline bool point_out_of_bounds_numeric(const JanusVector<Scalar> &point,
+template <MetisScalar Scalar>
+inline bool point_out_of_bounds_numeric(const MetisVector<Scalar> &point,
                                         const std::vector<std::vector<double>> &grid) {
     static_assert(std::is_floating_point_v<Scalar>);
     for (int d = 0; d < point.size(); ++d) {
@@ -463,7 +463,7 @@ inline double hermite_interpn_numeric(const std::vector<std::vector<double>> &gr
  * x << 0, 1, 2, 3;
  * y << 0, 1, 4, 9;  // y = x^2
  *
- * janus::Interpolator interp(x, y, janus::InterpolationMethod::Linear);
+ * metis::Interpolator interp(x, y, metis::InterpolationMethod::Linear);
  *
  * double result = interp(1.5);  // Query at single point
  * NumericVector batch = interp(query_vec);  // Batch query
@@ -475,7 +475,7 @@ inline double hermite_interpn_numeric(const std::vector<std::vector<double>> &gr
  * NumericVector values(4);  // Fortran order
  * values << 0, 1, 1, 2;     // z(x,y) = x + y
  *
- * janus::Interpolator interp(grid, values);
+ * metis::Interpolator interp(grid, values);
  *
  * NumericVector query(2);
  * query << 0.5, 0.5;
@@ -666,7 +666,7 @@ class Interpolator {
      * @return Interpolated value
      * @throw InterpolationError if not 1D or not initialized
      */
-    template <JanusScalar Scalar> Scalar operator()(const Scalar &query) const {
+    template <MetisScalar Scalar> Scalar operator()(const Scalar &query) const {
         if (!m_valid)
             throw InterpolationError("Interpolator: not initialized");
         if (m_dims != 1)
@@ -696,7 +696,7 @@ class Interpolator {
      * @param query Query point (size must match dims())
      * @return Interpolated scalar value
      */
-    template <JanusScalar Scalar> Scalar operator()(const JanusVector<Scalar> &query) const {
+    template <MetisScalar Scalar> Scalar operator()(const MetisVector<Scalar> &query) const {
         if (!m_valid)
             throw InterpolationError("Interpolator: not initialized");
 
@@ -732,7 +732,7 @@ class Interpolator {
      */
     template <typename Derived>
     auto operator()(const Eigen::MatrixBase<Derived> &queries) const
-        -> JanusVector<typename Derived::Scalar> {
+        -> MetisVector<typename Derived::Scalar> {
         using Scalar = typename Derived::Scalar;
 
         if (!m_valid)
@@ -749,7 +749,7 @@ class Interpolator {
                 is_transposed ? static_cast<int>(queries.cols()) : static_cast<int>(queries.rows());
         }
 
-        JanusVector<Scalar> result(n_points);
+        MetisVector<Scalar> result(n_points);
 
         if constexpr (std::is_floating_point_v<Scalar>) {
             if (m_dims == 1) {
@@ -1137,13 +1137,13 @@ class Interpolator {
  * @return Vector of interpolated values at query points
  */
 template <typename Scalar>
-JanusVector<Scalar> interpn(const std::vector<NumericVector> &points,
-                            const NumericVector &values_flat, const JanusMatrix<Scalar> &xi,
+MetisVector<Scalar> interpn(const std::vector<NumericVector> &points,
+                            const NumericVector &values_flat, const MetisMatrix<Scalar> &xi,
                             InterpolationMethod method = InterpolationMethod::Linear,
                             std::optional<Scalar> fill_value = std::nullopt) {
     const auto grid_data = detail::build_interpn_grid(points, "interpn");
     const int n_dims = static_cast<int>(points.size());
-    JanusMatrix<Scalar> xi_work = detail::normalize_query_matrix(xi, n_dims, "interpn");
+    MetisMatrix<Scalar> xi_work = detail::normalize_query_matrix(xi, n_dims, "interpn");
     const int n_points = static_cast<int>(xi_work.rows());
 
     // Validate values size
@@ -1157,7 +1157,7 @@ JanusVector<Scalar> interpn(const std::vector<NumericVector> &points,
     Interpolator interp(points, values_flat, method);
 
     // Prepare result
-    JanusVector<Scalar> result(n_points);
+    MetisVector<Scalar> result(n_points);
 
     // Handle fill_value for out-of-bounds
     if (fill_value.has_value()) {
@@ -1171,14 +1171,14 @@ JanusVector<Scalar> interpn(const std::vector<NumericVector> &points,
             if (out_of_bounds) {
                 result(i) = fill_value.value();
             } else {
-                JanusVector<Scalar> point = xi_work.row(i).transpose();
+                MetisVector<Scalar> point = xi_work.row(i).transpose();
                 result(i) = interp(point);
             }
         }
     } else {
         // No fill_value, allow extrapolation (clamp)
         for (int i = 0; i < n_points; ++i) {
-            JanusVector<Scalar> point = xi_work.row(i).transpose();
+            MetisVector<Scalar> point = xi_work.row(i).transpose();
             result(i) = interp(point);
         }
     }
@@ -1203,12 +1203,12 @@ JanusVector<Scalar> interpn(const std::vector<NumericVector> &points,
  */
 template <typename Scalar>
 SymbolicVector interpn(const std::vector<NumericVector> &points, const SymbolicVector &values_flat,
-                       const JanusMatrix<Scalar> &xi,
+                       const MetisMatrix<Scalar> &xi,
                        InterpolationMethod method = InterpolationMethod::Linear,
                        std::optional<SymbolicScalar> fill_value = std::nullopt) {
     const auto grid_data = detail::build_interpn_grid(points, "interpn");
     const int n_dims = static_cast<int>(points.size());
-    JanusMatrix<Scalar> xi_work = detail::normalize_query_matrix(xi, n_dims, "interpn");
+    MetisMatrix<Scalar> xi_work = detail::normalize_query_matrix(xi, n_dims, "interpn");
     const int n_points = static_cast<int>(xi_work.rows());
 
     if (values_flat.size() != grid_data.expected_size) {
@@ -1218,11 +1218,11 @@ SymbolicVector interpn(const std::vector<NumericVector> &points, const SymbolicV
     }
 
     casadi::Function interp = detail::make_parametric_interpolant(grid_data.grid, method);
-    const SymbolicScalar coeffs = janus::as_mx(values_flat);
+    const SymbolicScalar coeffs = metis::as_mx(values_flat);
 
     SymbolicVector result(n_points);
     for (int i = 0; i < n_points; ++i) {
-        JanusVector<Scalar> point = xi_work.row(i).transpose();
+        MetisVector<Scalar> point = xi_work.row(i).transpose();
         SymbolicScalar clamped_point = detail::clamp_query_point(point, grid_data.grid);
         SymbolicScalar interp_value = interp(std::vector<SymbolicScalar>{clamped_point, coeffs})[0];
 
@@ -1245,4 +1245,4 @@ SymbolicVector interpn(const std::vector<NumericVector> &points, const SymbolicV
     return result;
 }
 
-} // namespace janus
+} // namespace metis

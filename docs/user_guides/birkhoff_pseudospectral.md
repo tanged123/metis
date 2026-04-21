@@ -1,32 +1,32 @@
 # Birkhoff Pseudospectral
 
-`janus::BirkhoffPseudospectral` is a Birkhoff-form pseudospectral transcription where state-derivative variables are collocated directly and states are recovered through a linear integration matrix. Unlike classical pseudospectral methods that use a dense differentiation matrix `D*X`, the Birkhoff form keeps dense coupling mostly in linear constraints (`X = x_a * 1 + B * V`) while dynamics constraints are pointwise (`V_i = (dt/2) * f(X_i, U_i, t_i)`). This gives improved numerical conditioning at higher node counts. Works in **symbolic mode** via the `janus::Opti` interface. The class lives in `<janus/optimization/BirkhoffPseudospectral.hpp>`.
+`metis::BirkhoffPseudospectral` is a Birkhoff-form pseudospectral transcription where state-derivative variables are collocated directly and states are recovered through a linear integration matrix. Unlike classical pseudospectral methods that use a dense differentiation matrix `D*X`, the Birkhoff form keeps dense coupling mostly in linear constraints (`X = x_a * 1 + B * V`) while dynamics constraints are pointwise (`V_i = (dt/2) * f(X_i, U_i, t_i)`). This gives improved numerical conditioning at higher node counts. Works in **symbolic mode** via the `metis::Opti` interface. The class lives in `<metis/optimization/BirkhoffPseudospectral.hpp>`.
 
 ## Quick Start
 
 ```cpp
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-janus::Opti opti;
-janus::BirkhoffPseudospectral bk(opti);
+metis::Opti opti;
+metis::BirkhoffPseudospectral bk(opti);
 
 auto [x, u, tau] = bk.setup(
     3, 1, 0.0, 2.0,
-    {.scheme = janus::BirkhoffScheme::LGL, .n_nodes = 31}
+    {.scheme = metis::BirkhoffScheme::LGL, .n_nodes = 31}
 );
 
-bk.set_dynamics([](const janus::SymbolicVector& x,
-                    const janus::SymbolicVector& u,
-                    const janus::SymbolicScalar& t) {
-    janus::SymbolicVector dxdt(3);
-    dxdt(0) = x(2) * janus::sin(u(0));
-    dxdt(1) = -x(2) * janus::cos(u(0));
-    dxdt(2) = 9.81 * janus::cos(u(0));
+bk.set_dynamics([](const metis::SymbolicVector& x,
+                    const metis::SymbolicVector& u,
+                    const metis::SymbolicScalar& t) {
+    metis::SymbolicVector dxdt(3);
+    dxdt(0) = x(2) * metis::sin(u(0));
+    dxdt(1) = -x(2) * metis::cos(u(0));
+    dxdt(2) = 9.81 * metis::cos(u(0));
     return dxdt;
 });
 
 bk.add_dynamics_constraints();
-bk.set_initial_state(janus::NumericVector{{0.0, 10.0, 0.001}});
+bk.set_initial_state(metis::NumericVector{{0.0, 10.0, 0.001}});
 bk.set_final_state(0, 10.0);
 bk.set_final_state(1, 5.0);
 
@@ -38,7 +38,7 @@ auto sol = opti.solve();
 
 | Method | Description |
 |--------|-------------|
-| `BirkhoffPseudospectral(opti)` | Construct with a `janus::Opti` instance |
+| `BirkhoffPseudospectral(opti)` | Construct with a `metis::Opti` instance |
 | `setup(n_states, n_controls, t0, tf, opts)` | Create decision variables and time grid |
 | `set_dynamics(ode)` | Set the ODE function: `(x, u, t) -> dxdt` |
 | `add_dynamics_constraints()` | Apply Birkhoff dynamics and state-recovery constraints |
@@ -78,7 +78,7 @@ B_ij = integral_{tau_0}^{tau_i} ell_j(s) ds
 auto T = opti.variable(2.0, std::nullopt, 0.1, 10.0);
 auto [x, u, tau] = bk.setup(
     3, 1, 0.0, T,
-    {.scheme = janus::BirkhoffScheme::LGL, .n_nodes = 31}
+    {.scheme = metis::BirkhoffScheme::LGL, .n_nodes = 31}
 );
 
 bk.set_dynamics(my_ode);
@@ -94,7 +94,7 @@ auto sol = opti.solve();
 ### Quadrature for Running Costs
 
 ```cpp
-janus::SymbolicVector integrand(bk.n_nodes());
+metis::SymbolicVector integrand(bk.n_nodes());
 for (int k = 0; k < bk.n_nodes(); ++k) {
     integrand(k) = u(k, 0) * u(k, 0);
 }
@@ -124,4 +124,4 @@ The virtual variables `V` represent the scaled state derivatives at each node. T
 - [Direct Collocation Guide](collocation.md) -- Local polynomial defect-based transcription
 - [Multiple Shooting Guide](multiple_shooting.md) -- Integrator-based transcription
 - [transcription_comparison_demo.cpp](../../examples/optimization/transcription_comparison_demo.cpp) -- Unified comparison example
-- [BirkhoffPseudospectral.hpp](../../include/janus/optimization/BirkhoffPseudospectral.hpp) -- API reference
+- [BirkhoffPseudospectral.hpp](../../include/metis/optimization/BirkhoffPseudospectral.hpp) -- API reference

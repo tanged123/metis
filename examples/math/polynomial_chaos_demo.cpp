@@ -10,11 +10,11 @@
 
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <string>
 #include <vector>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 
@@ -160,7 +160,7 @@ int main() {
     std::cout << "  - pce_projection_coefficients(...) and pce_regression_coefficients(...)\n";
     std::cout << "    recover coefficients from those quadrature samples or plain collocation\n";
     std::cout << "  - because the fitted coefficients remain symbolic, pce_mean(...) and\n";
-    std::cout << "    pce_variance(...) can be differentiated directly with CasADi/Janus\n";
+    std::cout << "    pce_variance(...) can be differentiated directly with CasADi/Metis\n";
 
     return 0;
 }

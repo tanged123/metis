@@ -1,17 +1,17 @@
 #include <chrono>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
 /**
  * Numeric-Specific Example
  *
- * Demonstrates high-performance numeric execution using Janus standard types.
+ * Demonstrates high-performance numeric execution using Metis standard types.
  * We implement a simple bouncing ball simulation.
  */
 
 // Generic Physics Function
 // Using "Scalar" template allows this to be reused for Symbolic later if needed.
-template <typename Scalar> void step_physics(janus::JanusMatrix<Scalar> &state, const Scalar &dt) {
+template <typename Scalar> void step_physics(metis::MetisMatrix<Scalar> &state, const Scalar &dt) {
     // State: [y, vy]
     Scalar y = state(0);
     Scalar vy = state(1);
@@ -25,8 +25,8 @@ template <typename Scalar> void step_physics(janus::JanusMatrix<Scalar> &state, 
     // Bounce Logic
     // usage: where(condition, if_true, if_false)
     // When y < 0, reverse velocity with damping
-    vy = janus::where(y < 0.0, -0.8 * vy, vy);
-    y = janus::where(y < 0.0, 0.0, y);
+    vy = metis::where(y < 0.0, -0.8 * vy, vy);
+    y = metis::where(y < 0.0, 0.0, y);
 
     // Write back
     state(0) = y;
@@ -38,7 +38,7 @@ int main() {
 
     // Initialize State using Eigen syntax
     // NumericMatrix is standard Eigen::MatrixXd
-    janus::NumericMatrix state(2, 1);
+    metis::NumericMatrix state(2, 1);
     state << 10.0, 0.0; // Initial height 10m, velocity 0
 
     double dt = 0.001;
@@ -65,13 +65,13 @@ int main() {
 
     // 1. Create Symbols
     // step_physics expects Eigen structure for symbolic matrices
-    auto state_mx = janus::sym("state", 2);
-    auto state_sym = janus::to_eigen(state_mx); // Convert CasADi vector to Eigen<MX>
+    auto state_mx = metis::sym("state", 2);
+    auto state_sym = metis::to_eigen(state_mx); // Convert CasADi vector to Eigen<MX>
 
     // We need to keep the original symbols for the Function inputs
     auto state_next = state_sym; // Copy for modification
 
-    auto dt_sym = janus::sym("dt"); // Scalar
+    auto dt_sym = metis::sym("dt"); // Scalar
 
     // 2. Build Graph (Reuse the exact same physics code!)
     step_physics(state_next, dt_sym);
@@ -81,16 +81,16 @@ int main() {
     // 3. Compile to Function: next_state = f(current_state, dt)
     // Inputs must be the original symbolic primitives (state_mx, dt_sym)
     // Outputs are the expressions (state_next)
-    janus::Function step_fn({state_mx, dt_sym}, {state_next});
+    metis::Function step_fn({state_mx, dt_sym}, {state_next});
 
     // 4. Verify against Numeric
     // Let's test a specific condition where we bounce
-    janus::NumericMatrix test_state(2, 1);
+    metis::NumericMatrix test_state(2, 1);
     test_state << -1.0, -5.0; // Below ground, moving down
     double test_dt = 0.1;
 
     // Numeric execution
-    janus::NumericMatrix num_res = test_state;
+    metis::NumericMatrix num_res = test_state;
     step_physics(num_res, test_dt);
 
     // Symbolic evaluation

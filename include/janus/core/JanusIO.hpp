@@ -1,6 +1,6 @@
 #pragma once
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
 #include <Eigen/Dense>
 #include <casadi/casadi.hpp>
 #include <cstdlib>
@@ -14,18 +14,18 @@
 #include <vector>
 
 /**
- * @file JanusIO.hpp
- * @brief IO Utilities and Traits for Janus
+ * @file MetisIO.hpp
+ * @brief IO Utilities and Traits for Metis
  *
  * Provides:
  * 1. Helper functions for printing/displaying matrices with wrappers.
  * 2. Evaluation utilities (eval).
  * 3. Graph visualization utilities for CasADi expressions.
  *
- * Note: Eigen::NumTraits definitions are in JanusTypes.hpp usually.
+ * Note: Eigen::NumTraits definitions are in MetisTypes.hpp usually.
  */
 
-namespace janus {
+namespace metis {
 
 // Forward declaration
 class Function;
@@ -329,7 +329,7 @@ inline void export_graph_dot(const SymbolicScalar &expr, const std::string &file
 }
 
 /**
- * @brief Export a janus::Function to DOT format for visualization
+ * @brief Export a metis::Function to DOT format for visualization
  *
  * @param func The function to visualize (uses underlying CasADi function)
  * @param filename Output filename (without extension)
@@ -1340,4 +1340,4 @@ inline bool visualize_graph_deep(const casadi::Function &fn, const std::string &
     }
 }
 
-} // namespace janus
+} // namespace metis

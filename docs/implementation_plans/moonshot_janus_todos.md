@@ -1,8 +1,8 @@
-# Janus Moonshot Implementation Plan
+# Metis Moonshot Implementation Plan
 
-Source: `docs/architecture/moonshot_roadmap.md` — Janus TODO items J-1 through J-23.
+Source: `docs/architecture/moonshot_roadmap.md` — Metis TODO items J-1 through J-23.
 
-This plan is intentionally high-level. Each item describes what to build and why. Implementation details (file placement, API signatures, test structure) should follow existing Janus conventions — see `CLAUDE.md`, existing headers in `include/janus/`, and the test patterns in `tests/`.
+This plan is intentionally high-level. Each item describes what to build and why. Implementation details (file placement, API signatures, test structure) should follow existing Metis conventions — see `CLAUDE.md`, existing headers in `include/metis/`, and the test patterns in `tests/`.
 
 ---
 
@@ -17,7 +17,7 @@ This plan is intentionally high-level. Each item describes what to build and why
 - Blend the linear regime smoothly via a sigmoid transition
 - Must remain numerically stable for large `beta*x` values
 
-**Where**: `include/janus/math/SurrogateModel.hpp`
+**Where**: `include/metis/math/SurrogateModel.hpp`
 **Tests**: Verify C-infinity by checking first and second derivatives are continuous across the transition region. Test both numeric and symbolic modes.
 
 ---
@@ -28,7 +28,7 @@ This plan is intentionally high-level. Each item describes what to build and why
 
 **Goal**: Implement wrap-around finite differences at domain edges using the periodicity assumption. The last point wraps to the first.
 
-**Where**: `include/janus/math/Calculus.hpp`
+**Where**: `include/metis/math/Calculus.hpp`
 **Use cases**: Angle-of-attack derivatives, orbital true anomaly gradients, any signal defined on a periodic domain.
 
 ---
@@ -38,10 +38,10 @@ This plan is intentionally high-level. Each item describes what to build and why
 **Problem**: Hermite/Catmull-Rom is numeric-only because interval finding uses value comparisons that break the symbolic trace. Fallback is silent.
 
 **Goal**: Either:
-- (a) Implement symbolic-compatible interval finder using `janus::where` cascades for fixed breakpoint counts, or
+- (a) Implement symbolic-compatible interval finder using `metis::where` cascades for fixed breakpoint counts, or
 - (b) Accept numeric-only Hermite, ensure BSpline (symbolic-compatible, C^2) covers optimization use cases, and document the fallback explicitly with a clear warning/error when symbolic mode is attempted
 
-**Where**: `include/janus/math/Interpolate.hpp`
+**Where**: `include/metis/math/Interpolate.hpp`
 
 ---
 
@@ -56,7 +56,7 @@ This plan is intentionally high-level. Each item describes what to build and why
 - `smooth_clamp(x, low, high, hardness)` — composed smooth_min/smooth_max
 - `ks_max(values, rho)` — Kreisselmeier-Steinhauser constraint aggregation
 
-**Where**: `include/janus/math/SurrogateModel.hpp` or new header
+**Where**: `include/metis/math/SurrogateModel.hpp` or new header
 **Tests**: Verify each converges to the non-smooth version as hardness -> infinity. Test gradients exist everywhere. Numeric + symbolic.
 
 ---
@@ -67,7 +67,7 @@ This plan is intentionally high-level. Each item describes what to build and why
 
 **Goal**: Implement `cumtrapz(y, x)` returning a vector of partial sums. Support both numeric and symbolic modes.
 
-**Where**: `include/janus/math/Calculus.hpp` or `IntegrateDiscrete.hpp`
+**Where**: `include/metis/math/Calculus.hpp` or `IntegrateDiscrete.hpp`
 
 ---
 
@@ -80,17 +80,17 @@ This plan is intentionally high-level. Each item describes what to build and why
 - Symbolic: investigate CasADi's `eig_symbolic`, or implement 3x3 closed-form for the common inertia tensor case
 - Return eigenvalues (sorted) and eigenvectors
 
-**Where**: `include/janus/math/Linalg.hpp`
+**Where**: `include/metis/math/Linalg.hpp`
 
 ---
 
 ### J-7. Code generation API
 
-**Problem**: Experimental JIT only. No way to generate standalone C code from a `janus::Function`.
+**Problem**: Experimental JIT only. No way to generate standalone C code from a `metis::Function`.
 
-**Goal**: First-class API: `janus::Function` -> standalone C source file with no CasADi runtime dependency. Enable embedded deployment and CI validation of generated code.
+**Goal**: First-class API: `metis::Function` -> standalone C source file with no CasADi runtime dependency. Enable embedded deployment and CI validation of generated code.
 
-**Where**: `include/janus/core/CodeGen.hpp` (new)
+**Where**: `include/metis/core/CodeGen.hpp` (new)
 **Consideration**: May also need a Vulcan-level variant for full engineering models.
 
 ---
@@ -101,7 +101,7 @@ This plan is intentionally high-level. Each item describes what to build and why
 
 **Goal**: Given `F(x, p) = 0`, solve for `x(p)` and propagate `dx/dp` through the NLP via the implicit function theorem. Essential for trim-in-the-loop optimization.
 
-**Where**: `include/janus/math/RootFinding.hpp`
+**Where**: `include/metis/math/RootFinding.hpp`
 
 ---
 
@@ -111,7 +111,7 @@ This plan is intentionally high-level. Each item describes what to build and why
 
 **Goal**: Rework `interpn` to accept `Scalar`-typed value arrays so table values (and potentially breakpoints) can be symbolic decision variables. Enables optimization over aero coefficient tables, engine maps, control schedules.
 
-**Where**: `include/janus/math/Interpolate.hpp`
+**Where**: `include/metis/math/Interpolate.hpp`
 
 ---
 
@@ -121,7 +121,7 @@ This plan is intentionally high-level. Each item describes what to build and why
 
 **Goal**: Return constraint expressions (conjunctions/disjunctions) for the optimizer. Enable natural feasibility conditions in the optimization interface.
 
-**Where**: `include/janus/math/Logic.hpp`
+**Where**: `include/metis/math/Logic.hpp`
 
 ---
 
@@ -129,9 +129,9 @@ This plan is intentionally high-level. Each item describes what to build and why
 
 **Problem**: AeroSandbox-derived explicit 3x3 symmetric inverse returns elements in unverified order.
 
-**Goal**: Verify tuple order matches Eigen column-major storage convention. Add a doc comment specifying the convention. Add a test comparing against `janus::inv()` for several symmetric matrices.
+**Goal**: Verify tuple order matches Eigen column-major storage convention. Add a doc comment specifying the convention. Add a test comparing against `metis::inv()` for several symmetric matrices.
 
-**Where**: `include/janus/math/Linalg.hpp`
+**Where**: `include/metis/math/Linalg.hpp`
 
 ---
 
@@ -141,15 +141,15 @@ This plan is intentionally high-level. Each item describes what to build and why
 
 **Goal**: Expose CasADi's `map` function for SIMD-like parallel evaluation over batches of inputs. Target use cases: batch interpolation queries, Monte Carlo derivative evaluation, parallel sensitivity analysis.
 
-**Where**: `include/janus/core/Function.hpp`
+**Where**: `include/metis/core/Function.hpp`
 
 ---
 
 ## SciML-Inspired Enhancements (J-13 through J-23)
 
-Reference: `janus/docs/saved_work/sciml_comparison_for_janus.md`
+Reference: `metis/docs/saved_work/sciml_comparison_for_metis.md`
 
-These are algorithmic ideas from Julia's SciML ecosystem. Math-level improvements only — Janus stays a dual-headed math library, not an acausal modeling framework.
+These are algorithmic ideas from Julia's SciML ecosystem. Math-level improvements only — Metis stays a dual-headed math library, not an acausal modeling framework.
 
 ### P0 — High impact, unblocks optimization quality
 
@@ -157,9 +157,9 @@ These are algorithmic ideas from Julia's SciML ecosystem. Math-level improvement
 
 **Problem**: `SparsityPattern` exists for inspection but no end-to-end pipeline exploits sparsity.
 
-**Goal**: Detect Jacobian/Hessian sparsity from symbolic trace -> compile sparse value evaluators (only compute nonzero entries) -> cache and reuse structure across solves. Surface CasADi's internal graph coloring through Janus. Downstream gets `O(nnz)` derivative cost instead of dense `O(n^2)`.
+**Goal**: Detect Jacobian/Hessian sparsity from symbolic trace -> compile sparse value evaluators (only compute nonzero entries) -> cache and reuse structure across solves. Surface CasADi's internal graph coloring through Metis. Downstream gets `O(nnz)` derivative cost instead of dense `O(n^2)`.
 
-**Where**: `include/janus/core/Sparsity.hpp` (extend), possibly new `SparseDerivatives.hpp`
+**Where**: `include/metis/core/Sparsity.hpp` (extend), possibly new `SparseDerivatives.hpp`
 
 ---
 
@@ -172,7 +172,7 @@ These are algorithmic ideas from Julia's SciML ecosystem. Math-level improvement
 - Adjoint mode: many parameters (hundreds+), few outputs
 - Checkpointed adjoint for long-horizon trajectories: choose backsolve / interpolating / quadrature-based checkpointing based on horizon length and stiffness
 
-**Where**: `include/janus/math/AutoDiff.hpp` (extend)
+**Where**: `include/metis/math/AutoDiff.hpp` (extend)
 
 ---
 
@@ -188,7 +188,7 @@ These are algorithmic ideas from Julia's SciML ecosystem. Math-level improvement
 
 Configurable via solver options with sane defaults for 6DOF trim.
 
-**Where**: `include/janus/math/RootFinding.hpp` (extend)
+**Where**: `include/metis/math/RootFinding.hpp` (extend)
 
 ---
 
@@ -196,13 +196,13 @@ Configurable via solver options with sane defaults for 6DOF trim.
 
 **Problem**: Symbolic graphs are handed to the NLP solver without structural reduction.
 
-**Goal**: Pass pipeline on `janus::Function`:
+**Goal**: Pass pipeline on `metis::Function`:
 1. Alias elimination — remove trivially equal variables
 2. BLT decomposition — identify independent subsystems
 3. Tearing — select minimal iteration variables in algebraic loops
 4. Codegen — generate simplified residual/Jacobian evaluators
 
-**Where**: New `include/janus/core/StructuralTransforms.hpp`
+**Where**: New `include/metis/core/StructuralTransforms.hpp`
 **Design question**: Pass ordering matters — alias elimination first to simplify dependency graph before BLT.
 
 ---
@@ -215,13 +215,13 @@ Configurable via solver options with sane defaults for 6DOF trim.
 
 **Goal**: Implement via CasADi's forward-over-reverse AD. Also provide second-order adjoint pathways for `d²L/dx²` in Lagrangian-based optimization. Enables scaling to problems where the Hessian is too large to form densely.
 
-**Where**: `include/janus/math/AutoDiff.hpp` (extend)
+**Where**: `include/metis/math/AutoDiff.hpp` (extend)
 
 ---
 
 #### J-18. Linear solve backend policy
 
-**Problem**: `janus::solve` uses QR (numeric) or CasADi default (symbolic). No configurability.
+**Problem**: `metis::solve` uses QR (numeric) or CasADi default (symbolic). No configurability.
 
 **Goal**: Swappable backends via policy objects:
 - Dense (current default)
@@ -229,7 +229,7 @@ Configurable via solver options with sane defaults for 6DOF trim.
 - Iterative Krylov (GMRES/BiCGSTAB for very large systems)
 - Preconditioner hooks
 
-**Where**: `include/janus/math/Linalg.hpp` (extend) or new `LinearSolvePolicy.hpp`
+**Where**: `include/metis/math/Linalg.hpp` (extend) or new `LinearSolvePolicy.hpp`
 
 ---
 
@@ -241,7 +241,7 @@ Configurable via solver options with sane defaults for 6DOF trim.
 - Symplectic integrators (Stormer-Verlet, RKN) for orbital propagation
 - Rosenbrock/BDF with mass matrix support for stiff constrained systems
 
-**Where**: `include/janus/math/Integrate.hpp` and `IntegratorStep.hpp` (extend)
+**Where**: `include/metis/math/Integrate.hpp` and `IntegratorStep.hpp` (extend)
 
 ---
 
@@ -256,7 +256,7 @@ Configurable via solver options with sane defaults for 6DOF trim.
 - Suggest or apply variable/constraint scaling to Opti problem
 - Warn about badly scaled variables
 
-**Where**: `include/janus/optimization/Opti.hpp` (extend) or new `Scaling.hpp`
+**Where**: `include/metis/optimization/Opti.hpp` (extend) or new `Scaling.hpp`
 
 ---
 
@@ -269,7 +269,7 @@ Configurable via solver options with sane defaults for 6DOF trim.
 - Identify unobservable states and unidentifiable parameters
 - Suggest fixes (add sensors, constrain parameters)
 
-**Where**: New `include/janus/core/Diagnostics.hpp`
+**Where**: New `include/metis/core/Diagnostics.hpp`
 
 ---
 
@@ -283,7 +283,7 @@ Configurable via solver options with sane defaults for 6DOF trim.
 - Projection/regression methods for computing expansion coefficients from collocation samples
 - Key payoff: PCE coefficients through CasADi MX give gradients of statistical moments w.r.t. design variables — optimization-under-uncertainty without nested Monte Carlo
 
-**Where**: New `include/janus/math/PolynomialChaos.hpp`
+**Where**: New `include/metis/math/PolynomialChaos.hpp`
 
 ---
 
@@ -296,4 +296,4 @@ Configurable via solver options with sane defaults for 6DOF trim.
 - Smolyak sparse grids for high-dimensional problems (avoids curse of dimensionality)
 - Nested rule variants (Gauss-Patterson, Clenshaw-Curtis) for incremental refinement
 
-**Where**: `include/janus/math/Integrate.hpp` (extend) or new `Quadrature.hpp`, plus `Spacing.hpp` for node generation
+**Where**: `include/metis/math/Integrate.hpp` (extend) or new `Quadrature.hpp`, plus `Spacing.hpp` for node generation

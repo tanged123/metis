@@ -1,6 +1,6 @@
 /**
  * @file linear_solve_policy_demo.cpp
- * @brief Demonstrate Janus linear solve backends and policy selection.
+ * @brief Demonstrate Metis linear solve backends and policy selection.
  *
  * This example shows four workflows:
  * 1. Default dense solve vs explicit dense direct backends.
@@ -11,10 +11,10 @@
 
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 #include <string>
 
-using namespace janus;
+using namespace metis;
 
 namespace {
 

@@ -5,12 +5,12 @@
  * @see Arithmetic.hpp
  */
 
-#include "janus/core/JanusConcepts.hpp"
-#include "janus/core/JanusError.hpp"
-#include "janus/core/JanusTypes.hpp"
-#include "janus/math/Arithmetic.hpp"
-#include "janus/math/Logic.hpp"
-#include "janus/math/Trig.hpp"
+#include "metis/core/MetisConcepts.hpp"
+#include "metis/core/MetisError.hpp"
+#include "metis/core/MetisTypes.hpp"
+#include "metis/math/Arithmetic.hpp"
+#include "metis/math/Logic.hpp"
+#include "metis/math/Trig.hpp"
 #include <Eigen/Dense>
 #include <Eigen/IterativeLinearSolvers>
 #include <Eigen/SparseCholesky>
@@ -28,10 +28,10 @@
 #include <unsupported/Eigen/IterativeSolvers>
 #include <vector>
 
-namespace janus {
+namespace metis {
 
 // --- Conversion Helpers ---
-// (Moved to JanusTypes.hpp: to_mx, to_eigen, as_vector)
+// (Moved to MetisTypes.hpp: to_mx, to_eigen, as_vector)
 
 /**
  * @brief Backend selection for linear system solves
@@ -565,7 +565,7 @@ template <typename Derived> auto det(const Eigen::MatrixBase<Derived> &A) {
  */
 template <typename DerivedA, typename DerivedB>
 auto inner(const Eigen::MatrixBase<DerivedA> &a, const Eigen::MatrixBase<DerivedB> &b) {
-    return janus::dot(a, b);
+    return metis::dot(a, b);
 }
 
 // --- Pseudo-Inverse ---
@@ -645,14 +645,14 @@ auto norm(const Eigen::MatrixBase<Derived> &x, NormType type = NormType::L2) {
  * @tparam Scalar Scalar type (NumericScalar or SymbolicScalar)
  */
 template <typename Scalar> struct EigenDecomposition {
-    JanusVector<Scalar> eigenvalues;  ///< Eigenvalues in ascending order
-    JanusMatrix<Scalar> eigenvectors; ///< Eigenvectors as columns
+    MetisVector<Scalar> eigenvalues;  ///< Eigenvalues in ascending order
+    MetisMatrix<Scalar> eigenvectors; ///< Eigenvectors as columns
 };
 
 namespace detail {
 
-template <typename Scalar> JanusVector<Scalar> normalize_vector(const JanusVector<Scalar> &v) {
-    const auto v_norm = janus::norm(v);
+template <typename Scalar> MetisVector<Scalar> normalize_vector(const MetisVector<Scalar> &v) {
+    const auto v_norm = metis::norm(v);
     if constexpr (std::is_floating_point_v<Scalar>) {
         if (v_norm <= std::numeric_limits<Scalar>::epsilon()) {
             throw InvalidArgument("eigendecomposition: eigenvector construction failed");
@@ -662,10 +662,10 @@ template <typename Scalar> JanusVector<Scalar> normalize_vector(const JanusVecto
 }
 
 template <typename Scalar>
-JanusVector<Scalar> best_eigenvector_candidate(const std::array<JanusVector<Scalar>, 3> &cands) {
-    const auto n01 = janus::dot(cands[0], cands[0]);
-    const auto n02 = janus::dot(cands[1], cands[1]);
-    const auto n12 = janus::dot(cands[2], cands[2]);
+MetisVector<Scalar> best_eigenvector_candidate(const std::array<MetisVector<Scalar>, 3> &cands) {
+    const auto n01 = metis::dot(cands[0], cands[0]);
+    const auto n02 = metis::dot(cands[1], cands[1]);
+    const auto n12 = metis::dot(cands[2], cands[2]);
 
     if constexpr (std::is_floating_point_v<Scalar>) {
         const auto *best = &cands[0];
@@ -679,61 +679,61 @@ JanusVector<Scalar> best_eigenvector_candidate(const std::array<JanusVector<Scal
         }
         return normalize_vector(*best);
     } else {
-        auto best = janus::detail::select(n02 > n01, cands[1], cands[0]);
-        auto best_norm = janus::where(n02 > n01, n02, n01);
-        best = janus::detail::select(n12 > best_norm, cands[2], best);
+        auto best = metis::detail::select(n02 > n01, cands[1], cands[0]);
+        auto best_norm = metis::where(n02 > n01, n02, n01);
+        best = metis::detail::select(n12 > best_norm, cands[2], best);
         return normalize_vector(best);
     }
 }
 
 template <typename Scalar>
-JanusVector<Scalar> symmetric_eigenvector_2x2(const JanusMatrix<Scalar> &A, const Scalar &lambda) {
-    JanusVector<Scalar> first(2);
+MetisVector<Scalar> symmetric_eigenvector_2x2(const MetisMatrix<Scalar> &A, const Scalar &lambda) {
+    MetisVector<Scalar> first(2);
     first << A(0, 1), lambda - A(0, 0);
 
-    JanusVector<Scalar> second(2);
+    MetisVector<Scalar> second(2);
     second << lambda - A(1, 1), A(1, 0);
 
     if constexpr (std::is_floating_point_v<Scalar>) {
-        return normalize_vector(janus::dot(first, first) >= janus::dot(second, second) ? first
+        return normalize_vector(metis::dot(first, first) >= metis::dot(second, second) ? first
                                                                                        : second);
     } else {
-        return normalize_vector(janus::detail::select(
-            janus::dot(first, first) >= janus::dot(second, second), first, second));
+        return normalize_vector(metis::detail::select(
+            metis::dot(first, first) >= metis::dot(second, second), first, second));
     }
 }
 
 template <typename Scalar>
-JanusVector<Scalar> symmetric_eigenvector_3x3(const JanusMatrix<Scalar> &A, const Scalar &lambda) {
-    JanusMatrix<Scalar> shifted = A;
+MetisVector<Scalar> symmetric_eigenvector_3x3(const MetisMatrix<Scalar> &A, const Scalar &lambda) {
+    MetisMatrix<Scalar> shifted = A;
     shifted(0, 0) = shifted(0, 0) - lambda;
     shifted(1, 1) = shifted(1, 1) - lambda;
     shifted(2, 2) = shifted(2, 2) - lambda;
 
-    const JanusVector<Scalar> r0 = shifted.row(0).transpose();
-    const JanusVector<Scalar> r1 = shifted.row(1).transpose();
-    const JanusVector<Scalar> r2 = shifted.row(2).transpose();
+    const MetisVector<Scalar> r0 = shifted.row(0).transpose();
+    const MetisVector<Scalar> r1 = shifted.row(1).transpose();
+    const MetisVector<Scalar> r2 = shifted.row(2).transpose();
 
     return best_eigenvector_candidate<Scalar>(
-        {janus::cross(r0, r1), janus::cross(r0, r2), janus::cross(r1, r2)});
+        {metis::cross(r0, r1), metis::cross(r0, r2), metis::cross(r1, r2)});
 }
 
-template <typename Scalar> Scalar determinant_3x3(const JanusMatrix<Scalar> &A) {
+template <typename Scalar> Scalar determinant_3x3(const MetisMatrix<Scalar> &A) {
     return A(0, 0) * (A(1, 1) * A(2, 2) - A(1, 2) * A(2, 1)) -
            A(0, 1) * (A(1, 0) * A(2, 2) - A(1, 2) * A(2, 0)) +
            A(0, 2) * (A(1, 0) * A(2, 1) - A(1, 1) * A(2, 0));
 }
 
 template <typename Scalar>
-void sort_eigenpairs(JanusVector<Scalar> &eigenvalues, JanusMatrix<Scalar> &eigenvectors) {
+void sort_eigenpairs(MetisVector<Scalar> &eigenvalues, MetisMatrix<Scalar> &eigenvectors) {
     std::vector<Eigen::Index> order(static_cast<size_t>(eigenvalues.size()));
     std::iota(order.begin(), order.end(), Eigen::Index{0});
     std::sort(order.begin(), order.end(), [&](Eigen::Index lhs, Eigen::Index rhs) {
         return eigenvalues(lhs) < eigenvalues(rhs);
     });
 
-    JanusVector<Scalar> sorted_values(eigenvalues.size());
-    JanusMatrix<Scalar> sorted_vectors(eigenvectors.rows(), eigenvectors.cols());
+    MetisVector<Scalar> sorted_values(eigenvalues.size());
+    MetisMatrix<Scalar> sorted_vectors(eigenvectors.rows(), eigenvectors.cols());
     for (Eigen::Index i = 0; i < eigenvalues.size(); ++i) {
         sorted_values(i) = eigenvalues(order[static_cast<size_t>(i)]);
         sorted_vectors.col(i) = eigenvectors.col(order[static_cast<size_t>(i)]);
@@ -744,7 +744,7 @@ void sort_eigenpairs(JanusVector<Scalar> &eigenvalues, JanusMatrix<Scalar> &eige
 }
 
 template <typename Scalar>
-EigenDecomposition<Scalar> eig_symmetric_symbolic(const JanusMatrix<Scalar> &A) {
+EigenDecomposition<Scalar> eig_symmetric_symbolic(const MetisMatrix<Scalar> &A) {
     if (A.rows() != A.cols()) {
         throw InvalidArgument("eig_symmetric: input must be square");
     }
@@ -753,13 +753,13 @@ EigenDecomposition<Scalar> eig_symmetric_symbolic(const JanusMatrix<Scalar> &A) 
         EigenDecomposition<Scalar> result;
         result.eigenvalues.resize(1);
         result.eigenvalues(0) = A(0, 0);
-        result.eigenvectors = JanusMatrix<Scalar>::Identity(1, 1);
+        result.eigenvectors = MetisMatrix<Scalar>::Identity(1, 1);
         return result;
     }
 
     if (A.rows() == 2) {
         const Scalar trace = A(0, 0) + A(1, 1);
-        const Scalar disc = janus::sqrt((A(0, 0) - A(1, 1)) * (A(0, 0) - A(1, 1)) +
+        const Scalar disc = metis::sqrt((A(0, 0) - A(1, 1)) * (A(0, 0) - A(1, 1)) +
                                         Scalar(4.0) * A(0, 1) * A(0, 1));
 
         EigenDecomposition<Scalar> result;
@@ -784,44 +784,44 @@ EigenDecomposition<Scalar> eig_symmetric_symbolic(const JanusMatrix<Scalar> &A) 
         if constexpr (std::is_floating_point_v<Scalar>) {
             if (p2 <= std::numeric_limits<Scalar>::epsilon()) {
                 EigenDecomposition<Scalar> result;
-                result.eigenvalues = JanusVector<Scalar>::Constant(3, q);
-                result.eigenvectors = JanusMatrix<Scalar>::Identity(3, 3);
+                result.eigenvalues = MetisVector<Scalar>::Constant(3, q);
+                result.eigenvectors = MetisMatrix<Scalar>::Identity(3, 3);
                 return result;
             }
         }
 
         const auto has_spread = p2 > Scalar(0.0);
-        const Scalar p = janus::where(has_spread, janus::sqrt(p2 / Scalar(6.0)), Scalar(1.0));
+        const Scalar p = metis::where(has_spread, metis::sqrt(p2 / Scalar(6.0)), Scalar(1.0));
 
-        JanusMatrix<Scalar> centered = A;
+        MetisMatrix<Scalar> centered = A;
         centered(0, 0) = centered(0, 0) - q;
         centered(1, 1) = centered(1, 1) - q;
         centered(2, 2) = centered(2, 2) - q;
-        const JanusMatrix<Scalar> B = centered / p;
+        const MetisMatrix<Scalar> B = centered / p;
 
-        const Scalar r = janus::clamp(determinant_3x3(B) / Scalar(2.0), -1.0, 1.0);
-        const Scalar phi = janus::where(has_spread, janus::acos(r) / Scalar(3.0), Scalar(0.0));
+        const Scalar r = metis::clamp(determinant_3x3(B) / Scalar(2.0), -1.0, 1.0);
+        const Scalar phi = metis::where(has_spread, metis::acos(r) / Scalar(3.0), Scalar(0.0));
 
         constexpr double kTwoPiOverThree = 2.0943951023931954923;
-        Scalar largest = q + Scalar(2.0) * p * janus::cos(phi);
-        Scalar smallest = q + Scalar(2.0) * p * janus::cos(phi + Scalar(kTwoPiOverThree));
+        Scalar largest = q + Scalar(2.0) * p * metis::cos(phi);
+        Scalar smallest = q + Scalar(2.0) * p * metis::cos(phi + Scalar(kTwoPiOverThree));
         Scalar middle = Scalar(3.0) * q - largest - smallest;
 
-        largest = janus::where(has_spread, largest, q);
-        middle = janus::where(has_spread, middle, q);
-        smallest = janus::where(has_spread, smallest, q);
+        largest = metis::where(has_spread, largest, q);
+        middle = metis::where(has_spread, middle, q);
+        smallest = metis::where(has_spread, smallest, q);
 
         EigenDecomposition<Scalar> result;
         result.eigenvalues.resize(3);
         result.eigenvalues << smallest, middle, largest;
 
-        JanusMatrix<Scalar> vectors(3, 3);
+        MetisMatrix<Scalar> vectors(3, 3);
         vectors.col(0) = symmetric_eigenvector_3x3(A, smallest);
         vectors.col(1) = symmetric_eigenvector_3x3(A, middle);
         vectors.col(2) = symmetric_eigenvector_3x3(A, largest);
 
-        const JanusMatrix<Scalar> identity = JanusMatrix<Scalar>::Identity(3, 3);
-        result.eigenvectors = janus::detail::select(has_spread, vectors, identity);
+        const MetisMatrix<Scalar> identity = MetisMatrix<Scalar>::Identity(3, 3);
+        result.eigenvectors = metis::detail::select(has_spread, vectors, identity);
         return result;
     }
 
@@ -847,7 +847,7 @@ template <typename Derived> auto eig(const Eigen::MatrixBase<Derived> &A) {
     }
 
     if constexpr (std::is_floating_point_v<Scalar>) {
-        using Matrix = JanusMatrix<Scalar>;
+        using Matrix = MetisMatrix<Scalar>;
         using Complex = std::complex<Scalar>;
         using ComplexMatrix = Eigen::Matrix<Complex, Eigen::Dynamic, Eigen::Dynamic>;
         using ComplexVector = Eigen::Matrix<Complex, Eigen::Dynamic, 1>;
@@ -914,7 +914,7 @@ template <typename Derived> auto eig_symmetric(const Eigen::MatrixBase<Derived> 
             throw InvalidArgument("eig_symmetric: numeric input must be symmetric");
         }
 
-        using Matrix = JanusMatrix<Scalar>;
+        using Matrix = MetisMatrix<Scalar>;
         Eigen::SelfAdjointEigenSolver<Matrix> solver(A.eval());
         if (solver.info() != Eigen::Success) {
             throw InvalidArgument("eig_symmetric: SelfAdjointEigenSolver failed");
@@ -968,7 +968,7 @@ std::tuple<T, T, T, T, T, T> inv_symmetric_3x3_explicit(const T &m11, const T &m
 
 // --- Sparse Matrix Utilities ---
 // NOTE: Sparse matrices are for NUMERIC data only. CasADi MX handles sparsity internally.
-// For symbolic sparsity analysis, use janus::SparsityPattern.
+// For symbolic sparsity analysis, use metis::SparsityPattern.
 
 /**
  * @brief Compile-time check for numeric scalar types
@@ -985,10 +985,10 @@ constexpr bool is_numeric_scalar_v = std::is_floating_point_v<Scalar> || std::is
  * Triplets specify (row, col, value) entries. Duplicate entries are summed.
  *
  * @code
- * std::vector<janus::SparseTriplet> triplets;
+ * std::vector<metis::SparseTriplet> triplets;
  * triplets.emplace_back(0, 0, 1.0);
  * triplets.emplace_back(1, 1, 2.0);
- * auto sp = janus::sparse_from_triplets(2, 2, triplets);
+ * auto sp = metis::sparse_from_triplets(2, 2, triplets);
  * @endcode
  *
  * @param rows Number of rows
@@ -1038,4 +1038,4 @@ inline SparseMatrix sparse_identity(int n) {
     return I;
 }
 
-} // namespace janus
+} // namespace metis

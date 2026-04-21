@@ -1,6 +1,6 @@
 /**
  * @file integration_demo.cpp
- * @brief Demo: Using Janus integrators with Icarus-style component models
+ * @brief Demo: Using Metis integrators with Icarus-style component models
  *
  * This example explores several integration patterns:
  * 1. Monolithic state vector (traditional approach)
@@ -12,9 +12,9 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <janus/janus.hpp>
+#include <metis/metis.hpp>
 
-using namespace janus;
+using namespace metis;
 
 // ============================================================================
 // Pattern 1: Monolithic State Vector (Traditional)
@@ -148,13 +148,13 @@ template <typename Scalar> class IntegrableState {
     virtual ~IntegrableState() = default;
 
     /// Get current state as a vector
-    virtual JanusVector<Scalar> get_state() const = 0;
+    virtual MetisVector<Scalar> get_state() const = 0;
 
     /// Set state from a vector
-    virtual void set_state(const JanusVector<Scalar> &state) = 0;
+    virtual void set_state(const MetisVector<Scalar> &state) = 0;
 
     /// Compute derivative: dx/dt = f(t, x)
-    virtual JanusVector<Scalar> compute_derivative(Scalar t) const = 0;
+    virtual MetisVector<Scalar> compute_derivative(Scalar t) const = 0;
 
     /// Number of state variables
     virtual int state_dim() const = 0;
@@ -177,18 +177,18 @@ class RigidBody : public IntegrableState<double> {
 
     int state_dim() const override { return 6; }
 
-    JanusVector<double> get_state() const override {
+    MetisVector<double> get_state() const override {
         NumericVector s(6);
         s << position(0), position(1), position(2), velocity(0), velocity(1), velocity(2);
         return s;
     }
 
-    void set_state(const JanusVector<double> &state) override {
+    void set_state(const MetisVector<double> &state) override {
         position << state(0), state(1), state(2);
         velocity << state(3), state(4), state(5);
     }
 
-    JanusVector<double> compute_derivative(double t) const override {
+    MetisVector<double> compute_derivative(double t) const override {
         NumericVector dydt(6);
         // dx/dt = v, dv/dt = a
         dydt << velocity(0), velocity(1), velocity(2), acceleration(0), acceleration(1),
@@ -220,8 +220,8 @@ class GravityModel {
 template <typename Scalar> class ComponentIntegrator {
   public:
     void step_rk4(IntegrableState<Scalar> &component, Scalar t, Scalar dt) {
-        // Wrap component's derivative function for janus::rk4_step
-        auto dynamics = [&component](Scalar t, const JanusVector<Scalar> &state) {
+        // Wrap component's derivative function for metis::rk4_step
+        auto dynamics = [&component](Scalar t, const MetisVector<Scalar> &state) {
             // Temporarily set state for derivative computation
             auto saved_state = component.get_state();
             component.set_state(state);
@@ -359,8 +359,8 @@ void mass_matrix_example() {
     std::cout << "  x(tf) = " << constrained_sol.y(0, constrained_sol.y.cols() - 1)
               << ", z(tf) = " << constrained_sol.y(1, constrained_sol.y.cols() - 1) << "\n";
 
-    auto t_sym = janus::sym("t");
-    auto y_sym = janus::sym("y", 2);
+    auto t_sym = metis::sym("t");
+    auto y_sym = metis::sym("y", 2);
 
     casadi::MX rhs_sym = casadi::MX::vertcat({y_sym(1), 1.0 - y_sym(0) - y_sym(1)});
     casadi::MX M_sym = casadi::MX::zeros(2, 2);
@@ -385,7 +385,7 @@ void mass_matrix_example() {
 // ============================================================================
 
 int main() {
-    std::cout << "Janus Integration Demo\n";
+    std::cout << "Metis Integration Demo\n";
     std::cout << "======================\n\n";
     std::cout << std::fixed << std::setprecision(6);
 

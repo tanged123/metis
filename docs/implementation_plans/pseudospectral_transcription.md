@@ -33,14 +33,14 @@ This plan introduces:
 
 ## Part 1: Orthogonal Polynomial Infrastructure
 
-New file: `include/janus/math/OrthogonalPolynomials.hpp`
+New file: `include/metis/math/OrthogonalPolynomials.hpp`
 
 This is the mathematical foundation. All functions are pure numeric (no symbolic types) and operate on `NumericVector` / `NumericMatrix`.
 
 ### 1.1 Legendre Polynomial Evaluation
 
 ```cpp
-namespace janus {
+namespace metis {
 
 /// Evaluate Legendre polynomial P_n(x) and its derivative P'_n(x)
 /// Uses the stable three-term recurrence:
@@ -53,7 +53,7 @@ std::pair<double, double> legendre_poly(int n, double x);
 /// Evaluate P_n(x) at every element of a vector
 NumericVector legendre_poly_vec(int n, const NumericVector &x);
 
-} // namespace janus
+} // namespace metis
 ```
 
 **Implementation notes:**
@@ -143,7 +143,7 @@ We'll implement the barycentric form since it works for both LGL and CGL nodes u
 ### 1.6 File Layout
 
 ```
-include/janus/math/OrthogonalPolynomials.hpp
+include/metis/math/OrthogonalPolynomials.hpp
     legendre_poly()
     lgl_nodes()
     cgl_nodes()
@@ -176,9 +176,9 @@ But they also have **method-specific options** (CollocationOptions, MultiShootin
 Rather than forcing runtime polymorphism, we use a **CRTP base class** that factors out the common data members and boundary-condition logic, while leaving the transcription-specific parts (setup internals, constraint generation) to the derived class.
 
 ```cpp
-// include/janus/optimization/TranscriptionBase.hpp
+// include/metis/optimization/TranscriptionBase.hpp
 
-namespace janus {
+namespace metis {
 
 /// Common state shared by all transcription methods
 template <typename Derived>
@@ -234,7 +234,7 @@ protected:
     SymbolicVector get_control_at_node(int k) const;
 };
 
-} // namespace janus
+} // namespace metis
 ```
 
 ### 2.3 Migration Path
@@ -268,7 +268,7 @@ class DirectCollocation : public TranscriptionBase<DirectCollocation> {
 
 ## Part 3: Pseudospectral Class
 
-New file: `include/janus/optimization/Pseudospectral.hpp`
+New file: `include/metis/optimization/Pseudospectral.hpp`
 
 ### 3.1 Options
 
@@ -479,7 +479,7 @@ For API parity, we should add a `quadrature()` method to `DirectCollocation` as 
 
 ### Phase 4.1: Math Foundation
 
-**Files:** `include/janus/math/OrthogonalPolynomials.hpp`
+**Files:** `include/metis/math/OrthogonalPolynomials.hpp`
 **Tests:** `tests/math/test_orthogonal_polynomials.cpp`
 
 | Task | Test |
@@ -496,9 +496,9 @@ For API parity, we should add a `quadrature()` method to `DirectCollocation` as 
 ### Phase 4.2: TranscriptionBase Refactor
 
 **Files:**
-- New: `include/janus/optimization/TranscriptionBase.hpp`
-- Modified: `include/janus/optimization/Collocation.hpp`
-- Modified: `include/janus/optimization/MultiShooting.hpp`
+- New: `include/metis/optimization/TranscriptionBase.hpp`
+- Modified: `include/metis/optimization/Collocation.hpp`
+- Modified: `include/metis/optimization/MultiShooting.hpp`
 
 **Validation:** All existing tests in `tests/optimization/test_collocation.cpp` and `tests/optimization/test_multishoot.cpp` pass unchanged. This is a pure refactor with zero behavioral change.
 
@@ -513,8 +513,8 @@ For API parity, we should add a `quadrature()` method to `DirectCollocation` as 
 ### Phase 4.3: Pseudospectral Class
 
 **Files:**
-- New: `include/janus/optimization/Pseudospectral.hpp`
-- Modified: `include/janus/janus.hpp` (add include)
+- New: `include/metis/optimization/Pseudospectral.hpp`
+- Modified: `include/metis/metis.hpp` (add include)
 - New: `tests/optimization/test_pseudospectral.cpp`
 - New: `examples/optimization/pseudospectral_demo.cpp`
 
@@ -908,9 +908,9 @@ The KKT multipliers of the pseudospectral NLP approximate the continuous-time co
 ### New Files
 | File | Contents |
 |------|----------|
-| `include/janus/math/OrthogonalPolynomials.hpp` | Legendre polynomials, LGL/CGL nodes, weights, differentiation matrix |
-| `include/janus/optimization/TranscriptionBase.hpp` | CRTP base for shared transcription logic |
-| `include/janus/optimization/Pseudospectral.hpp` | Pseudospectral transcription class |
+| `include/metis/math/OrthogonalPolynomials.hpp` | Legendre polynomials, LGL/CGL nodes, weights, differentiation matrix |
+| `include/metis/optimization/TranscriptionBase.hpp` | CRTP base for shared transcription logic |
+| `include/metis/optimization/Pseudospectral.hpp` | Pseudospectral transcription class |
 | `tests/math/test_orthogonal_polynomials.cpp` | Unit tests for polynomial infrastructure |
 | `tests/optimization/test_pseudospectral.cpp` | Integration tests for PS transcription |
 | `examples/optimization/pseudospectral_demo.cpp` | Brachistochrone via pseudospectral |
@@ -919,9 +919,9 @@ The KKT multipliers of the pseudospectral NLP approximate the continuous-time co
 ### Modified Files
 | File | Change |
 |------|--------|
-| `include/janus/optimization/Collocation.hpp` | Inherit from `TranscriptionBase`, move shared members to base |
-| `include/janus/optimization/MultiShooting.hpp` | Inherit from `TranscriptionBase`, move shared members to base |
-| `include/janus/janus.hpp` | Add `#include` for new headers |
+| `include/metis/optimization/Collocation.hpp` | Inherit from `TranscriptionBase`, move shared members to base |
+| `include/metis/optimization/MultiShooting.hpp` | Inherit from `TranscriptionBase`, move shared members to base |
+| `include/metis/metis.hpp` | Add `#include` for new headers |
 | `tests/CMakeLists.txt` | Add new test targets |
 | `examples/CMakeLists.txt` | Add new example target |
 

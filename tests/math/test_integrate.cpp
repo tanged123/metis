@@ -1,10 +1,10 @@
 #include "../utils/TestUtils.hpp"
 #include <cmath>
 #include <gtest/gtest.h>
-#include <janus/core/Function.hpp>
-#include <janus/core/JanusError.hpp>
-#include <janus/core/JanusTypes.hpp>
-#include <janus/math/Integrate.hpp>
+#include <metis/core/Function.hpp>
+#include <metis/core/MetisError.hpp>
+#include <metis/core/MetisTypes.hpp>
+#include <metis/math/Integrate.hpp>
 
 // ============================================================================
 // Tests for quad (definite integration)
@@ -12,43 +12,43 @@
 
 TEST(Integrate, QuadConstant) {
     // ∫ 2 dx from 0 to 3 = 6
-    auto result = janus::quad([](double x) { return 2.0; }, 0.0, 3.0);
+    auto result = metis::quad([](double x) { return 2.0; }, 0.0, 3.0);
     EXPECT_NEAR(result.value, 6.0, 1e-10);
 }
 
 TEST(Integrate, QuadLinear) {
     // ∫ x dx from 0 to 2 = x^2/2 |_0^2 = 2
-    auto result = janus::quad([](double x) { return x; }, 0.0, 2.0);
+    auto result = metis::quad([](double x) { return x; }, 0.0, 2.0);
     EXPECT_NEAR(result.value, 2.0, 1e-10);
 }
 
 TEST(Integrate, QuadQuadratic) {
     // ∫ x^2 dx from 0 to 1 = 1/3
-    auto result = janus::quad([](double x) { return x * x; }, 0.0, 1.0);
+    auto result = metis::quad([](double x) { return x * x; }, 0.0, 1.0);
     EXPECT_NEAR(result.value, 1.0 / 3.0, 1e-10);
 }
 
 TEST(Integrate, QuadCubic) {
     // ∫ x^3 dx from 0 to 2 = x^4/4 |_0^2 = 4
-    auto result = janus::quad([](double x) { return x * x * x; }, 0.0, 2.0);
+    auto result = metis::quad([](double x) { return x * x * x; }, 0.0, 2.0);
     EXPECT_NEAR(result.value, 4.0, 1e-10);
 }
 
 TEST(Integrate, QuadTrig) {
     // ∫ sin(x) dx from 0 to π = -cos(x) |_0^π = -(-1) - (-1) = 2
-    auto result = janus::quad([](double x) { return std::sin(x); }, 0.0, M_PI);
+    auto result = metis::quad([](double x) { return std::sin(x); }, 0.0, M_PI);
     EXPECT_NEAR(result.value, 2.0, 1e-10);
 }
 
 TEST(Integrate, QuadExp) {
     // ∫ e^x dx from 0 to 1 = e - 1 ≈ 1.718281828
-    auto result = janus::quad([](double x) { return std::exp(x); }, 0.0, 1.0);
+    auto result = metis::quad([](double x) { return std::exp(x); }, 0.0, 1.0);
     EXPECT_NEAR(result.value, std::exp(1.0) - 1.0, 1e-10);
 }
 
 TEST(Integrate, QuadGaussian) {
     // ∫ e^(-x^2) dx from -3 to 3 ≈ √π ≈ 1.7724538509
-    auto result = janus::quad([](double x) { return std::exp(-x * x); }, -3.0, 3.0);
+    auto result = metis::quad([](double x) { return std::exp(-x * x); }, -3.0, 3.0);
     EXPECT_NEAR(result.value, std::sqrt(M_PI), 1e-4); // Less accurate for unbounded
 }
 
@@ -58,30 +58,30 @@ TEST(Integrate, QuadGaussian) {
 
 TEST(IntegrateSymbolic, QuadBasic) {
     // ∫ x dx from 0 to 1 = 0.5 (symbolic)
-    auto x = janus::sym("x");
+    auto x = metis::sym("x");
     auto expr = x; // f(x) = x
 
-    auto result = janus::quad(expr, x, 0.0, 1.0);
+    auto result = metis::quad(expr, x, 0.0, 1.0);
 
-    // Use janus::eval for clean evaluation
-    double val = janus::eval(result.value);
+    // Use metis::eval for clean evaluation
+    double val = metis::eval(result.value);
     EXPECT_NEAR(val, 0.5, 1e-6);
 }
 
 TEST(IntegrateSymbolic, QuadSquare) {
     // ∫ x^2 dx from 0 to 1 = 1/3 (symbolic)
-    auto x = janus::sym("x");
+    auto x = metis::sym("x");
     auto expr = x * x;
 
-    auto result = janus::quad(expr, x, 0.0, 1.0);
+    auto result = metis::quad(expr, x, 0.0, 1.0);
 
-    // Use janus::eval for clean evaluation
-    double val = janus::eval(result.value);
+    // Use metis::eval for clean evaluation
+    double val = metis::eval(result.value);
     EXPECT_NEAR(val, 1.0 / 3.0, 1e-6);
 }
 
 // ============================================================================
-// Tests for solve_ivp (numeric) - Using Janus native types
+// Tests for solve_ivp (numeric) - Using Metis native types
 // ============================================================================
 
 TEST(Integrate, SolveIvpExponentialDecay) {
@@ -92,7 +92,7 @@ TEST(Integrate, SolveIvpExponentialDecay) {
 
     // Use initializer list for clean API
     auto sol =
-        janus::solve_ivp([lambda](double t, const janus::NumericVector &y) { return -lambda * y; },
+        metis::solve_ivp([lambda](double t, const metis::NumericVector &y) { return -lambda * y; },
                          {0.0, 4.0}, {y0_val}, // initializer list syntax
                          50);
 
@@ -117,9 +117,9 @@ TEST(Integrate, SolveIvpHarmonicOscillator) {
     double omega = 2.0;
 
     // Use initializer list for multi-state initial condition
-    auto sol = janus::solve_ivp(
-        [omega](double t, const janus::NumericVector &state) {
-            janus::NumericVector dydt(2);
+    auto sol = metis::solve_ivp(
+        [omega](double t, const metis::NumericVector &state) {
+            metis::NumericVector dydt(2);
             dydt << state(1), -omega * omega * state(0);
             return dydt;
         },
@@ -143,9 +143,9 @@ TEST(Integrate, SolveIvpLogistic) {
     double K = 1.0;
     double y0_val = 0.1;
 
-    auto sol = janus::solve_ivp(
-        [r, K](double t, const janus::NumericVector &y) {
-            janus::NumericVector dydt(1);
+    auto sol = metis::solve_ivp(
+        [r, K](double t, const metis::NumericVector &y) {
+            metis::NumericVector dydt(1);
             dydt << r * y(0) * (1 - y(0) / K);
             return dydt;
         },
@@ -158,11 +158,11 @@ TEST(Integrate, SolveIvpLogistic) {
 }
 
 TEST(Integrate, SolveSecondOrderIvpStormerVerletHarmonicOscillator) {
-    janus::SecondOrderIvpOptions opts;
-    opts.method = janus::SecondOrderIntegratorMethod::StormerVerlet;
+    metis::SecondOrderIvpOptions opts;
+    opts.method = metis::SecondOrderIntegratorMethod::StormerVerlet;
 
-    auto sol = janus::solve_second_order_ivp(
-        [](double t, const janus::NumericVector &q) { return (-q).eval(); }, {0.0, 40.0}, {1.0},
+    auto sol = metis::solve_second_order_ivp(
+        [](double t, const metis::NumericVector &q) { return (-q).eval(); }, {0.0, 40.0}, {1.0},
         {0.0}, 401, opts);
 
     EXPECT_TRUE(sol.success);
@@ -180,12 +180,12 @@ TEST(Integrate, SolveSecondOrderIvpStormerVerletHarmonicOscillator) {
 }
 
 TEST(Integrate, SolveSecondOrderIvpRkn4OscillatorAccuracy) {
-    janus::SecondOrderIvpOptions opts;
-    opts.method = janus::SecondOrderIntegratorMethod::RungeKuttaNystrom4;
+    metis::SecondOrderIvpOptions opts;
+    opts.method = metis::SecondOrderIntegratorMethod::RungeKuttaNystrom4;
 
     const double omega = 2.0;
-    auto sol = janus::solve_second_order_ivp(
-        [omega](double t, const janus::NumericVector &q) { return (-omega * omega * q).eval(); },
+    auto sol = metis::solve_second_order_ivp(
+        [omega](double t, const metis::NumericVector &q) { return (-omega * omega * q).eval(); },
         {0.0, M_PI / omega}, {1.0}, {0.0}, 60, opts);
 
     EXPECT_TRUE(sol.success);
@@ -194,18 +194,18 @@ TEST(Integrate, SolveSecondOrderIvpRkn4OscillatorAccuracy) {
 }
 
 TEST(Integrate, SolveIvpMassMatrixRosenbrockLinearStiff) {
-    janus::MassMatrixIvpOptions opts;
-    opts.method = janus::MassMatrixIntegratorMethod::RosenbrockEuler;
+    metis::MassMatrixIvpOptions opts;
+    opts.method = metis::MassMatrixIntegratorMethod::RosenbrockEuler;
     opts.substeps = 2;
 
-    auto sol = janus::solve_ivp_mass_matrix(
-        [](double t, const janus::NumericVector &y) {
-            janus::NumericVector rhs(1);
+    auto sol = metis::solve_ivp_mass_matrix(
+        [](double t, const metis::NumericVector &y) {
+            metis::NumericVector rhs(1);
             rhs(0) = -20.0 * y(0);
             return rhs;
         },
-        [](double t, const janus::NumericVector &y) {
-            janus::NumericMatrix M(1, 1);
+        [](double t, const metis::NumericVector &y) {
+            metis::NumericMatrix M(1, 1);
             M(0, 0) = 2.0;
             return M;
         },
@@ -216,18 +216,18 @@ TEST(Integrate, SolveIvpMassMatrixRosenbrockLinearStiff) {
 }
 
 TEST(Integrate, SolveIvpMassMatrixBdf1SingularConstraint) {
-    janus::MassMatrixIvpOptions opts;
-    opts.method = janus::MassMatrixIntegratorMethod::Bdf1;
+    metis::MassMatrixIvpOptions opts;
+    opts.method = metis::MassMatrixIntegratorMethod::Bdf1;
     opts.substeps = 2;
 
-    auto sol = janus::solve_ivp_mass_matrix(
-        [](double t, const janus::NumericVector &y) {
-            janus::NumericVector rhs(2);
+    auto sol = metis::solve_ivp_mass_matrix(
+        [](double t, const metis::NumericVector &y) {
+            metis::NumericVector rhs(2);
             rhs << y(1), 1.0 - y(0) - y(1);
             return rhs;
         },
-        [](double t, const janus::NumericVector &y) {
-            janus::NumericMatrix M = janus::NumericMatrix::Zero(2, 2);
+        [](double t, const metis::NumericVector &y) {
+            metis::NumericMatrix M = metis::NumericMatrix::Zero(2, 2);
             M(0, 0) = 1.0;
             return M;
         },
@@ -248,15 +248,15 @@ TEST(IntegrateSymbolic, SolveIvpExprExponential) {
     double lambda = 0.5;
     double y0_val = 2.5;
 
-    auto t = janus::sym("t");
-    auto y = janus::sym("y");
+    auto t = metis::sym("t");
+    auto y = metis::sym("y");
     auto ode = -lambda * y;
 
     // Use NumericVector
-    janus::NumericVector y0(1);
+    metis::NumericVector y0(1);
     y0(0) = y0_val;
 
-    auto sol = janus::solve_ivp_expr(ode, t, y, {0.0, 4.0}, y0, 50);
+    auto sol = metis::solve_ivp_expr(ode, t, y, {0.0, 4.0}, y0, 50);
 
     EXPECT_TRUE(sol.success);
 
@@ -270,18 +270,18 @@ TEST(IntegrateSymbolic, SolveIvpExprOscillator) {
     // y'' = -ω²y  =>  y' = v, v' = -ω²y
     double omega = 2.0;
 
-    auto t = janus::sym("t");
-    auto state = janus::sym("state", 2); // [y, v]
+    auto t = metis::sym("t");
+    auto state = metis::sym("state", 2); // [y, v]
 
-    janus::SymbolicScalar ode_y = state(1);                  // dy/dt = v
-    janus::SymbolicScalar ode_v = -omega * omega * state(0); // dv/dt = -ω²y
+    metis::SymbolicScalar ode_y = state(1);                  // dy/dt = v
+    metis::SymbolicScalar ode_v = -omega * omega * state(0); // dv/dt = -ω²y
 
     casadi::MX ode = casadi::MX::vertcat({ode_y, ode_v});
 
-    janus::NumericVector y0(2);
+    metis::NumericVector y0(2);
     y0 << 1.0, 0.0;
 
-    auto sol = janus::solve_ivp_expr(ode, t, state, {0.0, M_PI / omega}, y0, 100);
+    auto sol = metis::solve_ivp_expr(ode, t, state, {0.0, M_PI / omega}, y0, 100);
 
     EXPECT_TRUE(sol.success);
 
@@ -290,21 +290,21 @@ TEST(IntegrateSymbolic, SolveIvpExprOscillator) {
 }
 
 TEST(IntegrateSymbolic, SolveIvpMassMatrixExprSingularConstraint) {
-    auto t = janus::sym("t");
-    auto y = janus::sym("y", 2);
+    auto t = metis::sym("t");
+    auto y = metis::sym("y", 2);
 
     casadi::MX rhs = casadi::MX::vertcat({y(1), 1.0 - y(0) - y(1)});
     casadi::MX M = casadi::MX::zeros(2, 2);
     M(0, 0) = 1.0;
 
-    janus::NumericVector y0(2);
+    metis::NumericVector y0(2);
     y0 << 0.0, 1.0;
 
-    janus::MassMatrixIvpOptions opts;
+    metis::MassMatrixIvpOptions opts;
     opts.abstol = 1e-10;
     opts.reltol = 1e-10;
 
-    auto sol = janus::solve_ivp_mass_matrix_expr(rhs, M, t, y, {0.0, 1.0}, y0, 40, opts);
+    auto sol = metis::solve_ivp_mass_matrix_expr(rhs, M, t, y, {0.0, 1.0}, y0, 40, opts);
 
     EXPECT_TRUE(sol.success);
     EXPECT_NEAR(sol.y(0, sol.y.cols() - 1), 1.0 - std::exp(-1.0), 1e-5);
@@ -317,19 +317,19 @@ TEST(IntegrateSymbolic, SolveIvpMassMatrixExprSingularConstraint) {
 
 TEST(Integrate, QuadZeroInterval) {
     // ∫ f(x) dx from a to a = 0
-    auto result = janus::quad([](double x) { return x * x + 1; }, 2.0, 2.0);
+    auto result = metis::quad([](double x) { return x * x + 1; }, 2.0, 2.0);
     EXPECT_NEAR(result.value, 0.0, 1e-14);
 }
 
 TEST(Integrate, QuadNegativeInterval) {
     // ∫ x dx from 2 to 0 = -∫ x dx from 0 to 2 = -2
-    auto result = janus::quad([](double x) { return x; }, 2.0, 0.0);
+    auto result = metis::quad([](double x) { return x; }, 2.0, 0.0);
     EXPECT_NEAR(result.value, -2.0, 1e-10);
 }
 
 TEST(Integrate, SolveIvpSingleStep) {
     // Minimal case: 2 output points using initializer list
-    auto sol = janus::solve_ivp([](double t, const janus::NumericVector &y) { return -y; },
+    auto sol = metis::solve_ivp([](double t, const metis::NumericVector &y) { return -y; },
                                 {0.0, 1.0}, {1.0}, 2);
 
     EXPECT_TRUE(sol.success);
@@ -339,22 +339,22 @@ TEST(Integrate, SolveIvpSingleStep) {
 }
 
 TEST(Integrate, StructurePreservingErrors) {
-    janus::SecondOrderIvpOptions second_order_opts;
+    metis::SecondOrderIvpOptions second_order_opts;
     second_order_opts.substeps = 0;
 
-    EXPECT_THROW(janus::solve_second_order_ivp(
-                     [](double t, const janus::NumericVector &q) { return (-q).eval(); },
+    EXPECT_THROW(metis::solve_second_order_ivp(
+                     [](double t, const metis::NumericVector &q) { return (-q).eval(); },
                      {0.0, 1.0}, {1.0}, {0.0}, 10, second_order_opts),
-                 janus::IntegrationError);
+                 metis::IntegrationError);
 
-    janus::MassMatrixIvpOptions mass_opts;
+    metis::MassMatrixIvpOptions mass_opts;
     mass_opts.max_newton_iterations = 0;
 
     EXPECT_THROW(
-        janus::solve_ivp_mass_matrix([](double t, const janus::NumericVector &y) { return y; },
-                                     [](double t, const janus::NumericVector &y) {
-                                         return janus::NumericMatrix::Identity(y.size(), y.size());
+        metis::solve_ivp_mass_matrix([](double t, const metis::NumericVector &y) { return y; },
+                                     [](double t, const metis::NumericVector &y) {
+                                         return metis::NumericMatrix::Identity(y.size(), y.size());
                                      },
                                      {0.0, 1.0}, {1.0}, 10, mass_opts),
-        janus::IntegrationError);
+        metis::IntegrationError);
 }

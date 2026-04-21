@@ -1,7 +1,7 @@
 #pragma once
 /**
- * @file JanusError.hpp
- * @brief Custom exception hierarchy for Janus framework
+ * @file MetisError.hpp
+ * @brief Custom exception hierarchy for Metis framework
  *
  * Provides consistent error handling with contextual messages.
  * All exceptions derive from std::runtime_error for backward compatibility.
@@ -10,59 +10,59 @@
 #include <stdexcept>
 #include <string>
 
-namespace janus {
+namespace metis {
 
 /**
- * @brief Base exception for all Janus errors
+ * @brief Base exception for all Metis errors
  * @see InvalidArgument, RuntimeError, InterpolationError, IntegrationError
  */
-class JanusError : public std::runtime_error {
+class MetisError : public std::runtime_error {
   public:
     /**
      * @brief Construct with a descriptive message
-     * @param what Error description (automatically prefixed with "[janus]")
+     * @param what Error description (automatically prefixed with "[metis]")
      */
-    explicit JanusError(const std::string &what) : std::runtime_error("[janus] " + what) {}
+    explicit MetisError(const std::string &what) : std::runtime_error("[metis] " + what) {}
 };
 
 /**
  * @brief Input validation failed (e.g., mismatched sizes, invalid parameters)
  */
-class InvalidArgument : public JanusError {
+class InvalidArgument : public MetisError {
   public:
     /// @brief Construct with a descriptive message
     /// @param what Error description
-    explicit InvalidArgument(const std::string &what) : JanusError(what) {}
+    explicit InvalidArgument(const std::string &what) : MetisError(what) {}
 };
 
 /**
  * @brief Operation failed at runtime (e.g., CasADi eval with free variables)
  */
-class RuntimeError : public JanusError {
+class RuntimeError : public MetisError {
   public:
     /// @brief Construct with a descriptive message
     /// @param what Error description
-    explicit RuntimeError(const std::string &what) : JanusError(what) {}
+    explicit RuntimeError(const std::string &what) : MetisError(what) {}
 };
 
 /**
  * @brief Interpolation-specific errors
  */
-class InterpolationError : public JanusError {
+class InterpolationError : public MetisError {
   public:
     /// @brief Construct with a descriptive message
     /// @param what Error description (automatically prefixed with "Interpolation:")
-    explicit InterpolationError(const std::string &what) : JanusError("Interpolation: " + what) {}
+    explicit InterpolationError(const std::string &what) : MetisError("Interpolation: " + what) {}
 };
 
 /**
  * @brief Integration/ODE solver errors
  */
-class IntegrationError : public JanusError {
+class IntegrationError : public MetisError {
   public:
     /// @brief Construct with a descriptive message
     /// @param what Error description (automatically prefixed with "Integration:")
-    explicit IntegrationError(const std::string &what) : JanusError("Integration: " + what) {}
+    explicit IntegrationError(const std::string &what) : MetisError("Integration: " + what) {}
 };
 
-} // namespace janus
+} // namespace metis
