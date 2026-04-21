@@ -279,7 +279,7 @@ auto solve_sparse_direct_numeric(const SparseMatrix &A, const Eigen::MatrixBase<
         return solver.solve(b).eval();
     }
     case SparseDirectLinearSolver::SparseQR: {
-        Eigen::SparseQR<SparseMatrix, Eigen::COLAMDOrdering<int>> solver;
+        metis::SparseQR<SparseMatrix> solver;
         solver.compute(matrix);
         if (solver.info() != Eigen::Success) {
             throw InvalidArgument("solve: SparseQR factorization failed");
@@ -288,7 +288,7 @@ auto solve_sparse_direct_numeric(const SparseMatrix &A, const Eigen::MatrixBase<
     }
     case SparseDirectLinearSolver::SimplicialLLT: {
         validate_square_required(matrix.rows(), matrix.cols(), "solve", "SimplicialLLT");
-        Eigen::SimplicialLLT<SparseMatrix> solver;
+        metis::SimplicialLLT<SparseMatrix> solver;
         solver.compute(matrix);
         if (solver.info() != Eigen::Success) {
             throw InvalidArgument("solve: SimplicialLLT factorization failed");
@@ -297,7 +297,7 @@ auto solve_sparse_direct_numeric(const SparseMatrix &A, const Eigen::MatrixBase<
     }
     case SparseDirectLinearSolver::SimplicialLDLT: {
         validate_square_required(matrix.rows(), matrix.cols(), "solve", "SimplicialLDLT");
-        Eigen::SimplicialLDLT<SparseMatrix> solver;
+        metis::SimplicialLDLT<SparseMatrix> solver;
         solver.compute(matrix);
         if (solver.info() != Eigen::Success) {
             throw InvalidArgument("solve: SimplicialLDLT factorization failed");
@@ -372,7 +372,7 @@ auto solve_dense_numeric(const Eigen::MatrixBase<DerivedA> &A, const Eigen::Matr
         return A.fullPivLu().solve(b).eval();
     case DenseLinearSolver::LLT: {
         validate_square_required(A.rows(), A.cols(), "solve", "LLT");
-        Eigen::LLT<NumericMatrix> solver(A.eval());
+        metis::LLT<typename DerivedA::PlainObject> solver(A.eval());
         if (solver.info() != Eigen::Success) {
             throw InvalidArgument("solve: LLT factorization failed");
         }
@@ -380,7 +380,7 @@ auto solve_dense_numeric(const Eigen::MatrixBase<DerivedA> &A, const Eigen::Matr
     }
     case DenseLinearSolver::LDLT: {
         validate_square_required(A.rows(), A.cols(), "solve", "LDLT");
-        Eigen::LDLT<NumericMatrix> solver(A.eval());
+        metis::LDLT<typename DerivedA::PlainObject> solver(A.eval());
         if (solver.info() != Eigen::Success) {
             throw InvalidArgument("solve: LDLT factorization failed");
         }
@@ -419,15 +419,22 @@ auto solve(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixBase<Derived
     detail::validate_linear_solve_dims(A.rows(), A.cols(), b.rows(), "solve");
 
     if constexpr (std::is_floating_point_v<Scalar>) {
+        // Unify the return type across dense/sparse/iterative backends so `auto`
+        // deduction succeeds. Rows come from A (square systems preserve A's row
+        // dim), cols come from b. Fixed-size inputs yield fixed-size results.
+        using Result =
+            Eigen::Matrix<Scalar, DerivedA::RowsAtCompileTime, DerivedB::ColsAtCompileTime>;
         switch (policy.backend) {
         case LinearSolveBackend::Dense:
-            return detail::solve_dense_numeric(A, b, policy);
+            return Result(detail::solve_dense_numeric(A, b, policy));
         case LinearSolveBackend::SparseDirect:
-            return detail::solve_sparse_direct_numeric(detail::dense_to_sparse(A.eval()), b,
-                                                       policy);
+            return Result(
+                detail::solve_sparse_direct_numeric(detail::dense_to_sparse(A.eval()), b, policy));
         case LinearSolveBackend::IterativeKrylov:
-            return detail::solve_iterative_numeric(detail::dense_to_sparse(A.eval()), b, policy);
+            return Result(
+                detail::solve_iterative_numeric(detail::dense_to_sparse(A.eval()), b, policy));
         }
+        return Result(detail::solve_dense_numeric(A, b, policy));
     } else {
         SymbolicScalar A_mx = to_mx(A);
         SymbolicScalar b_mx = to_mx(b);
