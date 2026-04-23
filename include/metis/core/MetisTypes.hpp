@@ -80,6 +80,23 @@ using SymbolicVector = MetisVector<SymbolicScalar>; ///< Eigen vector of MX elem
 using SparseMatrix = Eigen::SparseMatrix<double>; ///< Sparse numeric matrix (CSC)
 using SparseTriplet = Eigen::Triplet<double>;     ///< (row, col, value) triplet
 
+// --- Dense Decompositions (aliases for Eigen decomposition types) ---
+/**
+ * @brief Dense decomposition type aliases matching Eigen's decomposition templates.
+ * Use these in metis internals and downstream code rather than referencing Eigen directly.
+ */
+template <typename MatrixType> using LLT = Eigen::LLT<MatrixType>;
+template <typename MatrixType> using LDLT = Eigen::LDLT<MatrixType>;
+template <typename MatrixType> using PartialPivLU = Eigen::PartialPivLU<MatrixType>;
+template <typename MatrixType> using FullPivLU = Eigen::FullPivLU<MatrixType>;
+template <typename MatrixType> using ColPivHouseholderQR = Eigen::ColPivHouseholderQR<MatrixType>;
+
+// --- Sparse Decompositions ---
+template <typename MatrixType, typename Ord = Eigen::COLAMDOrdering<int>>
+using SparseQR = Eigen::SparseQR<MatrixType, Ord>;
+template <typename MatrixType> using SimplicialLLT = Eigen::SimplicialLLT<MatrixType>;
+template <typename MatrixType> using SimplicialLDLT = Eigen::SimplicialLDLT<MatrixType>;
+
 // --- Symbolic Variable Creation ---
 
 /**

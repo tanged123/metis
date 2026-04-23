@@ -474,3 +474,88 @@ TEST(LinalgTests, SparseIdentity) {
         EXPECT_DOUBLE_EQ(I.coeff(i, i), 1.0);
     }
 }
+
+// Regression tests: metis::solve on fixed-size inputs must preserve the
+// compile-time shape across every DenseLinearSolver policy. Previously LLT and
+// LDLT hard-coded the dynamic NumericMatrix for the Eigen solver template
+// argument, which made the switch branches return inconsistent types and broke
+// `auto` deduction for callers using Mat3/Vec3 etc.
+TEST(LinalgTests, SolveFixedSizeColPivHouseholderQR) {
+    metis::Mat3<double> A = metis::Mat3<double>::Identity() * 4.0;
+    metis::Vec3<double> b;
+    b << 1.0, 2.0, 3.0;
+    auto x = metis::solve(
+        A, b, metis::LinearSolvePolicy::dense(metis::DenseLinearSolver::ColPivHouseholderQR));
+    static_assert(std::is_same_v<decltype(x), metis::Vec3<double>>,
+                  "ColPivHouseholderQR solve should preserve fixed-size type");
+    EXPECT_NEAR(x(0), 0.25, 1e-12);
+    EXPECT_NEAR(x(1), 0.50, 1e-12);
+    EXPECT_NEAR(x(2), 0.75, 1e-12);
+}
+
+TEST(LinalgTests, SolveFixedSizePartialPivLU) {
+    metis::Mat3<double> A = metis::Mat3<double>::Identity() * 4.0;
+    metis::Vec3<double> b;
+    b << 1.0, 2.0, 3.0;
+    auto x =
+        metis::solve(A, b, metis::LinearSolvePolicy::dense(metis::DenseLinearSolver::PartialPivLU));
+    static_assert(std::is_same_v<decltype(x), metis::Vec3<double>>,
+                  "PartialPivLU solve should preserve fixed-size type");
+    EXPECT_NEAR(x(0), 0.25, 1e-12);
+    EXPECT_NEAR(x(1), 0.50, 1e-12);
+    EXPECT_NEAR(x(2), 0.75, 1e-12);
+}
+
+TEST(LinalgTests, SolveFixedSizeFullPivLU) {
+    metis::Mat3<double> A = metis::Mat3<double>::Identity() * 4.0;
+    metis::Vec3<double> b;
+    b << 1.0, 2.0, 3.0;
+    auto x =
+        metis::solve(A, b, metis::LinearSolvePolicy::dense(metis::DenseLinearSolver::FullPivLU));
+    static_assert(std::is_same_v<decltype(x), metis::Vec3<double>>,
+                  "FullPivLU solve should preserve fixed-size type");
+    EXPECT_NEAR(x(0), 0.25, 1e-12);
+    EXPECT_NEAR(x(1), 0.50, 1e-12);
+    EXPECT_NEAR(x(2), 0.75, 1e-12);
+}
+
+TEST(LinalgTests, SolveFixedSizeLLT) {
+    metis::Mat3<double> A = metis::Mat3<double>::Identity() * 4.0;
+    metis::Vec3<double> b;
+    b << 1.0, 2.0, 3.0;
+    auto x = metis::solve(A, b, metis::LinearSolvePolicy::dense(metis::DenseLinearSolver::LLT));
+    static_assert(std::is_same_v<decltype(x), metis::Vec3<double>>,
+                  "LLT solve should preserve fixed-size type");
+    EXPECT_NEAR(x(0), 0.25, 1e-12);
+    EXPECT_NEAR(x(1), 0.50, 1e-12);
+    EXPECT_NEAR(x(2), 0.75, 1e-12);
+}
+
+TEST(LinalgTests, SolveFixedSizeLDLT) {
+    metis::Mat3<double> A = metis::Mat3<double>::Identity() * 4.0;
+    metis::Vec3<double> b;
+    b << 1.0, 2.0, 3.0;
+    auto x = metis::solve(A, b, metis::LinearSolvePolicy::dense(metis::DenseLinearSolver::LDLT));
+    static_assert(std::is_same_v<decltype(x), metis::Vec3<double>>,
+                  "LDLT solve should preserve fixed-size type");
+    EXPECT_NEAR(x(0), 0.25, 1e-12);
+    EXPECT_NEAR(x(1), 0.50, 1e-12);
+    EXPECT_NEAR(x(2), 0.75, 1e-12);
+}
+
+// Non-square least-squares regression: for A (3x2) and b (3x1), the solution
+// should be a 2x1 vector (rows = A.cols, not A.rows). Catches the earlier
+// Result typedef that used DerivedA::RowsAtCompileTime.
+TEST(LinalgTests, SolveFixedSizeNonSquareLeastSquares) {
+    Eigen::Matrix<double, 3, 2> A;
+    A << 1.0, 0.0, 0.0, 1.0, 1.0, 1.0;
+    metis::Vec3<double> b;
+    b << 1.0, 2.0, 3.0;
+    auto x = metis::solve(
+        A, b, metis::LinearSolvePolicy::dense(metis::DenseLinearSolver::ColPivHouseholderQR));
+    static_assert(std::is_same_v<decltype(x), Eigen::Matrix<double, 2, 1>>,
+                  "Non-square QR solve result must have A.cols rows");
+    // Normal equations: x = (AᵀA)⁻¹ Aᵀ b = [[2,1],[1,2]]⁻¹ [4,5] = [1, 2]
+    EXPECT_NEAR(x(0), 1.0, 1e-12);
+    EXPECT_NEAR(x(1), 2.0, 1e-12);
+}
