@@ -26,10 +26,10 @@ trigger: always_on
 ### 4. Project Structure to Respect
 *   `include/metis/core/`: Concepts and Type traits.
 *   `include/metis/math/`: Math dispatch logic.
-*   `include/metis/linalg/`: Linear algebra extensions.
+*   `include/metis/math/Linalg.hpp`: Linear algebra extensions.
 *   `tests/`: Test suite.
 
-### 4. Read the Overview! 
+### 5. Read the Overview! 
 *   Always make sure to read through the docs before doing anything! Get context from design_overview.md!
 
 ## workflow
