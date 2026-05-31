@@ -5,6 +5,7 @@ add_executable(test_core
     core/test_diagnostics.cpp
     core/test_metis_io.cpp
     core/test_metis_types.cpp
+    core/test_using_header.cpp
     core/test_io_coverage.cpp
     core/test_sparsity.cpp
     core/test_structural_transforms.cpp

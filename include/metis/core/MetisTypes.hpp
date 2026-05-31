@@ -250,12 +250,6 @@ inline SymbolicVector as_vector(const casadi::MX &m) {
     return v;
 }
 
-/// @brief Backwards compatibility alias for as_vector
-/// @param m Input CasADi MX (column vector)
-/// @return SymbolicVector
-/// @see as_vector
-inline SymbolicVector to_eigen_vec(const casadi::MX &m) { return as_vector(m); }
-
 /**
  * @brief Universal symbolic argument wrapper for Function inputs/outputs
  *
@@ -277,18 +271,7 @@ class SymbolicArg {
      * @tparam Derived Eigen expression type
      * @param e Eigen matrix to flatten into MX
      */
-    template <typename Derived> SymbolicArg(const Eigen::MatrixBase<Derived> &e) {
-        if (e.size() == 0) {
-            mx_ = casadi::MX(e.rows(), e.cols());
-            return;
-        }
-        mx_ = casadi::MX(e.rows(), e.cols());
-        for (Eigen::Index i = 0; i < e.rows(); ++i) {
-            for (Eigen::Index j = 0; j < e.cols(); ++j) {
-                mx_(static_cast<int>(i), static_cast<int>(j)) = e(i, j);
-            }
-        }
-    }
+    template <typename Derived> SymbolicArg(const Eigen::MatrixBase<Derived> &e) : mx_(to_mx(e)) {}
 
     /**
      * @brief Implicit conversion to CasADi MX
