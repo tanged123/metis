@@ -162,7 +162,7 @@ template <typename T> MetisVector<T> geomspace(const T &start, const T &end, int
     }
     T log_start = metis::log10(start);
     T log_end = metis::log10(end);
-    return logspace(log_start, log_end, n);
+    return metis::logspace(log_start, log_end, n);
 }
 
 } // namespace metis
