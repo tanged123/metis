@@ -1,3 +1,11 @@
+> [!WARNING]
+> **Historical / superseded.** This is a point-in-time AI assessment (Dec 2025)
+> that builds on the earlier comprehensive review. Several references are now
+> stale — e.g. `DiffOps.hpp` and `tests/test_math.cpp` no longer exist, and the
+> open items it lists (linear-algebra primitives, test-suite restoration, etc.)
+> have since been addressed. Kept for historical context only; for current
+> architecture see [`../design_overview.md`](../design_overview.md).
+
 # Metis Repository: Follow-up Review
 ## Changes Since Initial Assessment
 

@@ -1,3 +1,12 @@
+> [!WARNING]
+> **Historical / superseded.** This is a point-in-time AI assessment from an
+> early stage of the project. Several specifics are no longer accurate — e.g.
+> it describes `DiffOps.hpp`, `tests/test_math.cpp`, and an empty `linalg/`
+> directory (all since renamed/removed/restructured), and lists missing
+> functions (`min`/`max`/`clamp`, matrix type aliases) that now exist. Kept for
+> historical context only; for current architecture see
+> [`../design_overview.md`](../design_overview.md).
+
 # Metis Repository: Comprehensive Technical Review
 
 ## Executive Summary
