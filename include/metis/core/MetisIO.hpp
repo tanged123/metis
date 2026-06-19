@@ -827,6 +827,113 @@ namespace detail {
  * Uses casadi_math.hpp operation codes. Returns a short human-readable
  * string for each operation type.
  */
+/// Map a CasADi operation code to a short display symbol.
+/// Shared by the symbolic graph exporters and the numeric eval-algorithm panel
+/// so both label identical operations identically.
+/// CasADi operation codes are defined in casadi/core/calculus.hpp.
+inline std::string op_symbol(casadi_int op) {
+    switch (op) {
+    // Unary operations
+    case casadi::OP_ASSIGN:
+        return "=";
+    case casadi::OP_NEG:
+        return "neg";
+    case casadi::OP_NOT:
+        return "not";
+    case casadi::OP_SQ:
+        return "sq";
+    case casadi::OP_SQRT:
+        return "sqrt";
+    case casadi::OP_EXP:
+        return "exp";
+    case casadi::OP_LOG:
+        return "log";
+    case casadi::OP_SIN:
+        return "sin";
+    case casadi::OP_COS:
+        return "cos";
+    case casadi::OP_TAN:
+        return "tan";
+    case casadi::OP_ASIN:
+        return "asin";
+    case casadi::OP_ACOS:
+        return "acos";
+    case casadi::OP_ATAN:
+        return "atan";
+    case casadi::OP_SINH:
+        return "sinh";
+    case casadi::OP_COSH:
+        return "cosh";
+    case casadi::OP_TANH:
+        return "tanh";
+    case casadi::OP_ASINH:
+        return "asinh";
+    case casadi::OP_ACOSH:
+        return "acosh";
+    case casadi::OP_ATANH:
+        return "atanh";
+    case casadi::OP_FABS:
+        return "abs";
+    case casadi::OP_FLOOR:
+        return "floor";
+    case casadi::OP_CEIL:
+        return "ceil";
+    case casadi::OP_SIGN:
+        return "sign";
+    case casadi::OP_ERF:
+        return "erf";
+    case casadi::OP_ERFINV:
+        return "erfinv";
+    case casadi::OP_INV:
+        return "inv";
+
+    // Binary operations
+    case casadi::OP_ADD:
+        return "+";
+    case casadi::OP_SUB:
+        return "-";
+    case casadi::OP_MUL:
+        return "*";
+    case casadi::OP_DIV:
+        return "/";
+    case casadi::OP_POW:
+        return "pow";
+    case casadi::OP_ATAN2:
+        return "atan2";
+    case casadi::OP_FMIN:
+        return "min";
+    case casadi::OP_FMAX:
+        return "max";
+    case casadi::OP_FMOD:
+        return "mod";
+    case casadi::OP_COPYSIGN:
+        return "copysign";
+    case casadi::OP_HYPOT:
+        return "hypot";
+
+    // Comparison operations
+    case casadi::OP_LT:
+        return "<";
+    case casadi::OP_LE:
+        return "<=";
+    case casadi::OP_EQ:
+        return "==";
+    case casadi::OP_NE:
+        return "!=";
+    case casadi::OP_AND:
+        return "&&";
+    case casadi::OP_OR:
+        return "||";
+
+    // Conditional
+    case casadi::OP_IF_ELSE_ZERO:
+        return "if_else_zero";
+
+    default:
+        return "op" + std::to_string(op);
+    }
+}
+
 inline std::string get_sx_operation(const casadi::SXElem &elem) {
     if (elem.is_symbolic()) {
         return elem.name();
@@ -844,109 +951,7 @@ inline std::string get_sx_operation(const casadi::SXElem &elem) {
         return oss.str();
     }
     if (!elem.is_leaf()) {
-        // Non-leaf node: has an operation
-        // CasADi operation codes from casadi/core/casadi_math.hpp
-        casadi_int op = elem.op();
-        switch (op) {
-        // Unary operations
-        case casadi::OP_ASSIGN:
-            return "=";
-        case casadi::OP_NEG:
-            return "neg";
-        case casadi::OP_NOT:
-            return "not";
-        case casadi::OP_SQ:
-            return "sq";
-        case casadi::OP_SQRT:
-            return "sqrt";
-        case casadi::OP_EXP:
-            return "exp";
-        case casadi::OP_LOG:
-            return "log";
-        case casadi::OP_SIN:
-            return "sin";
-        case casadi::OP_COS:
-            return "cos";
-        case casadi::OP_TAN:
-            return "tan";
-        case casadi::OP_ASIN:
-            return "asin";
-        case casadi::OP_ACOS:
-            return "acos";
-        case casadi::OP_ATAN:
-            return "atan";
-        case casadi::OP_SINH:
-            return "sinh";
-        case casadi::OP_COSH:
-            return "cosh";
-        case casadi::OP_TANH:
-            return "tanh";
-        case casadi::OP_ASINH:
-            return "asinh";
-        case casadi::OP_ACOSH:
-            return "acosh";
-        case casadi::OP_ATANH:
-            return "atanh";
-        case casadi::OP_FABS:
-            return "abs";
-        case casadi::OP_FLOOR:
-            return "floor";
-        case casadi::OP_CEIL:
-            return "ceil";
-        case casadi::OP_SIGN:
-            return "sign";
-        case casadi::OP_ERF:
-            return "erf";
-        case casadi::OP_ERFINV:
-            return "erfinv";
-        case casadi::OP_INV:
-            return "inv";
-
-        // Binary operations
-        case casadi::OP_ADD:
-            return "+";
-        case casadi::OP_SUB:
-            return "-";
-        case casadi::OP_MUL:
-            return "*";
-        case casadi::OP_DIV:
-            return "/";
-        case casadi::OP_POW:
-            return "pow";
-        case casadi::OP_ATAN2:
-            return "atan2";
-        case casadi::OP_FMIN:
-            return "min";
-        case casadi::OP_FMAX:
-            return "max";
-        case casadi::OP_FMOD:
-            return "mod";
-        case casadi::OP_COPYSIGN:
-            return "copysign";
-        case casadi::OP_HYPOT:
-            return "hypot";
-
-        // Comparison operations
-        case casadi::OP_LT:
-            return "<";
-        case casadi::OP_LE:
-            return "<=";
-        case casadi::OP_EQ:
-            return "==";
-        case casadi::OP_NE:
-            return "!=";
-        case casadi::OP_AND:
-            return "&&";
-        case casadi::OP_OR:
-            return "||";
-
-        // Conditional
-        case casadi::OP_IF_ELSE_ZERO:
-            return "if_else_zero";
-
-        default:
-            return "op" + std::to_string(op);
-        }
+        return op_symbol(elem.op());
     }
     return "?";
 }
@@ -990,6 +995,113 @@ inline void get_sx_node_style(const casadi::SXElem &elem, std::string &color, st
 } // namespace detail
 
 /**
+ * @brief Visual theme for deep (SX) computational-graph exports.
+ *
+ * Defaults reproduce the historical Metis look (`classic()`); `conceptual()`
+ * produces a clean left-to-right "blueprint" style with white nodes, orange
+ * operation borders and subtle gray edges, matching slide-style diagrams.
+ *
+ * Colors are hex strings; an empty string omits that attribute (so the
+ * Graphviz default applies).
+ */
+struct GraphStyle {
+    std::string rankdir = "BT";
+    std::string splines = "ortho";
+    std::string bgcolor = ""; // empty -> transparent / Graphviz default
+    std::string fontname = "Helvetica";
+    std::string node_style = "rounded,filled";
+    std::string edge_color = "#666666";
+    double edge_arrowsize = 0.7;
+
+    // When false, operation nodes are colored by category (classic behavior).
+    // When true, every operation node uses op_fill/op_border/op_fontcolor.
+    bool uniform_op_color = false;
+
+    std::string input_fill = "#90EE90", input_border = "", input_fontcolor = "",
+                input_shape = "ellipse";
+    std::string const_fill = "#FFE4B5", const_border = "", const_fontcolor = "",
+                const_shape = "ellipse";
+    std::string op_fill = "#87CEEB", op_border = "", op_fontcolor = "", op_shape = "box";
+
+    bool show_output_marker = true;
+    std::string output_fill = "#FFD700", output_border = "", output_fontcolor = "",
+                output_shape = "doublecircle";
+
+    static GraphStyle classic() { return GraphStyle{}; }
+
+    static GraphStyle conceptual() {
+        GraphStyle s;
+        s.rankdir = "LR";
+        s.splines = "spline";
+        s.bgcolor = "#FAFCFE";
+        s.node_style = "filled";
+        s.edge_color = "#9AA7B4";
+        s.edge_arrowsize = 0.8;
+        s.uniform_op_color = true;
+        s.input_fill = "#FFFFFF";
+        s.input_border = "#5F7E9B";
+        s.input_fontcolor = "#33495C";
+        s.input_shape = "box";
+        s.const_fill = "#FFFFFF";
+        s.const_border = "#5F7E9B";
+        s.const_fontcolor = "#33495C";
+        s.const_shape = "box";
+        s.op_fill = "#FFFFFF";
+        s.op_border = "#E08A1E";
+        s.op_fontcolor = "#D17A12";
+        s.op_shape = "box";
+        s.output_fill = "#FFFFFF";
+        s.output_border = "#E08A1E";
+        s.output_fontcolor = "#D17A12";
+        s.output_shape = "box";
+        return s;
+    }
+};
+
+namespace detail {
+
+/// Build the per-node attribute list, omitting border/fontcolor when empty.
+inline std::string node_attrs(const std::string &fill, const std::string &border,
+                              const std::string &fontcolor) {
+    std::string a = "fillcolor=\"" + fill + "\"";
+    if (!border.empty())
+        a += ", color=\"" + border + "\"";
+    if (!fontcolor.empty())
+        a += ", fontcolor=\"" + fontcolor + "\"";
+    return a;
+}
+
+/// Theme-aware SX node styling. Falls back to the classic per-category colors
+/// when the style does not request a uniform operation color.
+inline void get_sx_node_style_themed(const casadi::SXElem &elem, const GraphStyle &style,
+                                     std::string &fill, std::string &border, std::string &fontcolor,
+                                     std::string &shape) {
+    if (elem.is_symbolic()) {
+        fill = style.input_fill;
+        border = style.input_border;
+        fontcolor = style.input_fontcolor;
+        shape = style.input_shape;
+    } else if (elem.is_constant()) {
+        fill = style.const_fill;
+        border = style.const_border;
+        fontcolor = style.const_fontcolor;
+        shape = style.const_shape;
+    } else if (style.uniform_op_color) {
+        fill = style.op_fill;
+        border = style.op_border;
+        fontcolor = style.op_fontcolor;
+        shape = style.op_shape;
+    } else {
+        // Classic: color operations by category.
+        get_sx_node_style(elem, fill, shape);
+        border = "";
+        fontcolor = "";
+    }
+}
+
+} // namespace detail
+
+/**
  * @brief Export an SX expression to DOT format for deep visualization
  *
  * Traverses the full SX expression tree showing all primitive operations.
@@ -1000,7 +1112,8 @@ inline void get_sx_node_style(const casadi::SXElem &elem, std::string &color, st
  * @param name Optional graph name for DOT file
  */
 inline void export_sx_graph_dot(const casadi::SX &expr, const std::string &filename,
-                                const std::string &name = "expression") {
+                                const std::string &name = "expression",
+                                const GraphStyle &style = GraphStyle::classic()) {
     std::string dot_filename = filename + ".dot";
     std::ofstream out(dot_filename);
     if (!out.is_open()) {
@@ -1008,10 +1121,15 @@ inline void export_sx_graph_dot(const casadi::SX &expr, const std::string &filen
     }
 
     out << "digraph \"" << name << "\" {\n";
-    out << "  rankdir=BT;\n";
-    out << "  splines=ortho;\n";
-    out << "  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\"];\n";
-    out << "  edge [color=\"#666666\", arrowsize=0.7];\n\n";
+    out << "  rankdir=" << style.rankdir << ";\n";
+    if (!style.splines.empty())
+        out << "  splines=" << style.splines << ";\n";
+    if (!style.bgcolor.empty())
+        out << "  bgcolor=\"" << style.bgcolor << "\";\n";
+    out << "  node [style=\"" << style.node_style << "\", fontname=\"" << style.fontname
+        << "\"];\n";
+    out << "  edge [color=\"" << style.edge_color << "\", arrowsize=" << style.edge_arrowsize
+        << "];\n\n";
     out << "  labelloc=\"t\";\n";
     out << "  label=\"" << detail::escape_dot_label(name) << "\";\n";
     out << "  fontsize=16;\n\n";
@@ -1070,11 +1188,11 @@ inline void export_sx_graph_dot(const casadi::SX &expr, const std::string &filen
 
         int current_id = ptr_to_id[ptr];
         std::string label = detail::get_sx_operation(current);
-        std::string color, shape;
-        detail::get_sx_node_style(current, color, shape);
+        std::string fill, border, fontcolor, shape;
+        detail::get_sx_node_style_themed(current, style, fill, border, fontcolor, shape);
 
-        out << "  node_" << current_id << " [label=\"" << detail::escape_dot_label(label)
-            << "\", fillcolor=\"" << color << "\", shape=" << shape << "];\n";
+        out << "  node_" << current_id << " [label=\"" << detail::escape_dot_label(label) << "\", "
+            << detail::node_attrs(fill, border, fontcolor) << ", shape=" << shape << "];\n";
 
         casadi_int n = current.n_dep();
         for (casadi_int i = 0; i < n; ++i) {
@@ -1087,11 +1205,16 @@ inline void export_sx_graph_dot(const casadi::SX &expr, const std::string &filen
     }
 
     // Mark output nodes
-    if (!output_node_ids.empty()) {
+    if (style.show_output_marker && !output_node_ids.empty()) {
         out << "\n  // Output markers\n";
+        bool single = output_node_ids.size() == 1;
         for (size_t i = 0; i < output_node_ids.size(); ++i) {
-            out << "  output_" << i << " [label=\"out[" << i
-                << "]\", shape=doublecircle, fillcolor=\"#FFD700\"];\n";
+            std::string olabel =
+                single ? detail::escape_dot_label(name) : ("out[" + std::to_string(i) + "]");
+            out << "  output_" << i << " [label=\"" << olabel << "\", "
+                << detail::node_attrs(style.output_fill, style.output_border,
+                                      style.output_fontcolor)
+                << ", shape=" << style.output_shape << "];\n";
             out << "  node_" << output_node_ids[i] << " -> output_" << i << ";\n";
         }
     }
@@ -1111,16 +1234,22 @@ inline void export_sx_graph_dot(const casadi::SX &expr, const std::string &filen
  * @param name Optional graph name
  */
 inline void export_sx_graph_html(const casadi::SX &expr, const std::string &filename,
-                                 const std::string &name = "expression") {
+                                 const std::string &name = "expression",
+                                 const GraphStyle &style = GraphStyle::classic()) {
     std::ostringstream dot_stream;
     std::ostringstream node_data_stream;
     std::ostringstream edges_stream;
 
     dot_stream << "digraph \"" << name << "\" {\n";
-    dot_stream << "  rankdir=BT;\n";
-    dot_stream << "  splines=ortho;\n";
-    dot_stream << "  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\"];\n";
-    dot_stream << "  edge [color=\"#666666\", arrowsize=0.7];\n\n";
+    dot_stream << "  rankdir=" << style.rankdir << ";\n";
+    if (!style.splines.empty())
+        dot_stream << "  splines=" << style.splines << ";\n";
+    if (!style.bgcolor.empty())
+        dot_stream << "  bgcolor=\"" << style.bgcolor << "\";\n";
+    dot_stream << "  node [style=\"" << style.node_style << "\", fontname=\"" << style.fontname
+               << "\"];\n";
+    dot_stream << "  edge [color=\"" << style.edge_color << "\", arrowsize=" << style.edge_arrowsize
+               << "];\n\n";
     dot_stream << "  labelloc=\"t\";\n";
     dot_stream << "  label=\"" << detail::escape_dot_label(name) << "\";\n";
     dot_stream << "  fontsize=16;\n\n";
@@ -1184,8 +1313,8 @@ inline void export_sx_graph_html(const casadi::SX &expr, const std::string &file
 
         int current_id = ptr_to_id[ptr];
         std::string label = detail::get_sx_operation(current);
-        std::string color, shape;
-        detail::get_sx_node_style(current, color, shape);
+        std::string fill, border, fontcolor, shape;
+        detail::get_sx_node_style_themed(current, style, fill, border, fontcolor, shape);
 
         // Determine node type
         std::string node_type = "operation";
@@ -1214,8 +1343,8 @@ inline void export_sx_graph_html(const casadi::SX &expr, const std::string &file
         node_data_stream << "]}";
 
         dot_stream << "  node_" << current_id << " [label=\"" << detail::escape_dot_label(label)
-                   << "\", fillcolor=\"" << color << "\", shape=" << shape << ", id=\"node_"
-                   << current_id << "\"];\n";
+                   << "\", " << detail::node_attrs(fill, border, fontcolor) << ", shape=" << shape
+                   << ", id=\"node_" << current_id << "\"];\n";
 
         for (casadi_int i = 0; i < n; ++i) {
             casadi::SXElem dep = current.dep(i);
@@ -1233,10 +1362,14 @@ inline void export_sx_graph_html(const casadi::SX &expr, const std::string &file
     }
 
     // Mark outputs
-    for (size_t i = 0; i < output_node_ids.size(); ++i) {
-        dot_stream << "  output_" << i << " [label=\"out[" << i
-                   << "]\", shape=doublecircle, fillcolor=\"#FFD700\", id=\"output_" << i
-                   << "\"];\n";
+    bool single_output = output_node_ids.size() == 1;
+    for (size_t i = 0; style.show_output_marker && i < output_node_ids.size(); ++i) {
+        std::string olabel =
+            single_output ? detail::escape_dot_label(name) : ("out[" + std::to_string(i) + "]");
+        dot_stream << "  output_" << i << " [label=\"" << olabel << "\", "
+                   << detail::node_attrs(style.output_fill, style.output_border,
+                                         style.output_fontcolor)
+                   << ", shape=" << style.output_shape << ", id=\"output_" << i << "\"];\n";
         dot_stream << "  node_" << output_node_ids[i] << " -> output_" << i << ";\n";
 
         if (!first_edge)
@@ -1289,7 +1422,8 @@ enum class DeepGraphFormat {
  */
 inline void export_graph_deep(const casadi::Function &fn, const std::string &filename,
                               DeepGraphFormat format = DeepGraphFormat::HTML,
-                              const std::string &name = "") {
+                              const std::string &name = "",
+                              const GraphStyle &style = GraphStyle::classic()) {
     // Use function name if no name provided
     std::string graph_name = name.empty() ? fn.name() : name;
 
@@ -1312,13 +1446,13 @@ inline void export_graph_deep(const casadi::Function &fn, const std::string &fil
     // Export using SX-specific traversal
     switch (format) {
     case DeepGraphFormat::DOT:
-        export_sx_graph_dot(combined, filename, graph_name);
+        export_sx_graph_dot(combined, filename, graph_name, style);
         break;
     case DeepGraphFormat::HTML:
-        export_sx_graph_html(combined, filename, graph_name);
+        export_sx_graph_html(combined, filename, graph_name, style);
         break;
     case DeepGraphFormat::PDF:
-        export_sx_graph_dot(combined, filename, graph_name);
+        export_sx_graph_dot(combined, filename, graph_name, style);
         render_graph(filename + ".dot", filename + ".pdf");
         break;
     }
@@ -1337,6 +1471,309 @@ inline bool visualize_graph_deep(const casadi::Function &fn, const std::string &
         return true;
     } catch (const std::exception &) {
         return false;
+    }
+}
+
+// =============================================================================
+// Numeric-equivalent exports
+//
+// A symbolic Function has a "numeric twin": the same computation run as native
+// arithmetic. CasADi can emit that twin for ANY Function, so these are the
+// numeric counterparts of export_graph_deep -- one Function, two views:
+//   export_graph_deep(fn)      -> the graph it traces       (DAG)
+//   export_function_code(fn)   -> the code it compiles to    (portable C)
+//   export_eval_algorithm(fn)  -> the algorithm it runs      (SSA work-vector)
+// =============================================================================
+
+/// Target language for export_function_code.
+enum class CodeLanguage {
+    C ///< Portable C99 source (CasADi codegen)
+};
+
+/**
+ * @brief Emit source that numerically evaluates @p fn -- the "numeric twin".
+ *
+ * Thin wrapper over casadi::Function::generate(): writes self-contained,
+ * dependency-free C that evaluates the function with native arithmetic. Works
+ * for any function, mirroring how export_graph_deep visualizes any graph.
+ *
+ * @param fn       The Function to emit code for
+ * @param filename Output base name (".c" is appended by CasADi)
+ * @param lang     Output language (currently only C)
+ * @return The path of the file written (as reported by CasADi)
+ * @throws RuntimeError if code generation fails
+ */
+inline std::string export_function_code(const casadi::Function &fn, const std::string &filename,
+                                        CodeLanguage lang = CodeLanguage::C) {
+    if (lang != CodeLanguage::C) {
+        throw RuntimeError("export_function_code: only C output is currently supported");
+    }
+    try {
+        return fn.generate(filename);
+    } catch (const std::exception &e) {
+        throw RuntimeError("export_function_code failed for '" + fn.name() + "': " + e.what());
+    }
+}
+
+namespace detail {
+
+/// A rendered token and the role that determines its color.
+enum class TokRole { Text, Op, Io, Const };
+using AlgoToken = std::pair<TokRole, std::string>;
+using AlgoLine = std::vector<AlgoToken>;
+
+inline bool is_infix_op(const std::string &s) {
+    return s == "+" || s == "-" || s == "*" || s == "/" || s == "<" || s == "<=" || s == ">" ||
+           s == ">=" || s == "==" || s == "!=" || s == "&&" || s == "||";
+}
+
+inline std::string fmt_algo_num(double v) {
+    std::ostringstream oss;
+    oss << std::setprecision(6) << v;
+    return oss.str();
+}
+
+inline std::string html_escape(const std::string &s) {
+    std::string out;
+    out.reserve(s.size());
+    for (char c : s) {
+        switch (c) {
+        case '&':
+            out += "&amp;";
+            break;
+        case '<':
+            out += "&lt;";
+            break;
+        case '>':
+            out += "&gt;";
+            break;
+        default:
+            out += c;
+        }
+    }
+    return out;
+}
+
+/**
+ * @brief Decode a Function's evaluation algorithm into colorable token lines.
+ *
+ * Walks instruction_id/input/output/constant. Work-vector slots are shown as
+ * `aN` (matching CasADi's C codegen register style); OP_INPUT/OP_OUTPUT use the
+ * supplied input/output names. Best-effort for non-expandable (MX) functions.
+ */
+inline std::vector<AlgoLine> decode_algorithm(const casadi::Function &f,
+                                              const std::vector<std::string> &names_in,
+                                              const std::vector<std::string> &names_out) {
+    std::vector<AlgoLine> lines;
+    auto reg = [](casadi_int w) { return "a" + std::to_string(w); };
+    auto name_at = [](const std::vector<std::string> &names, casadi_int idx) {
+        return (idx >= 0 && idx < static_cast<casadi_int>(names.size()))
+                   ? names[idx]
+                   : ("x" + std::to_string(idx));
+    };
+
+    for (casadi_int k = 0; k < f.n_instructions(); ++k) {
+        casadi_int id = f.instruction_id(k);
+        std::vector<casadi_int> in = f.instruction_input(k);
+        std::vector<casadi_int> out = f.instruction_output(k);
+        AlgoLine line;
+
+        if (id == casadi::OP_INPUT) {
+            std::string nm = name_at(names_in, in.empty() ? 0 : in[0]);
+            if (in.size() > 1 && in[1] > 0)
+                nm += "[" + std::to_string(in[1]) + "]";
+            line.push_back({TokRole::Text, reg(out[0]) + " = "});
+            line.push_back({TokRole::Io, nm});
+        } else if (id == casadi::OP_OUTPUT) {
+            std::string nm = name_at(names_out, out.empty() ? 0 : out[0]);
+            if (out.size() > 1 && out[1] > 0)
+                nm += "[" + std::to_string(out[1]) + "]";
+            line.push_back({TokRole::Io, nm});
+            line.push_back({TokRole::Text, " = " + reg(in[0])});
+        } else if (id == casadi::OP_CONST) {
+            line.push_back({TokRole::Text, reg(out[0]) + " = "});
+            line.push_back({TokRole::Const, fmt_algo_num(f.instruction_constant(k))});
+        } else {
+            std::string lbl = op_symbol(id);
+            line.push_back({TokRole::Text, reg(out[0]) + " = "});
+            if (is_infix_op(lbl) && in.size() == 2) {
+                line.push_back({TokRole::Text, reg(in[0]) + " "});
+                line.push_back({TokRole::Op, lbl});
+                line.push_back({TokRole::Text, " " + reg(in[1])});
+            } else {
+                line.push_back({TokRole::Op, lbl});
+                line.push_back({TokRole::Text, "("});
+                for (size_t i = 0; i < in.size(); ++i) {
+                    line.push_back({TokRole::Text, reg(in[i]) + (i + 1 < in.size() ? ", " : "")});
+                }
+                line.push_back({TokRole::Text, ")"});
+            }
+        }
+        lines.push_back(std::move(line));
+    }
+    return lines;
+}
+
+/// Resolved panel colors, taken from the GraphStyle with readable fallbacks.
+struct PanelColors {
+    std::string bg, card, title, text, op, io, num;
+};
+
+inline PanelColors resolve_panel_colors(const GraphStyle &s) {
+    auto pick = [](const std::string &v, const char *d) { return v.empty() ? std::string(d) : v; };
+    PanelColors c;
+    c.bg = pick(s.bgcolor, "#FAFCFE");
+    c.card = "#FFFFFF";
+    c.title = pick(s.input_fontcolor, "#33495C");
+    c.text = "#2B3A48";
+    c.op = pick(s.op_fontcolor, "#D17A12");
+    c.io = pick(s.input_fontcolor, "#5F7E9B");
+    c.num = pick(s.op_fontcolor, "#D17A12");
+    return c;
+}
+
+inline std::string token_color(const AlgoToken &t, const PanelColors &c) {
+    switch (t.first) {
+    case TokRole::Op:
+        return c.op;
+    case TokRole::Io:
+        return c.io;
+    case TokRole::Const:
+        return c.num;
+    default:
+        return c.text;
+    }
+}
+
+/// Render a line as a Graphviz HTML-like-label fragment (colored <font> tokens).
+inline std::string render_line_graphviz(const AlgoLine &line, const PanelColors &c) {
+    std::string out;
+    for (const auto &t : line) {
+        if (t.first == TokRole::Text) {
+            out += html_escape(t.second);
+        } else {
+            out += "<font color=\"" + token_color(t, c) + "\">" + html_escape(t.second) + "</font>";
+        }
+    }
+    return out;
+}
+
+/// Render a line as an HTML-page fragment (colored <span> tokens).
+inline std::string render_line_html(const AlgoLine &line, const PanelColors &c) {
+    std::string out;
+    for (const auto &t : line) {
+        if (t.first == TokRole::Text) {
+            out += html_escape(t.second);
+        } else {
+            out += "<span style=\"color:" + token_color(t, c) + "\">" + html_escape(t.second) +
+                   "</span>";
+        }
+    }
+    return out;
+}
+
+inline void write_algorithm_dot(const std::string &filename, const std::string &title,
+                                const std::vector<AlgoLine> &lines, const PanelColors &c) {
+    std::string dot_filename = filename + ".dot";
+    std::ofstream out(dot_filename);
+    if (!out.is_open()) {
+        throw RuntimeError("Failed to open file for writing: " + dot_filename);
+    }
+    out << "digraph numeric_twin {\n";
+    out << "  bgcolor=\"" << c.bg << "\";\n  margin=0;\n";
+    out << "  node [shape=plaintext];\n";
+    out << "  panel [label=<\n";
+    out << "    <table border=\"1\" color=\"#D7DEE6\" cellborder=\"0\" cellspacing=\"0\" "
+           "cellpadding=\"5\" bgcolor=\""
+        << c.card << "\">\n";
+    out << "      <tr><td align=\"left\"><font face=\"Helvetica-Bold\" point-size=\"15\" color=\""
+        << c.title << "\">  " << html_escape(title) << "  </font></td></tr>\n";
+    out << "      <tr><td><font point-size=\"3\"> </font></td></tr>\n";
+    for (const auto &line : lines) {
+        out << "      <tr><td align=\"left\"><font face=\"Courier\" point-size=\"13\" color=\""
+            << c.text << "\">  " << render_line_graphviz(line, c) << "  </font></td></tr>\n";
+    }
+    out << "    </table>\n  >];\n}\n";
+    out.close();
+}
+
+inline void write_algorithm_html(const std::string &filename, const std::string &title,
+                                 const std::vector<AlgoLine> &lines, const PanelColors &c) {
+    std::string html_filename = filename + ".html";
+    std::ofstream out(html_filename);
+    if (!out.is_open()) {
+        throw RuntimeError("Failed to open file for writing: " + html_filename);
+    }
+    out << "<!DOCTYPE html>\n<html lang=\"en\"><head><meta charset=\"UTF-8\">\n";
+    out << "<title>" << html_escape(title) << "</title></head>\n";
+    out << "<body style=\"background:" << c.bg
+        << ";margin:0;padding:32px;font-family:Helvetica,"
+           "Arial,sans-serif;\">\n";
+    out << "<div style=\"display:inline-block;background:" << c.card
+        << ";border:1px solid #D7DEE6;border-radius:8px;padding:20px 28px;\">\n";
+    out << "<div style=\"color:" << c.title
+        << ";font-weight:bold;font-size:18px;margin-bottom:14px;\">" << html_escape(title)
+        << "</div>\n";
+    out << "<pre style=\"margin:0;font-family:'Courier "
+           "New',monospace;font-size:14px;line-height:1.6;"
+           "color:"
+        << c.text << ";\">\n";
+    for (const auto &line : lines) {
+        out << render_line_html(line, c) << "\n";
+    }
+    out << "</pre>\n</div>\n</body>\n</html>\n";
+    out.close();
+}
+
+} // namespace detail
+
+/**
+ * @brief Render a Function's numeric evaluation algorithm as a code panel.
+ *
+ * Decodes the SSA work-vector trace (`aN = op(aI, aJ)`) the numeric backend
+ * runs -- the linear counterpart to the deep graph, using the same operation
+ * labels. The function is expanded to primitive ops first (falling back to the
+ * MX-level trace if it is not expandable).
+ *
+ * @param fn       The Function whose algorithm to render
+ * @param filename Output base name (extension added per format)
+ * @param format   DOT, HTML, or PDF (PDF requires Graphviz `dot`)
+ * @param style    Visual theme (colors); defaults to the conceptual blueprint
+ * @param name     Panel title (defaults to the function name)
+ */
+inline void export_eval_algorithm(const casadi::Function &fn, const std::string &filename,
+                                  DeepGraphFormat format = DeepGraphFormat::HTML,
+                                  const GraphStyle &style = GraphStyle::conceptual(),
+                                  const std::string &name = "") {
+    std::string title = name.empty() ? fn.name() : name;
+
+    casadi::Function f = fn;
+    try {
+        f = fn.expand(); // primitive ops; mirrors export_graph_deep
+    } catch (const std::exception &) {
+        f = fn; // best-effort: render the MX-level trace
+    }
+
+    std::vector<std::string> names_in, names_out;
+    for (casadi_int i = 0; i < fn.n_in(); ++i)
+        names_in.push_back(fn.name_in(i));
+    for (casadi_int i = 0; i < fn.n_out(); ++i)
+        names_out.push_back(fn.name_out(i));
+
+    auto lines = detail::decode_algorithm(f, names_in, names_out);
+    auto colors = detail::resolve_panel_colors(style);
+
+    switch (format) {
+    case DeepGraphFormat::DOT:
+        detail::write_algorithm_dot(filename, title, lines, colors);
+        break;
+    case DeepGraphFormat::HTML:
+        detail::write_algorithm_html(filename, title, lines, colors);
+        break;
+    case DeepGraphFormat::PDF:
+        detail::write_algorithm_dot(filename, title, lines, colors);
+        render_graph(filename + ".dot", filename + ".pdf");
+        break;
     }
 }
 

@@ -216,3 +216,56 @@ TEST(MetisIOTests, RenderGraphPNG) {
     std::remove((base + ".dot").c_str());
     std::remove((base + ".png").c_str());
 }
+
+// --- Numeric-equivalent exports ------------------------------------------
+
+TEST(MetisIOTests, ExportFunctionCodeC) {
+    auto x = metis::sym("x");
+    auto y = metis::sym("y");
+    casadi::Function fn("twinf", {x, y}, {x * y + metis::sin(x)}, {"x", "y"}, {"twinf"});
+
+    std::string path = metis::export_function_code(fn, "test_metis_numcode");
+
+    std::ifstream in(path);
+    ASSERT_TRUE(in.good()) << "generated C file should exist at " << path;
+    std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    EXPECT_NE(content.find("casadi_real"), std::string::npos) << "should be CasADi C kernel";
+    EXPECT_NE(content.find("twinf"), std::string::npos) << "should mention the function name";
+
+    std::remove(path.c_str());
+}
+
+TEST(MetisIOTests, ExportEvalAlgorithmDot) {
+    auto x = metis::sym("x");
+    auto y = metis::sym("y");
+    casadi::Function fn("twin", {x, y}, {x * y + x}, {"x", "y"}, {"twin"});
+
+    std::string base = "/tmp/test_metis_algo";
+    metis::export_eval_algorithm(fn, base, metis::DeepGraphFormat::DOT);
+
+    std::ifstream in(base + ".dot");
+    ASSERT_TRUE(in.good());
+    std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    EXPECT_NE(content.find("<table"), std::string::npos) << "panel renders as a table";
+    EXPECT_NE(content.find("a0 = "), std::string::npos) << "work-vector registers labeled aN";
+    EXPECT_NE(content.find("twin"), std::string::npos) << "title is the function name";
+
+    std::remove((base + ".dot").c_str());
+}
+
+TEST(MetisIOTests, ExportEvalAlgorithmHtml) {
+    auto x = metis::sym("x");
+    casadi::Function fn("sq_twin", {x}, {x * x}, {"x"}, {"sq_twin"});
+
+    std::string base = "/tmp/test_metis_algo_html";
+    metis::export_eval_algorithm(fn, base, metis::DeepGraphFormat::HTML);
+
+    std::ifstream in(base + ".html");
+    ASSERT_TRUE(in.good());
+    std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    EXPECT_NE(content.find("<html"), std::string::npos);
+    EXPECT_NE(content.find("sq_twin"), std::string::npos);
+    EXPECT_NE(content.find("<pre"), std::string::npos);
+
+    std::remove((base + ".html").c_str());
+}

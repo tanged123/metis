@@ -97,6 +97,9 @@ target_link_libraries(beam_deflection PRIVATE metis)
 add_executable(drag_optimization optimization/drag_optimization.cpp)
 target_link_libraries(drag_optimization PRIVATE metis)
 
+add_executable(drag_graph optimization/drag_graph.cpp)
+target_link_libraries(drag_graph PRIVATE metis)
+
 add_executable(parametric_sweep optimization/parametric_sweep.cpp)
 target_link_libraries(parametric_sweep PRIVATE metis)
 
